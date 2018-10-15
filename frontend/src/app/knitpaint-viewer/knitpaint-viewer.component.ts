@@ -18,11 +18,13 @@ import { BehaviorSubject } from 'rxjs';
 export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
 
   @ViewChild('canvas') canvas: ElementRef<HTMLCanvasElement>;
+  @ViewChild('tooltip') tooltip: ElementRef<HTMLDivElement>;
   @Input() knitpaint: Knitpaint;
   @Input() pixelsPerRow: number;
   @Input() pixelSize = 10;
   @Input() drawingColorNumber: number = null;
   private ctx: CanvasRenderingContext2D;
+  public colorNumbers: BehaviorSubject<number[]> = new BehaviorSubject([]);
   public colors: BehaviorSubject<Color[]> = new BehaviorSubject<Color[]>([]);
 
   constructor(private element: ElementRef<HTMLElement>, private ngZone: NgZone) {
@@ -42,17 +44,29 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
     // Attach some events to allow drawing
     this.ngZone.runOutsideAngular(() => {
       let isDown = false;
-      this.canvas.nativeElement.addEventListener('mousedown', (event) => {
+      const canvasEl = this.canvas.nativeElement;
+      const tooltipEl = this.tooltip.nativeElement;
+      canvasEl.addEventListener('mousedown', (event) => {
         isDown = true;
-        this.drawPixel(event.offsetX, event.offsetY);
+        this.drawColorNumber(event.offsetX, event.offsetY);
+        tooltipEl.innerText = '' + this.getColorNumber(event.offsetX, event.offsetY);
       });
-      this.canvas.nativeElement.addEventListener('mouseup', () => {
+      canvasEl.addEventListener('mouseup', () => {
         isDown = false;
       });
-      this.canvas.nativeElement.addEventListener('mousemove', (event) => {
+      canvasEl.addEventListener('mouseover', () => {
+        tooltipEl.style.display = 'block';
+      });
+      canvasEl.addEventListener('mousemove', (event) => {
         if (isDown) {
-          this.drawPixel(event.offsetX, event.offsetY);
+          this.drawColorNumber(event.offsetX, event.offsetY);
         }
+        tooltipEl.style.left = (event.offsetX + 5) + 'px';
+        tooltipEl.style.top = (event.offsetY + 10) + 'px';
+        tooltipEl.innerText = '' + this.getColorNumber(event.offsetX, event.offsetY);
+      });
+      canvasEl.addEventListener('mouseout', () => {
+        tooltipEl.style.display = 'none';
       });
     });
 
@@ -68,6 +82,10 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     // Extract the colors when the knitpaint changes
     if (changes['knitpaint'] && this.knitpaint) {
+      // Todo: Unsubscribe when reference changes
+      this.knitpaint.getColorNumbers().subscribe(colorNumbers => {
+        this.colorNumbers.next(colorNumbers);
+      });
       this.knitpaint.getColors().subscribe(colors => {
         this.colors.next(colors);
       });
@@ -103,17 +121,37 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
   }
 
   /**
+   * Returns the color number of the provided canvas coordinates
+   * @param canvasX
+   * @param canvasY
+   */
+  private getColorNumber(canvasX: number, canvasY: number): number {
+    const index = this.getColorIndex(canvasX, canvasY);
+    return this.colorNumbers.getValue()[index];
+  }
+
+  /**
+   * Finds the index for the provided canvas coordinates
+   *
+   * @param canvasX
+   * @param canvasY
+   */
+  private getColorIndex(canvasX: number, canvasY: number): number {
+    const pixels = this.colors.getValue();
+    const height = Math.ceil(pixels.length / this.pixelsPerRow);
+    const xIndex = Math.floor(canvasX / this.pixelSize);
+    const yIndex = height - Math.ceil(canvasY / this.pixelSize);
+    return yIndex * this.pixelsPerRow + xIndex;
+  }
+
+  /**
    * Draws the currently selected color number to the provided canvas coordinates
    *
    * @param canvasX
    * @param canvasY
    */
-  private drawPixel(canvasX, canvasY) {
-    const pixels = this.colors.getValue();
-    const height = Math.ceil(pixels.length / this.pixelsPerRow);
-    const xIndex = Math.floor(canvasX / this.pixelSize);
-    const yIndex = height - Math.ceil(canvasY / this.pixelSize);
-    const index = yIndex * this.pixelsPerRow + xIndex;
+  private drawColorNumber(canvasX: number, canvasY: number): void {
+    const index = this.getColorIndex(canvasX, canvasY);
     this.setColor(index);
   }
 
@@ -122,7 +160,7 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
    *
    * @param index
    */
-  setColor(index) {
+  setColor(index: number) {
     if (this.drawingColorNumber !== null && this.drawingColorNumber >= 0) {
       this.knitpaint.setColorNumber(index, this.drawingColorNumber);
     }
