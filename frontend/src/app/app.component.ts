@@ -9,7 +9,8 @@ import { Knitpaint } from './knitpaint';
 })
 export class AppComponent implements OnInit, AfterViewChecked {
   knitpaint: Knitpaint;
-  width = 57;
+  pixelsPerRow = 57;
+  selectedColorNumber = 1;
 
   constructor(private httpClient: HttpClient) {}
 
@@ -17,6 +18,7 @@ export class AppComponent implements OnInit, AfterViewChecked {
     // Fetch some knitpaint file
     this.httpClient.get('/assets/sample_test.txt', { responseType: 'blob' }).subscribe((res) => {
       this.knitpaint = new Knitpaint(res);
+      setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 100);
     });
   }
 

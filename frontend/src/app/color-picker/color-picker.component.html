@@ -1,0 +1,11 @@
+<div class="color-wrapper">
+  <div
+    *ngFor="let colorNumber of colorNumbers"
+    class="color"
+    [class.selected]="colorNumber === selectedColorNumber"
+    [style.backgroundColor]="getBackgroundColorStr(colorNumber)"
+    [style.color]="getTextColorStr(colorNumber)"
+    (click)="selectColor(colorNumber)">
+    {{ colorNumber }}
+  </div>
+</div>

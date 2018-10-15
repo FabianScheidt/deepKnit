@@ -1,1 +1,4 @@
-<app-knitpaint-viewer [knitpaint]="knitpaint" [pixelsPerRow]="width" [drawingColorNumber]="2"></app-knitpaint-viewer>
+<app-knitpaint-viewer
+  [knitpaint]="knitpaint" [pixelsPerRow]="pixelsPerRow"
+  [drawingColorNumber]="selectedColorNumber"></app-knitpaint-viewer>
+<app-color-picker [(selectedColorNumber)]="selectedColorNumber"></app-color-picker>

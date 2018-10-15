@@ -123,7 +123,7 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
    * @param index
    */
   setColor(index) {
-    if (this.drawingColorNumber) {
+    if (this.drawingColorNumber !== null && this.drawingColorNumber >= 0) {
       this.knitpaint.setColorNumber(index, this.drawingColorNumber);
     }
   }
