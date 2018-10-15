@@ -1,0 +1,6 @@
+<div class="pixel-wrapper" [style.width]="width * 10 + 'px'">
+  <div class="pixel"
+       *ngFor="let cssColor of cssColors | async; let i = index"
+       [style.backgroundColor]="cssColor"
+       (mouseover)="overPixelEvent(i)"></div>
+</div>

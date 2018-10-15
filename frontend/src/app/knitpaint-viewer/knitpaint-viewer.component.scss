@@ -1,0 +1,9 @@
+.pixel-wrapper {
+  display: flex;
+  flex-wrap: wrap-reverse;
+
+  .pixel {
+    width: 10px;
+    height: 10px;
+  }
+}
