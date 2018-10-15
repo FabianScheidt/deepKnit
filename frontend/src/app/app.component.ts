@@ -18,7 +18,6 @@ export class AppComponent implements OnInit, AfterViewChecked {
     // Fetch some knitpaint file
     this.httpClient.get('/assets/sample_test.txt', { responseType: 'blob' }).subscribe((res) => {
       this.knitpaint = new Knitpaint(res);
-      setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 100);
     });
   }
 

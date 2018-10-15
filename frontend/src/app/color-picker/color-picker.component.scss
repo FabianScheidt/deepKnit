@@ -3,7 +3,7 @@
   width: 100%;
   overflow-x: scroll;
   user-select: none;
-  background-color: #eee;
+  background-color: #f0f0f0;
 
   .color {
     display: inline-block;
@@ -16,7 +16,7 @@
     cursor: pointer;
 
     &.selected {
-      border-color: #333333;
+      border-color: rgb(0, 174, 239);
     }
   }
 }
