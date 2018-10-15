@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewChecked, Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Knitpaint } from './knitpaint';
 
@@ -7,8 +7,7 @@ import { Knitpaint } from './knitpaint';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
-  title = 'app';
+export class AppComponent implements OnInit, AfterViewChecked {
   knitpaint: Knitpaint;
   width = 57;
 
@@ -19,5 +18,9 @@ export class AppComponent implements OnInit {
     this.httpClient.get('/assets/sample_test.txt', { responseType: 'blob' }).subscribe((res) => {
       this.knitpaint = new Knitpaint(res);
     });
+  }
+
+  ngAfterViewChecked() {
+    console.log('View Checked');
   }
 }

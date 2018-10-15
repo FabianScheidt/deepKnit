@@ -1,9 +1,10 @@
-.pixel-wrapper {
-  display: flex;
-  flex-wrap: wrap-reverse;
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100px;
+}
 
-  .pixel {
-    width: 10px;
-    height: 10px;
-  }
+canvas {
+  display: block;
+  margin: 0 auto;
 }
