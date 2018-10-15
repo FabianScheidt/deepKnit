@@ -124,12 +124,7 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
    */
   setColor(index) {
     if (this.drawingColorNumber) {
-      const colors: Color[] = this.colors.getValue();
-
-      // Todo: Build the correct functionality and reflect to knitpaint data
-      colors[index] = [255, 255, 0];
-      this.colors.next(colors);
-      console.log(colors[index]);
+      this.knitpaint.setColorNumber(index, this.drawingColorNumber);
     }
   }
 

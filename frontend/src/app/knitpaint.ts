@@ -1,12 +1,10 @@
-import { Observable, Observer } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 export type Color = [number, number, number];
 
 export class Knitpaint {
-  public data: Blob;
-
-  private readonly colorTable: Color[] = [
+  public static readonly COLOR_TABLE: Color[] = [
     [0, 0, 0], [255, 0, 0], [0, 255, 0], [255, 255, 0], [0, 0, 255], [255, 0, 255], [0, 255, 255], [255, 255, 255],
     [74, 137, 153], [108, 36, 144], [180, 180, 216], [255, 103, 189], [144, 108, 180], [153, 153, 153],
     [207, 144, 192], [128, 128, 255], [81, 255, 222], [82, 145, 219], [0, 124, 145], [235, 235, 36],
@@ -50,32 +48,77 @@ export class Knitpaint {
     [0, 175, 0], [0, 150, 0], [200, 0, 0], [110, 0, 0], [100, 100, 100], [0, 125, 0]
   ];
 
-  constructor(data: Blob) {
-    this.data = data;
+  public data: BehaviorSubject<ArrayBuffer> = new BehaviorSubject<ArrayBuffer>(null);
+
+  /**
+   * Creates a new Knitpaint object from a file blob or array buffer
+   * @param data
+   */
+  constructor(data?: Blob | ArrayBuffer) {
+    if (data) {
+      this.setData(data);
+    }
   }
 
+  /**
+   * Sets new data from either a file blob or array buffer
+   *
+   * @param data
+   */
+  public setData(data: Blob | ArrayBuffer): void {
+    if (data instanceof Blob) {
+      this.setDataFromBlob(data);
+    } else {
+      this.data.next(data);
+    }
+  }
+
+  /**
+   * Reads a file blob and sets the knitpaint data from it
+   *
+   * @param blob
+   */
+  private setDataFromBlob(blob: Blob): void {
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      const result: ArrayBuffer = fileReader.result;
+      this.data.next(result);
+    };
+    fileReader.onerror = (err) => {
+      this.data.error(err);
+    };
+    fileReader.readAsArrayBuffer(blob);
+  }
+
+  /**
+   * Changes the color number at an index
+   *
+   * @param index
+   * @param colorNumber
+   */
+  public setColorNumber(index: number, colorNumber: number) {
+    const uint: Uint8Array = new Uint8Array(this.data.getValue());
+    uint.fill(colorNumber, index, index + 1);
+    this.data.next(this.data.getValue());
+  }
+
+  /**
+   * Returns the color number for each byte in the data
+   */
   public getColorNumbers(): Observable<number[]> {
-    return new Observable<number[]>((observer: Observer<number[]>) => {
-      const fileReader = new FileReader();
-      fileReader.onload = () => {
-        const result: ArrayBuffer = fileReader.result;
-        const resultInt = new Uint8Array(result);
-        const colorNumbers = Array.from(resultInt);
-        observer.next(colorNumbers);
-        observer.complete();
-      };
-      fileReader.onerror = (err) => {
-        observer.error(err);
-        observer.complete();
-      };
-      fileReader.readAsArrayBuffer(this.data);
-    });
+    return this.data.pipe(map((data: ArrayBuffer) => {
+      const dataInt = new Uint8Array(data);
+      return Array.from(dataInt);
+    }));
   }
 
+  /**
+   * Returns the colors of each byte in the data
+   */
   public getColors(): Observable<Color[]> {
     return this.getColorNumbers().pipe(
       map((colorNumbers: number[]) => {
-        return colorNumbers.map((colorNumber: number) => this.colorTable[colorNumber]);
+        return colorNumbers.map((colorNumber: number) => Knitpaint.COLOR_TABLE[colorNumber]);
       }
     ));
   }
