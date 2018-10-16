@@ -96,7 +96,8 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
    * Resizes the canvas to fit all pixel and draws all the pixels
    */
   private renderCanvas() {
-    if (!this.canvas || !this.canvas.nativeElement) {
+    console.log('Rendering Knitpaint Canvas');
+    if (!this.canvas || !this.canvas.nativeElement || !this.ctx) {
       return;
     }
 
