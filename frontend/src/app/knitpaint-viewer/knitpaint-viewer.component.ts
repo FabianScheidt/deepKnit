@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { Color, Knitpaint } from '../knitpaint';
 import { BehaviorSubject } from 'rxjs';
+import saveAs from 'file-saver';
 
 @Component({
   selector: 'app-knitpaint-viewer',
@@ -165,6 +166,27 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
     if (this.drawingColorNumber !== null && this.drawingColorNumber >= 0) {
       this.knitpaint.setColorNumber(index, this.drawingColorNumber);
     }
+  }
+
+  /**
+   * Exports the current canvas as a png file and immediately starts the download
+   * @param filename
+   */
+  exportAsImage(filename?: string) {
+
+    // Change the pixel size for the export to 1
+    const pixelSize = this.pixelSize;
+    this.pixelSize = 1;
+    this.renderCanvas();
+
+    // Create the png blob and set the pixel size back
+    this.canvas.nativeElement.toBlob((blob: Blob) => {
+      this.pixelSize = pixelSize;
+      this.renderCanvas();
+      if (blob) {
+        saveAs(blob, filename);
+      }
+    }, 'image/png');
   }
 
 }

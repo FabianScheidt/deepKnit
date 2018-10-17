@@ -25,7 +25,17 @@
       height: 52px;
       flex-grow: 0;
       flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
     }
+  }
+
+  app-color-picker {
+    width: 100%;
+  }
+
+  .export-buttons {
+    padding: 8px;
   }
 
   .tmg-logo {

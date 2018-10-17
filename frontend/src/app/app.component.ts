@@ -1,9 +1,10 @@
-import { AfterViewChecked, Component, NgZone, OnInit } from '@angular/core';
+import { AfterViewChecked, Component, NgZone, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Knitpaint } from './knitpaint';
 import { KnitpaintSamplingOptions, KnitpaintSamplingService } from './knitpaint-sampling.service';
 import { debounceTime, map, skip } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { KnitpaintViewerComponent } from './knitpaint-viewer/knitpaint-viewer.component';
 
 @Component({
   selector: 'app-root',
@@ -11,6 +12,8 @@ import { Observable } from 'rxjs';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit, AfterViewChecked {
+  @ViewChild('designKnitpaintViewer') designKnitpaintViewer: KnitpaintViewerComponent;
+  @ViewChild('ideaKnitpaintViewer') ideaKnitpaintViewer: KnitpaintViewerComponent;
   knitpaint: Knitpaint;
   pixelsPerRow = 57;
   selectedColorNumber = 1;
@@ -64,5 +67,13 @@ export class AppComponent implements OnInit, AfterViewChecked {
     const length = this.pixelsPerRow * rows;
     this.knitpaint = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer);
     this.designIdeas = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer);
+  }
+
+  public exportDesignAsImage() {
+    this.designKnitpaintViewer.exportAsImage('design.png');
+  }
+
+  public exportIdeaAsImage() {
+    this.ideaKnitpaintViewer.exportAsImage('idea.png');
   }
 }

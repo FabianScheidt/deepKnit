@@ -24,7 +24,8 @@
     "fetch-readablestream": "^0.1.0",
     "lodash": "^4.17.11",
     "rxjs": "^6.0.0",
-    "zone.js": "^0.8.26"
+    "zone.js": "^0.8.26",
+    "file-saver": "latest"
   },
   "devDependencies": {
     "@angular/compiler-cli": "^6.0.0",
