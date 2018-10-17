@@ -64,7 +64,8 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
         }
         tooltipEl.style.left = (event.offsetX + 5) + 'px';
         tooltipEl.style.top = (event.offsetY + 10) + 'px';
-        tooltipEl.innerText = '' + this.getColorNumber(event.offsetX, event.offsetY);
+        const colorNumber = this.getColorNumber(event.offsetX, event.offsetY);
+        tooltipEl.innerText = 'No. ' + colorNumber + ': ' + Knitpaint.COLOR_LABELS[colorNumber];
       });
       canvasEl.addEventListener('mouseout', () => {
         tooltipEl.style.display = 'none';
