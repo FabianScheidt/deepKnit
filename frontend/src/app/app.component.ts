@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Knitpaint } from './knitpaint';
 import { KnitpaintSamplingOptions, KnitpaintSamplingService } from './knitpaint-sampling.service';
 import { debounceTime, map, skip } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { KnitpaintViewerComponent } from './knitpaint-viewer/knitpaint-viewer.component';
 
 @Component({
@@ -18,6 +18,7 @@ export class AppComponent implements OnInit, AfterViewChecked {
   pixelsPerRow = 57;
   selectedColorNumber = 1;
   designIdeas: Knitpaint;
+  temperature: BehaviorSubject<number> = new BehaviorSubject(1.0);
 
   constructor(private httpClient: HttpClient, private ngZone: NgZone, private knitpaintSamplingService: KnitpaintSamplingService) {}
 
@@ -27,10 +28,12 @@ export class AppComponent implements OnInit, AfterViewChecked {
     this.ngZone.runOutsideAngular(() => {
 
       // Generate the options for the sampling of the design ideas whenever the knitpaint changes
-      const options: Observable<KnitpaintSamplingOptions> = this.knitpaint.data.pipe(
+      const options: Observable<KnitpaintSamplingOptions> = combineLatest(this.knitpaint.data, this.temperature).pipe(
         skip(1),
         debounceTime(500),
-        map((data: ArrayBuffer) => {
+        map((res: [ArrayBuffer, number]) => {
+          const data = res[0];
+          const temperature = res[1];
           const dataUint8Array = new Uint8Array(data);
 
           // Find the last non-black index
@@ -42,7 +45,7 @@ export class AppComponent implements OnInit, AfterViewChecked {
           });
           const start = dataUint8Array.slice(0, lastNonBlackIndex + 1);
           return {
-            temperature: 0.8,
+            temperature,
             start: <ArrayBuffer>start.buffer
           };
         })
@@ -67,6 +70,12 @@ export class AppComponent implements OnInit, AfterViewChecked {
     const length = this.pixelsPerRow * rows;
     this.knitpaint = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer);
     this.designIdeas = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer);
+  }
+
+  public setTemperature(temperature) {
+    this.ngZone.runOutsideAngular(() => {
+      this.temperature.next(temperature);
+    });
   }
 
   public exportDesignAsImage() {

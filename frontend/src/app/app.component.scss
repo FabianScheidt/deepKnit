@@ -38,6 +38,13 @@
     padding: 8px;
   }
 
+  .temperature {
+    padding: 8px;
+    span {
+      display: block;
+    }
+  }
+
   .tmg-logo {
     text-align: right;
 

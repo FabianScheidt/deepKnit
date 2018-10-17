@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { KnitpaintViewerComponent } from './knitpaint-viewer/knitpaint-viewer.component';
 import { HttpClientModule } from '@angular/common/http';
 import { ColorPickerComponent } from './color-picker/color-picker.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import { ColorPickerComponent } from './color-picker/color-picker.component';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HttpClientModule
+    HttpClientModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
