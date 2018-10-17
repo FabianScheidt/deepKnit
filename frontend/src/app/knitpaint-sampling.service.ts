@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
-import { Observable, Observer } from 'rxjs';
+import { Observable, Observer, Subject } from 'rxjs';
 import fetchStream from 'fetch-readablestream';
+import { delay, skip, takeUntil, tap } from 'rxjs/operators';
+
+export interface KnitpaintSamplingOptions {
+  start?: ArrayBuffer;
+  temperature?: number;
+  numGenerate?: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -9,10 +16,34 @@ export class KnitpaintSamplingService {
 
   constructor() { }
 
-  public fetchSamples(): Observable<ArrayBuffer> {
+  /**
+   * Fetches new samples whenever the options change
+   *
+   * @param options
+   */
+  public getContinuousSampleStream(options: Observable<KnitpaintSamplingOptions>): Observable<ArrayBuffer> {
+    const subject: Subject<ArrayBuffer> = new Subject<ArrayBuffer>();
+    options.subscribe((currentOptions?: KnitpaintSamplingOptions) => {
+      this.fetchSamples(currentOptions)
+        .pipe(takeUntil(options))
+        .subscribe((val) => subject.next(val), (err) => subject.error(err));
+    });
+    return subject.asObservable();
+  }
+
+  /**
+   * Fetches a stream of samples for the provided options
+   *
+   * @param options
+   */
+  public fetchSamples(options?: KnitpaintSamplingOptions): Observable<ArrayBuffer> {
+    const start = options && options.start ? options.start : new ArrayBuffer(1);
+    const temperature = options && options.temperature ? options.temperature : 1.0;
+    const numGenerate = options && options.numGenerate ? options.numGenerate : 57 * 70;
+
     return new Observable<ArrayBuffer>((observer: Observer<ArrayBuffer>) => {
       // Create a new array buffer to store the fetched bytes
-      const res = new Uint8Array(57 * 70);
+      const res = new Uint8Array(numGenerate);
       observer.next(<ArrayBuffer>res.buffer);
       let bytesReceived = 0;
       let cancelStream = false;
@@ -52,18 +83,28 @@ export class KnitpaintSamplingService {
 
       // Perform the request
       const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/octet-stream',
         'If-Unmodified-Since': (new Date()).getTime()
       };
+      const body = JSON.stringify({
+        start: Array.from(new Uint8Array(start)),
+        temperature,
+        num_generate: numGenerate
+      });
       const fetchOptions = {
-        method: 'get',
-        headers
+        method: 'post',
+        headers,
+        body
       };
+      console.log('Fetch');
       fetchStream('http://18.85.58.125:5000/stream', fetchOptions)
         .then(responseHandler)
         .catch((err) => observer.error(err));
 
       // Mark that response stream should be canceled when the subscription is canceled
       return () => {
+        console.log('Cancel');
         cancelStream = true;
       };
     });
