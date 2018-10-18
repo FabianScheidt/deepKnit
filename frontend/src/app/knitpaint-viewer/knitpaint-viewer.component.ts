@@ -96,8 +96,9 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
 
   /**
    * Resizes the canvas to fit all pixel and draws all the pixels
+   * @param drawGrid
    */
-  private renderCanvas() {
+  private renderCanvas(drawGrid?: boolean) {
     console.log('Rendering Knitpaint Canvas');
     if (!this.canvas || !this.canvas.nativeElement || !this.ctx) {
       return;
@@ -121,6 +122,31 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
       this.ctx.fillStyle = 'rgb(' + color[0] + ', ' + color[1] + ', ' + color[2] + ')';
       this.ctx.fillRect(x, y, pixelSize, pixelSize);
     });
+
+    // Draw grid
+    if (drawGrid || typeof drawGrid === 'undefined') {
+      this.ctx.strokeStyle = '#ffffff';
+
+      // Horizontal
+      for (let i = 0; i < canvasHeight / pixelSize - 1; i++) {
+        const y = (i + 1) * this.pixelSize;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, y);
+        this.ctx.lineTo(canvasWidth, y);
+        this.ctx.lineWidth = i % 5 === 0 ? 0.4 : 0.15;
+        this.ctx.stroke();
+      }
+
+      // Vertical
+      for (let i = 0; i < canvasWidth / pixelSize - 1; i++) {
+        const x = (i + 1) * this.pixelSize;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, 0);
+        this.ctx.lineTo(x, canvasHeight);
+        this.ctx.lineWidth = i % 5 === 0 ? 0.4 : 0.15;
+        this.ctx.stroke();
+      }
+    }
   }
 
   /**
@@ -178,7 +204,7 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
     // Change the pixel size for the export to 1
     const pixelSize = this.pixelSize;
     this.pixelSize = 1;
-    this.renderCanvas();
+    this.renderCanvas(false);
 
     // Create the png blob and set the pixel size back
     this.canvas.nativeElement.toBlob((blob: Blob) => {
