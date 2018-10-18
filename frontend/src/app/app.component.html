@@ -30,7 +30,7 @@
       <div class="temperature">
         <label>
           <span>Temperature: {{ temperature | async }}</span>
-          <input type="range" min="0.01" max="1.00" step="0.01" [ngModel]="temperature | async" (ngModelChange)="setTemperature($event)">
+          <input type="range" min="0.01" max="3.00" step="0.01" [ngModel]="temperature | async" (ngModelChange)="setTemperature($event)">
         </label>
       </div>
       <div class="tmg-logo">
