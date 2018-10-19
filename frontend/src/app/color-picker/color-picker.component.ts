@@ -1,21 +1,41 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, NgZone, OnDestroy, OnInit, Output } from '@angular/core';
 import { Color, Knitpaint } from '../knitpaint';
 import * as _ from 'lodash';
+import { fromEvent, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-color-picker',
   templateUrl: './color-picker.component.html',
   styleUrls: ['./color-picker.component.scss']
 })
-export class ColorPickerComponent implements OnInit {
+export class ColorPickerComponent implements OnInit, OnDestroy {
 
   @Input() selectedColorNumber = 0;
   @Output() selectedColorNumberChange: EventEmitter<number> = new EventEmitter<number>();
   colorNumbers = _.range(0, 256);
+  private destroyed: Subject<boolean> = new Subject();
 
-  constructor() { }
+  constructor(private ngZone: NgZone) { }
 
   ngOnInit() {
+    // Allow selection of colors using the number keys 0-9
+    this.ngZone.runOutsideAngular(() => {
+      fromEvent(document, 'keypress')
+        .pipe(takeUntil(this.destroyed))
+        .subscribe((event: KeyboardEvent) => {
+          const keyCode = event.keyCode;
+          if (keyCode >= 48 && keyCode <= 57) {
+            this.ngZone.run(() => {
+              this.selectColor(keyCode - 48);
+            });
+          }
+        });
+    });
+  }
+
+  ngOnDestroy() {
+    this.destroyed.next(true);
   }
 
   /**
