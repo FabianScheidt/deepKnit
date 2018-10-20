@@ -1,32 +1,40 @@
 import {
   AfterViewInit,
   Component,
-  ElementRef,
+  ElementRef, EventEmitter,
   Input, NgZone,
-  OnChanges,
+  OnChanges, OnDestroy, Output,
   SimpleChanges,
   ViewChild
 } from '@angular/core';
 import { Color, Knitpaint } from '../knitpaint';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, fromEvent, Subject } from 'rxjs';
 import saveAs from 'file-saver';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-knitpaint-viewer',
   templateUrl: './knitpaint-viewer.component.html',
   styleUrls: ['./knitpaint-viewer.component.scss']
 })
-export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
+export class KnitpaintViewerComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   @ViewChild('canvas') canvas: ElementRef<HTMLCanvasElement>;
   @ViewChild('tooltip') tooltip: ElementRef<HTMLDivElement>;
   @Input() knitpaint: Knitpaint;
   @Input() pixelsPerRow: number;
   @Input() pixelSize = 10;
-  @Input() drawingColorNumber: number = null;
+  @Input() enableTooltip = true;
+  @Input() enableDrawing = false;
+  @Input() drawingColorNumber = 0;
+  @Input() enableSelection = false;
+  @Input() selection: [number, number] = null;
+  @Output() selectionChange: EventEmitter<[number, number]> = new EventEmitter<[number, number]>();
   private ctx: CanvasRenderingContext2D;
-  public colorNumbers: BehaviorSubject<number[]> = new BehaviorSubject([]);
-  public colors: BehaviorSubject<Color[]> = new BehaviorSubject<Color[]>([]);
+  private colorNumbers: BehaviorSubject<number[]> = new BehaviorSubject([]);
+  private colors: BehaviorSubject<Color[]> = new BehaviorSubject<Color[]>([]);
+  private knitpaintChanged: Subject<void> = new Subject();
+  private isDestroyed: Subject<boolean> = new Subject<boolean>();
 
   constructor(private element: ElementRef<HTMLElement>, private ngZone: NgZone) {
     // Redraw the canvas whenever the colors change
@@ -42,34 +50,23 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
     // Get a reference to the canvas context
     this.ctx = this.canvas.nativeElement.getContext('2d');
 
-    // Attach some events to allow drawing
-    this.ngZone.runOutsideAngular(() => {
-      let isDown = false;
-      const canvasEl = this.canvas.nativeElement;
-      const tooltipEl = this.tooltip.nativeElement;
-      canvasEl.addEventListener('mousedown', (event) => {
-        isDown = true;
-        this.drawColorNumber(event.offsetX, event.offsetY);
-        tooltipEl.innerText = '' + this.getColorNumber(event.offsetX, event.offsetY);
-      });
-      canvasEl.addEventListener('mouseup', () => {
-        isDown = false;
-      });
-      canvasEl.addEventListener('mouseover', () => {
-        tooltipEl.style.display = 'block';
-      });
-      canvasEl.addEventListener('mousemove', (event) => {
-        if (isDown) {
-          this.drawColorNumber(event.offsetX, event.offsetY);
-        }
-        tooltipEl.style.left = (event.offsetX + 5) + 'px';
-        tooltipEl.style.top = (event.offsetY + 10) + 'px';
-        const colorNumber = this.getColorNumber(event.offsetX, event.offsetY);
-        tooltipEl.innerText = 'No. ' + colorNumber + ': ' + Knitpaint.COLOR_LABELS[colorNumber];
-      });
-      canvasEl.addEventListener('mouseout', () => {
-        tooltipEl.style.display = 'none';
-      });
+    // Attach some events depending on the configured options
+    if (this.enableSelection && this.enableDrawing) {
+      console.warn('Drawing and selection should not be used together');
+    }
+    if (this.enableDrawing) {
+      this.attachDrawingEvents();
+    }
+    if (this.enableSelection) {
+      this.attachSelectionEvents();
+    }
+    if (this.enableTooltip) {
+      this.attachTooltipEvents();
+    }
+
+    // Render the canvas whenever the selection changes
+    this.selectionChange.subscribe(() => {
+      this.renderCanvas();
     });
 
     // Render the canvas
@@ -82,16 +79,126 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
    * @param changes
    */
   ngOnChanges(changes: SimpleChanges) {
-    // Extract the colors when the knitpaint changes
     if (changes['knitpaint'] && this.knitpaint) {
-      // Todo: Unsubscribe when reference changes
-      this.knitpaint.getColorNumbers().subscribe(colorNumbers => {
-        this.colorNumbers.next(colorNumbers);
-      });
-      this.knitpaint.getColors().subscribe(colors => {
-        this.colors.next(colors);
-      });
+
+      // Emit knitpaintChanged to unsubscribe from previous subscriptions
+      this.knitpaintChanged.next();
+
+      // Subscribe to color numbers and color data
+      this.knitpaint.getColorNumbers()
+        .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.isDestroyed))
+        .subscribe(colorNumbers => this.colorNumbers.next(colorNumbers));
+      this.knitpaint.getColors()
+        .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.isDestroyed))
+        .subscribe(colors => this.colors.next(colors));
     }
+  }
+
+  /**
+   * Marks isDestroyed as true to unsubscribe from any open observable
+   */
+  ngOnDestroy() {
+    this.isDestroyed.next(true);
+  }
+
+  /**
+   * Attaches all events needed to allow knitpaint drawing
+   */
+  private attachDrawingEvents() {
+    this.ngZone.runOutsideAngular(() => {
+      let isDown = false;
+      const canvasEl = this.canvas.nativeElement;
+
+      fromEvent(canvasEl, 'mousedown').pipe(takeUntil(this.isDestroyed)).subscribe((event: MouseEvent) => {
+        isDown = true;
+        this.drawColorNumber(event.offsetX, event.offsetY);
+      });
+      fromEvent(canvasEl, 'mousemove').pipe(takeUntil(this.isDestroyed)).subscribe((event: MouseEvent) => {
+        if (isDown) {
+          this.drawColorNumber(event.offsetX, event.offsetY);
+        }
+      });
+      fromEvent(document, 'mouseup').pipe(takeUntil(this.isDestroyed)).subscribe((event: MouseEvent) => {
+        isDown = false;
+      });
+    });
+  }
+
+  /**
+   * Attaches all events needed to allow selection of rows
+   */
+  private attachSelectionEvents() {
+    this.ngZone.runOutsideAngular(() => {
+      const canvasEl = this.canvas.nativeElement;
+      let selectionStartY = null;
+      let moved = false;
+      fromEvent(canvasEl, 'mousedown').pipe(takeUntil(this.isDestroyed)).subscribe((event: MouseEvent) => {
+        selectionStartY = event.offsetY;
+      });
+      const updateSelection = (event: MouseEvent) => {
+        if (selectionStartY !== null) {
+          const selectionEndY = event.offsetY;
+
+          // Deselect if the mouse didn't move
+          if (!moved) {
+            this.selection = null;
+            this.selectionChange.emit(null);
+            return;
+          }
+
+          // Find the indices of the selection based on the start and end coordinates
+          const startX = 0;
+          const endX = canvasEl.offsetWidth - 0.1;
+          const startY = Math.max(selectionStartY, selectionEndY);
+          const endY = Math.min(selectionStartY, selectionEndY);
+          const startIndex = this.getColorIndex(startX, startY);
+          const endIndex = this.getColorIndex(endX, endY);
+          const newSelection: [number, number] = [startIndex, endIndex];
+
+          // Only emit the update if the selection actually changed
+          if (this.selection == null || newSelection[0] !== this.selection[0] || newSelection[1] !== this.selection[1]) {
+            this.selection = newSelection;
+            this.selectionChange.emit(this.selection);
+          }
+        }
+      };
+      fromEvent(canvasEl, 'mousemove').pipe(takeUntil(this.isDestroyed)).subscribe((event: MouseEvent) => {
+        if (selectionStartY !== null) {
+          moved = true;
+          updateSelection(event);
+        }
+      });
+      fromEvent(document, 'mouseup').pipe(takeUntil(this.isDestroyed)).subscribe((event: MouseEvent) => {
+        updateSelection(event);
+        selectionStartY = null;
+        moved = false;
+      });
+    });
+  }
+
+  /**
+   * Attaches all events needed for the tooltip showing the current color
+   */
+  private attachTooltipEvents() {
+    this.ngZone.runOutsideAngular(() => {
+      const canvasEl = this.canvas.nativeElement;
+      const tooltipEl = this.tooltip.nativeElement;
+
+      fromEvent(canvasEl, 'mouseover').pipe(takeUntil(this.isDestroyed)).subscribe((event: MouseEvent) => {
+        tooltipEl.style.display = 'block';
+      });
+      const updateTooltip = (event: MouseEvent) => {
+        tooltipEl.style.left = (event.offsetX + 5) + 'px';
+        tooltipEl.style.top = (event.offsetY + 10) + 'px';
+        const colorNumber = this.getColorNumber(event.offsetX, event.offsetY);
+        tooltipEl.innerText = 'No. ' + colorNumber + ': ' + Knitpaint.COLOR_LABELS[colorNumber];
+      };
+      fromEvent(canvasEl, 'mousemove').pipe(takeUntil(this.isDestroyed)).subscribe(updateTooltip);
+      fromEvent(canvasEl, 'mousedown').pipe(takeUntil(this.isDestroyed)).subscribe(updateTooltip);
+      fromEvent(canvasEl, 'mouseout').pipe(takeUntil(this.isDestroyed)).subscribe((event: MouseEvent) => {
+        tooltipEl.style.display = 'none';
+      });
+    });
   }
 
   /**
@@ -119,7 +226,8 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges {
       const yIndex = Math.floor(index / this.pixelsPerRow);
       const x = xIndex * pixelSize;
       const y = canvasHeight - (yIndex + 1) * pixelSize;
-      this.ctx.fillStyle = 'rgb(' + color[0] + ', ' + color[1] + ', ' + color[2] + ')';
+      const opacity = this.selection === null || (index >= this.selection[0] && index <= this.selection[1]) ? 1.0 : 0.5;
+      this.ctx.fillStyle = 'rgba(' + color[0] + ', ' + color[1] + ', ' + color[2] + ', ' + opacity + ')';
       this.ctx.fillRect(x, y, pixelSize, pixelSize);
     });
 

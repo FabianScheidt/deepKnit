@@ -7,7 +7,7 @@
       <app-knitpaint-viewer
         #designKnitpaintViewer
         [knitpaint]="knitpaint" [pixelsPerRow]="pixelsPerRow"
-        [drawingColorNumber]="selectedColorNumber"></app-knitpaint-viewer>
+        [enableDrawing]="true" [drawingColorNumber]="selectedColorNumber"></app-knitpaint-viewer>
     </div>
     <div class="toolbar">
       <app-color-picker [(selectedColorNumber)]="selectedColorNumber"></app-color-picker>
@@ -20,7 +20,8 @@
     <div class="knitpaint">
       <app-knitpaint-viewer
         #ideaKnitpaintViewer
-        [knitpaint]="designIdeas" [pixelsPerRow]="pixelsPerRow"></app-knitpaint-viewer>
+        [knitpaint]="designIdeas" [pixelsPerRow]="pixelsPerRow"
+        [enableSelection]="true"></app-knitpaint-viewer>
     </div>
     <div class="toolbar">
       <div class="export-buttons">
