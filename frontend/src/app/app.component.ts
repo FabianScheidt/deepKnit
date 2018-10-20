@@ -19,6 +19,7 @@ export class AppComponent implements OnInit, AfterViewChecked {
   selectedColorNumber = 1;
   designIdeas: Knitpaint;
   temperature: BehaviorSubject<number> = new BehaviorSubject(1.0);
+  selection: [number, number] = null;
 
   constructor(private httpClient: HttpClient, private ngZone: NgZone, private knitpaintSamplingService: KnitpaintSamplingService) {}
 
@@ -27,7 +28,7 @@ export class AppComponent implements OnInit, AfterViewChecked {
 
     this.ngZone.runOutsideAngular(() => {
 
-      // Generate the options for the sampling of the design ideas whenever the knitpaint changes
+      // Generate the options for the sampling of the design ideas whenever the knitpaint or the temperature changes
       const options: Observable<KnitpaintSamplingOptions> = combineLatest(this.knitpaint.data, this.temperature).pipe(
         skip(1),
         debounceTime(500),
@@ -84,5 +85,30 @@ export class AppComponent implements OnInit, AfterViewChecked {
 
   public exportIdeaAsImage() {
     this.ideaKnitpaintViewer.exportAsImage('idea.png');
+  }
+
+  public copySelection() {
+    if (this.selection) {
+      this.ngZone.runOutsideAngular(() => {
+        // Extract the selection content
+        const ideaUint8Array = new Uint8Array(this.designIdeas.data.getValue());
+        const copyContent = ideaUint8Array.slice(this.selection[0], this.selection[1] + 1);
+
+        // Find out where to paste it
+        const knitpaintUint8Array = new Uint8Array(this.knitpaint.data.getValue());
+        let lastNonBlackIndex = 0;
+        knitpaintUint8Array.forEach((value, index) => {
+          if (value !== 0) {
+            lastNonBlackIndex = index;
+          }
+        });
+        const startIndex = Math.ceil((lastNonBlackIndex + 1) / this.pixelsPerRow) * this.pixelsPerRow;
+
+        // Perform the copy and update the knitpaint
+        knitpaintUint8Array.set(copyContent, startIndex);
+        this.knitpaint.setData(<ArrayBuffer>knitpaintUint8Array.buffer);
+        console.log('Copy selection', this.selection);
+      });
+    }
   }
 }

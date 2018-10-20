@@ -21,12 +21,13 @@
       <app-knitpaint-viewer
         #ideaKnitpaintViewer
         [knitpaint]="designIdeas" [pixelsPerRow]="pixelsPerRow"
-        [enableSelection]="true"></app-knitpaint-viewer>
+        [enableSelection]="true" [(selection)]="selection"></app-knitpaint-viewer>
     </div>
     <div class="toolbar">
       <div class="export-buttons">
         <button (click)="exportDesignAsImage()">Export Design</button>
         <button (click)="exportIdeaAsImage()">Export Idea</button>
+        <button (click)="copySelection()" [disabled]="selection === null">Copy Idea</button>
       </div>
       <div class="temperature">
         <label>

@@ -23,4 +23,9 @@ input[type=button], button {
   &:active {
     background-color: #555;
   }
+
+  &:disabled, &:disabled:hover, &:disabled:active {
+    background-color: #555;
+    cursor: default;
+  }
 }

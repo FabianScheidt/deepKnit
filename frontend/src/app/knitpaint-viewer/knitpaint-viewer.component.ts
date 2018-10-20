@@ -141,8 +141,10 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges, OnDes
 
           // Deselect if the mouse didn't move
           if (!moved) {
-            this.selection = null;
-            this.selectionChange.emit(null);
+            this.ngZone.run(() => {
+              this.selection = null;
+              this.selectionChange.emit(null);
+            });
             return;
           }
 
@@ -157,8 +159,10 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges, OnDes
 
           // Only emit the update if the selection actually changed
           if (this.selection == null || newSelection[0] !== this.selection[0] || newSelection[1] !== this.selection[1]) {
-            this.selection = newSelection;
-            this.selectionChange.emit(this.selection);
+            this.ngZone.run(() => {
+              this.selection = newSelection;
+              this.selectionChange.emit(this.selection);
+            });
           }
         }
       };
