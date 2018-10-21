@@ -107,8 +107,10 @@ export class AppComponent implements OnInit, AfterViewChecked {
         // Perform the copy and update the knitpaint
         knitpaintUint8Array.set(copyContent, startIndex);
         this.knitpaint.setData(<ArrayBuffer>knitpaintUint8Array.buffer);
-        console.log('Copy selection', this.selection);
       });
+
+      // Clear the selection after copy
+      this.selection = null;
     }
   }
 }
