@@ -7,12 +7,16 @@ import { KnitpaintViewerComponent } from './knitpaint-viewer/knitpaint-viewer.co
 import { HttpClientModule } from '@angular/common/http';
 import { ColorPickerComponent } from './color-picker/color-picker.component';
 import { FormsModule } from '@angular/forms';
+import { TooltipComponent } from './tooltip/tooltip.component';
+import { TooltipDirective } from './tooltip.directive';
 
 @NgModule({
   declarations: [
     AppComponent,
     KnitpaintViewerComponent,
-    ColorPickerComponent
+    ColorPickerComponent,
+    TooltipComponent,
+    TooltipDirective
   ],
   imports: [
     BrowserModule,

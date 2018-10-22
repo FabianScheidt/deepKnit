@@ -66,10 +66,18 @@ export class ColorPickerComponent implements OnInit, OnDestroy {
    * ((Red value X 299) + (Green value X 587) + (Blue value X 114)) / 1000
    * @param colorNumber
    */
-  public getTextColorStr(colorNumber) {
+  public getTextColorStr(colorNumber: number) {
     const color: Color = Knitpaint.COLOR_TABLE[colorNumber];
     const brightness = ((color[0] * 299) + (color[1] * 587) + (color[2] * 114)) / 1000;
     return brightness > 130 ? '#000000' : '#ffffff';
   }
 
+  /**
+   * Returns the tooltip text for the provided color number
+   *
+   * @param colorNumber
+   */
+  public getTooltipText(colorNumber: number) {
+    return 'No. ' + colorNumber + ': ' + Knitpaint.COLOR_LABELS[colorNumber];
+  }
 }

@@ -5,7 +5,8 @@
     [class.selected]="colorNumber === selectedColorNumber"
     [style.backgroundColor]="getBackgroundColorStr(colorNumber)"
     [style.color]="getTextColorStr(colorNumber)"
-    (click)="selectColor(colorNumber)">
+    (click)="selectColor(colorNumber)"
+    [appTooltip]="getTooltipText(colorNumber)">
     {{ colorNumber }}
   </div>
 </div>

@@ -11,6 +11,7 @@ import { Color, Knitpaint } from '../knitpaint';
 import { BehaviorSubject, fromEvent, Subject } from 'rxjs';
 import saveAs from 'file-saver';
 import { takeUntil } from 'rxjs/operators';
+import { TooltipService } from '../tooltip.service';
 
 @Component({
   selector: 'app-knitpaint-viewer',
@@ -20,7 +21,6 @@ import { takeUntil } from 'rxjs/operators';
 export class KnitpaintViewerComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   @ViewChild('canvas') canvas: ElementRef<HTMLCanvasElement>;
-  @ViewChild('tooltip') tooltip: ElementRef<HTMLDivElement>;
   @Input() knitpaint: Knitpaint;
   @Input() pixelsPerRow: number;
   @Input() pixelSize = 10;
@@ -36,7 +36,7 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges, OnDes
   private knitpaintChanged: Subject<void> = new Subject();
   private isDestroyed: Subject<boolean> = new Subject<boolean>();
 
-  constructor(private element: ElementRef<HTMLElement>, private ngZone: NgZone) {
+  constructor(private ngZone: NgZone, private tooltipService: TooltipService) {
     // Redraw the canvas whenever the colors change
     this.colors.subscribe(() => {
       this.renderCanvas();
@@ -186,21 +186,19 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges, OnDes
   private attachTooltipEvents() {
     this.ngZone.runOutsideAngular(() => {
       const canvasEl = this.canvas.nativeElement;
-      const tooltipEl = this.tooltip.nativeElement;
 
       fromEvent(canvasEl, 'mouseover').pipe(takeUntil(this.isDestroyed)).subscribe((event: MouseEvent) => {
-        tooltipEl.style.display = 'block';
+        this.tooltipService.visible.next(true);
       });
       const updateTooltip = (event: MouseEvent) => {
-        tooltipEl.style.left = (event.offsetX + 5) + 'px';
-        tooltipEl.style.top = (event.offsetY + 10) + 'px';
         const colorNumber = this.getColorNumber(event.offsetX, event.offsetY);
-        tooltipEl.innerText = 'No. ' + colorNumber + ': ' + Knitpaint.COLOR_LABELS[colorNumber];
+        const tooltipText = 'No. ' + colorNumber + ': ' + Knitpaint.COLOR_LABELS[colorNumber];
+        this.tooltipService.text.next(tooltipText);
       };
       fromEvent(canvasEl, 'mousemove').pipe(takeUntil(this.isDestroyed)).subscribe(updateTooltip);
       fromEvent(canvasEl, 'mousedown').pipe(takeUntil(this.isDestroyed)).subscribe(updateTooltip);
       fromEvent(canvasEl, 'mouseout').pipe(takeUntil(this.isDestroyed)).subscribe((event: MouseEvent) => {
-        tooltipEl.style.display = 'none';
+        this.tooltipService.visible.next(false);
       });
     });
   }
