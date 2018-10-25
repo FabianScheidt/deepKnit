@@ -9,7 +9,17 @@ import { ColorPickerComponent } from './color-picker/color-picker.component';
 import { FormsModule } from '@angular/forms';
 import { TooltipComponent } from './tooltip/tooltip.component';
 import { TooltipDirective } from './tooltip.directive';
+import { HammerGestureConfig, HAMMER_GESTURE_CONFIG } from '@angular/platform-browser';
 
+declare var Hammer: any;
+
+export class CustomHammerConfig extends HammerGestureConfig {
+  buildHammer(element: HTMLElement) {
+    return new Hammer(element, {
+      touchAction: 'pan-x',
+    });
+  }
+}
 @NgModule({
   declarations: [
     AppComponent,
@@ -24,7 +34,9 @@ import { TooltipDirective } from './tooltip.directive';
     HttpClientModule,
     FormsModule
   ],
-  providers: [],
+  providers: [
+    { provide: HAMMER_GESTURE_CONFIG, useClass: CustomHammerConfig }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

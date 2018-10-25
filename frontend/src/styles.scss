@@ -7,6 +7,11 @@ html, body {
   height: 100%;
   overflow: hidden;
   font-family: "Neue Haas Grotesk Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  // Disable scrolling and selecting on iOS
+  position: fixed;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
 input[type=button], button {

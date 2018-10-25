@@ -25,9 +25,10 @@
     </div>
     <div class="toolbar">
       <div class="export-buttons">
-        <button (click)="exportDesignAsImage()">Export Design</button>
-        <button (click)="exportIdeaAsImage()">Export Idea</button>
-        <button (click)="copySelection()" [disabled]="selection === null">Copy Idea</button>
+        <button (click)="exportDesignAsImage()" *ngIf="!isiOS">Export Design</button>
+        <button (click)="exportIdeaAsImage()" *ngIf="!isiOS">Export Idea</button>
+        <button (click)="copySelection()" (tap)="copySelection()" [disabled]="selection === null">Copy Idea</button>
+        <button (click)="copySelection()" (tap)="clear()">Clear</button>
       </div>
       <div class="temperature">
         <label>

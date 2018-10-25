@@ -6,6 +6,7 @@
     [style.backgroundColor]="getBackgroundColorStr(colorNumber)"
     [style.color]="getTextColorStr(colorNumber)"
     (click)="selectColor(colorNumber)"
+    (tap)="selectColor(colorNumber)"
     [appTooltip]="getTooltipText(colorNumber)">
     {{ colorNumber }}
   </div>

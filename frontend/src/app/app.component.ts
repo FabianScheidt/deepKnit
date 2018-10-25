@@ -20,6 +20,7 @@ export class AppComponent implements OnInit, AfterViewChecked {
   designIdeas: Knitpaint;
   temperature: BehaviorSubject<number> = new BehaviorSubject(1.0);
   selection: [number, number] = null;
+  isiOS = !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
 
   constructor(private httpClient: HttpClient, private ngZone: NgZone, private knitpaintSamplingService: KnitpaintSamplingService) {}
 
@@ -112,5 +113,12 @@ export class AppComponent implements OnInit, AfterViewChecked {
       // Clear the selection after copy
       this.selection = null;
     }
+  }
+
+  public clear() {
+    const rows = 70;
+    const length = this.pixelsPerRow * rows;
+    const clear = new Uint8Array(length);
+    this.knitpaint.setData(<ArrayBuffer>clear.buffer);
   }
 }

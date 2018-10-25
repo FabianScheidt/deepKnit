@@ -300,7 +300,7 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges, OnDes
    * @param index
    */
   setColor(index: number) {
-    if (this.drawingColorNumber !== null && this.drawingColorNumber >= 0) {
+    if (this.drawingColorNumber !== null && this.drawingColorNumber >= 0 && index >= 0) {
       this.knitpaint.setColorNumber(index, this.drawingColorNumber);
     }
   }
