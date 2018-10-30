@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable, Observer, Subject } from 'rxjs';
 import fetchStream from 'fetch-readablestream';
-import { delay, skip, takeUntil, tap } from 'rxjs/operators';
+import { takeUntil } from 'rxjs/operators';
+import { environment } from '../environments/environment';
 
 export interface KnitpaintSamplingOptions {
   start?: ArrayBuffer;
@@ -98,7 +99,7 @@ export class KnitpaintSamplingService {
         body
       };
       console.log('Fetch');
-      fetchStream('http://18.85.58.125:5000/stream', fetchOptions)
+      fetchStream(environment.backendUrl + 'stream', fetchOptions)
         .then(responseHandler)
         .catch((err) => observer.error(err));
 
