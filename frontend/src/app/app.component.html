@@ -30,6 +30,15 @@
         <button (click)="copySelection()" (tap)="copySelection()" [disabled]="selection === null">Copy Idea</button>
         <button (click)="copySelection()" (tap)="clear()">Clear</button>
       </div>
+      <div class="model">
+        <label>
+          <span>Model</span>
+          <select [ngModel]="model | async" (ngModelChange)="setModel($event)">
+            <option value="lstm" selected>LSTM</option>
+            <option value="sliding-window">Sliding Window</option>
+          </select>
+        </label>
+      </div>
       <div class="temperature">
         <label>
           <span>Temperature: {{ temperature | async }}</span>

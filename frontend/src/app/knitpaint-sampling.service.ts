@@ -6,6 +6,7 @@ import { environment } from '../environments/environment';
 
 export interface KnitpaintSamplingOptions {
   start?: ArrayBuffer;
+  model?: string;
   temperature?: number;
   numGenerate?: number;
 }
@@ -39,6 +40,7 @@ export class KnitpaintSamplingService {
    */
   public fetchSamples(options?: KnitpaintSamplingOptions): Observable<ArrayBuffer> {
     const start = options && options.start ? options.start : new ArrayBuffer(1);
+    const model = options && options.model ? options.model : 'lstm';
     const temperature = options && options.temperature ? options.temperature : 1.0;
     const numGenerate = options && options.numGenerate ? options.numGenerate : 57 * 70;
 
@@ -90,6 +92,7 @@ export class KnitpaintSamplingService {
       };
       const body = JSON.stringify({
         start: Array.from(new Uint8Array(start)),
+        model,
         temperature,
         num_generate: numGenerate
       });

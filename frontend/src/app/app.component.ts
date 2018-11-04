@@ -18,6 +18,7 @@ export class AppComponent implements OnInit, AfterViewChecked {
   pixelsPerRow = 57;
   selectedColorNumber = 1;
   designIdeas: Knitpaint;
+  model: BehaviorSubject<string> = new BehaviorSubject<string>('lstm');
   temperature: BehaviorSubject<number> = new BehaviorSubject(1.0);
   selection: [number, number] = null;
   isiOS = !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
@@ -30,12 +31,13 @@ export class AppComponent implements OnInit, AfterViewChecked {
     this.ngZone.runOutsideAngular(() => {
 
       // Generate the options for the sampling of the design ideas whenever the knitpaint or the temperature changes
-      const options: Observable<KnitpaintSamplingOptions> = combineLatest(this.knitpaint.data, this.temperature).pipe(
+      const options: Observable<KnitpaintSamplingOptions> = combineLatest(this.knitpaint.data, this.model, this.temperature).pipe(
         skip(1),
         debounceTime(500),
-        map((res: [ArrayBuffer, number]) => {
+        map((res: [ArrayBuffer, string, number]) => {
           const data = res[0];
-          const temperature = res[1];
+          const model = res[1];
+          const temperature = res[2];
           const dataUint8Array = new Uint8Array(data);
 
           // Find the last non-black index
@@ -47,6 +49,7 @@ export class AppComponent implements OnInit, AfterViewChecked {
           });
           const start = dataUint8Array.slice(0, lastNonBlackIndex + 1);
           return {
+            model,
             temperature,
             start: <ArrayBuffer>start.buffer
           };
@@ -72,6 +75,12 @@ export class AppComponent implements OnInit, AfterViewChecked {
     const length = this.pixelsPerRow * rows;
     this.knitpaint = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer);
     this.designIdeas = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer);
+  }
+
+  public setModel(model: string) {
+    this.ngZone.runOutsideAngular(() => {
+      this.model.next(model);
+    });
   }
 
   public setTemperature(temperature) {
