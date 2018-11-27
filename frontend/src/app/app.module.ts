@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { TooltipComponent } from './tooltip/tooltip.component';
 import { TooltipDirective } from './tooltip.directive';
 import { HammerGestureConfig, HAMMER_GESTURE_CONFIG } from '@angular/platform-browser';
+import { DesignIdeasComponent } from './design-ideas/design-ideas.component';
 
 declare var Hammer: any;
 
@@ -26,7 +27,8 @@ export class CustomHammerConfig extends HammerGestureConfig {
     KnitpaintViewerComponent,
     ColorPickerComponent,
     TooltipComponent,
-    TooltipDirective
+    TooltipDirective,
+    DesignIdeasComponent
   ],
   imports: [
     BrowserModule,
