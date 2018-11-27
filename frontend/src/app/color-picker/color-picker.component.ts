@@ -1,5 +1,5 @@
-import { Component, EventEmitter, HostListener, Input, NgZone, OnDestroy, OnInit, Output } from '@angular/core';
-import { Color, Knitpaint } from '../knitpaint';
+import { Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output } from '@angular/core';
+import { Knitpaint } from '../knitpaint';
 import * as _ from 'lodash';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -54,22 +54,16 @@ export class ColorPickerComponent implements OnInit, OnDestroy {
    * @param colorNumber
    */
   public getBackgroundColorStr(colorNumber: number) {
-    const color: Color = Knitpaint.COLOR_TABLE[colorNumber];
-    return 'rgb(' + color[0] + ', ' + color[1] + ', ' + color[2] + ')';
+    return Knitpaint.getColorString(colorNumber);
   }
 
   /**
    * Returns a contrast color for the provided color number
-   * From this W3C document: http://www.w3.org/TR/AERT#color-contrast
    *
-   * Color brightness is determined by the following formula:
-   * ((Red value X 299) + (Green value X 587) + (Blue value X 114)) / 1000
    * @param colorNumber
    */
   public getTextColorStr(colorNumber: number) {
-    const color: Color = Knitpaint.COLOR_TABLE[colorNumber];
-    const brightness = ((color[0] * 299) + (color[1] * 587) + (color[2] * 114)) / 1000;
-    return brightness > 130 ? '#000000' : '#ffffff';
+    return Knitpaint.getContrastColorString(colorNumber);
   }
 
   /**
@@ -78,6 +72,6 @@ export class ColorPickerComponent implements OnInit, OnDestroy {
    * @param colorNumber
    */
   public getTooltipText(colorNumber: number) {
-    return 'No. ' + colorNumber + ': ' + Knitpaint.COLOR_LABELS[colorNumber];
+    return Knitpaint.getColorLabel(colorNumber);
   }
 }

@@ -11,6 +11,7 @@ import { TooltipComponent } from './tooltip/tooltip.component';
 import { TooltipDirective } from './tooltip.directive';
 import { HammerGestureConfig, HAMMER_GESTURE_CONFIG } from '@angular/platform-browser';
 import { DesignIdeasComponent } from './design-ideas/design-ideas.component';
+import { ColorListComponent } from './color-list/color-list.component';
 
 declare var Hammer: any;
 
@@ -28,7 +29,8 @@ export class CustomHammerConfig extends HammerGestureConfig {
     ColorPickerComponent,
     TooltipComponent,
     TooltipDirective,
-    DesignIdeasComponent
+    DesignIdeasComponent,
+    ColorListComponent
   ],
   imports: [
     BrowserModule,

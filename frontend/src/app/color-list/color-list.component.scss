@@ -1,0 +1,12 @@
+.wrapper {
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+
+  .color {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 4px;
+  }
+}
