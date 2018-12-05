@@ -54,7 +54,9 @@ class LSTMModel:
                 if new_sequence.size == sequence_length:
                     sequences.append(new_sequence)
         sequences = np.array(sequences)
-        # Todo: Check if unique data improves results
+
+        # Find unique sequences
+        sequences, sequences_counts = np.unique(sequences, axis=0, return_counts=True)
 
         # Extract the vocabulary
         print('\n\nExtracting vocabulary...')
@@ -66,6 +68,7 @@ class LSTMModel:
         training_filename = self.get_training_filename()
         pathlib.Path(self.training_dir).mkdir(parents=True, exist_ok=True)
         np.save(self.training_dir + training_filename + '.npy', sequences)
+        np.save(self.training_dir + training_filename + '-counts.npy', sequences_counts)
         np.save(self.training_dir + training_filename + '-vocab.npy', vocab)
 
     def read_vocab(self):
@@ -82,7 +85,7 @@ class LSTMModel:
 
         return vocab, from_idx, to_idx
 
-    def read_training_dataset(self):
+    def read_training_dataset(self, val_split=0.05):
         # Read sequences
         training_filename = self.get_training_filename()
         sequences = np.load(self.training_dir + training_filename + '.npy')
@@ -106,12 +109,18 @@ class LSTMModel:
         dataset = dataset.shuffle(10000).batch(self.batch_size, drop_remainder=True)
         dataset_count = sequences.shape[0] // self.batch_size
 
-        return dataset, dataset_count, vocab_size, from_idx, to_idx
+        # Split dataset into train and validation
+        val_count = int(dataset_count * val_split)
+        train_count = dataset_count - val_count
+        dataset_train = dataset.take(train_count)
+        dataset_val = dataset.skip(train_count)
+
+        return dataset_train, train_count, dataset_val, val_count, vocab_size, from_idx, to_idx
 
     def get_model(self, vocab_size, batch_shape):
         # Build the model. Start with Input and Embedding
         inputs_layer = keras.layers.Input(batch_shape=batch_shape, name='inputs_layer')
-        embedded_inputs = keras.layers.Embedding(vocab_size, 50, name='embedded_inputs')(inputs_layer)
+        embedded_inputs = keras.layers.Embedding(vocab_size, 30, name='embedded_inputs')(inputs_layer)
 
         # Add 3 lstm-layers with dropout in between
         if tf.test.is_gpu_available():
@@ -119,13 +128,13 @@ class LSTMModel:
         else:
             lstm_layer = tf.keras.layers.LSTM
 
-        lstm_1 = lstm_layer(1000, return_sequences=True, recurrent_initializer='glorot_uniform',
+        lstm_1 = lstm_layer(500, return_sequences=True, recurrent_initializer='glorot_uniform',
                             stateful=True, name='lstm_1')(embedded_inputs)
         dropout_1 = tf.keras.layers.Dropout(0.3, name='dropout_1')(lstm_1)
-        lstm_2 = lstm_layer(1000, return_sequences=True, recurrent_initializer='glorot_uniform',
+        lstm_2 = lstm_layer(500, return_sequences=True, recurrent_initializer='glorot_uniform',
                             stateful=True, name='lstm_2')(dropout_1)
         dropout_2 = tf.keras.layers.Dropout(0.3, name='dropout_2')(lstm_2)
-        lstm_3 = lstm_layer(1000, return_sequences=True, recurrent_initializer='glorot_uniform',
+        lstm_3 = lstm_layer(500, return_sequences=True, recurrent_initializer='glorot_uniform',
                             stateful=True, name='lstm_3')(dropout_2)
         dropout_3 = tf.keras.layers.Dropout(0.3, name='dropout_3')(lstm_3)
 
@@ -136,10 +145,10 @@ class LSTMModel:
 
     def train(self):
         # Read input and output data
-        dataset, dataset_count, vocab_size, _, _ = self.read_training_dataset()
+        dataset_train, train_count, dataset_val, val_count, vocab_size, _, _ = self.read_training_dataset()
 
         # Get the model
-        model = self.get_model(vocab_size, dataset.output_shapes[0])
+        model = self.get_model(vocab_size, dataset_train.output_shapes[0])
 
         # Define loss and accuracy functions
         def sparse_categorical_loss(labels, logits):
@@ -151,7 +160,7 @@ class LSTMModel:
 
         # Compile the model. Use sparse categorical crossentropy so we don't need one hot output vectors
         # When not using eager execution, the target shape needs to be defined explicitly using a custom placeholder
-        target_placeholder = tf.placeholder(dtype='int32', shape=dataset.output_shapes[1])
+        target_placeholder = tf.placeholder(dtype='int32', shape=dataset_train.output_shapes[1])
         model.compile(target_tensors=[target_placeholder], optimizer=tf.train.AdamOptimizer(),
                       loss=sparse_categorical_loss, metrics=[sparse_categorical_accuracy])
         model.summary()
@@ -161,8 +170,9 @@ class LSTMModel:
             log_date_str = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
             log_dir = '../tensorboard-log/{}'.format(log_date_str)
             tensor_board_logger = TensorBoardLogger(write_graph=True, log_dir=log_dir)
-            model.fit(dataset.repeat(), epochs=self.epochs, steps_per_epoch=dataset_count,
-                      callbacks=[tensor_board_logger])
+            model.fit(dataset_train.repeat(), steps_per_epoch=train_count,
+                      validation_data=dataset_val.repeat(), validation_steps=val_count,
+                      epochs=self.epochs, callbacks=[tensor_board_logger])
         except KeyboardInterrupt:
             print('Saving current state of model...')
             pathlib.Path(self.model_dir).mkdir(parents=True, exist_ok=True)
