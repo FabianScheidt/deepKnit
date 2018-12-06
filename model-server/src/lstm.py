@@ -288,7 +288,7 @@ class LSTMModel:
                 output = model.predict(input)
 
                 # Pick with multinomial distribution to get a single prediction
-                col, rul, predicted_idx = sess.run([column, rule, prediction], feed_dict={model_output: output, index: i})
+                predicted_idx = sess.run(prediction, feed_dict={model_output: output, index: i})
 
                 # Append and yield prediction
                 generated.append(predicted_idx)
