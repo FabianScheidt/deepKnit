@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
 import pathlib, sys, datetime, os
+from sklearn.model_selection import train_test_split
 from KnitPaintFileHandler import KnitPaintFileHandler
 from TensorBoardLogger import TensorBoardLogger
 
@@ -104,7 +105,7 @@ class LSTMModel:
 
         return input_data, output_data, counts, vocab_size, from_idx, to_idx
 
-    def get_model(self, vocab_size, batch_shape):
+    def get_model(self, vocab_size, batch_shape, softmax=True):
         # Build the model. Start with Input and Embedding
         inputs_layer = keras.layers.Input(batch_shape=batch_shape, name='inputs_layer')
         embedded_inputs = keras.layers.Embedding(vocab_size, 30, name='embedded_inputs')(inputs_layer)
@@ -126,15 +127,20 @@ class LSTMModel:
         dropout_3 = tf.keras.layers.Dropout(0.3, name='dropout_3')(lstm_3)
 
         # Dense output: One element for each color number in the vocabulary
-        dense_output = keras.layers.Dense(vocab_size, name='dense_output')(dropout_3)
+        activation = 'softmax' if softmax else None
+        dense_output = keras.layers.Dense(vocab_size, name='dense_output', activation=activation)(dropout_3)
         model = keras.Model(inputs=inputs_layer, outputs=dense_output)
         return model
 
     def train(self, val_split=0.05):
         # Read input and output data
         input_data, output_data, _, vocab_size, _, _ = self.read_training_dataset()
+        output_data = tf.keras.utils.to_categorical(output_data, vocab_size)
 
-        # Split data manually into train and test since the batch size needs to be met
+        # Shuffle and split data manually into train to make sure that the batch size is correct
+        p = np.random.permutation(input_data.shape[0])
+        input_data = input_data[p]
+        output_data = output_data[p]
         batch_count = input_data.shape[0] // self.batch_size
         train_batch_count = int(batch_count * (1.0 - val_split))
         val_batch_count = batch_count - train_batch_count
@@ -148,19 +154,10 @@ class LSTMModel:
         # Get the model
         model = self.get_model(vocab_size, (self.batch_size, *input_data.shape[1:]))
 
-        # Define loss and accuracy functions
-        def sparse_categorical_loss(labels, logits):
-            return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits)
-
-        def sparse_categorical_accuracy(labels, logits):
-            pred = tf.argmax(logits, axis=-1)
-            return tf.keras.metrics.categorical_accuracy(labels, pred)
-
         # Compile the model. Use sparse categorical crossentropy so we don't need one hot output vectors
         # When not using eager execution, the target shape needs to be defined explicitly using a custom placeholder
-        target_placeholder = tf.placeholder(dtype='int32', shape=(self.batch_size, *output_data.shape[1:]))
-        model.compile(target_tensors=[target_placeholder], optimizer=tf.train.AdamOptimizer(),
-                      loss=sparse_categorical_loss, metrics=[sparse_categorical_accuracy])
+        model.compile(optimizer=tf.train.AdamOptimizer(),
+                      loss='categorical_crossentropy', metrics=['accuracy'])
         model.summary()
 
         # Fit the data. Use Tensorboard to visualize the progress
@@ -244,10 +241,10 @@ class LSTMModel:
             loaded_model = keras.models.load_model(self.model_dir + 'lstm-model.h5')
             loaded_weights = loaded_model.get_weights()
 
-            # Build a new model with the same weights but different batch-size and sequence-length
-            # This allows the prediction of sequences of any size. Note that the RNN layers need to be stateful
-            # so Keras does not reset the state after every batch
-            model = self.get_model(vocab.size, (1, 1))
+            # Build a new model with the same weights but different batch-size and sequence-length and without softmax
+            # output. This allows the prediction of sequences of any size. Note that the RNN layers need to be stateful
+            # so Keras does not reset the state after every batch.
+            model = self.get_model(vocab.size, (1, 1), False)
             model.set_weights(loaded_weights)
             model.summary()
 
