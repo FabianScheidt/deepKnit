@@ -10,9 +10,9 @@ class SlidingWindowModel:
     # Define window
     window_shape = (5, 9)
     batch_size = 8192
-    epochs = 100
+    epochs = 1000
     training_dir = '../data/processed/training-files/sliding-window/'
-    model_dir = '../output/models/sliding-window'
+    model_dir = '../output/models/sliding-window/'
 
     def __init__(self, window_shape=None):
         if window_shape is not None:
@@ -126,25 +126,9 @@ class SlidingWindowModel:
 
         return input_data, output_data, counts, vocab_size, from_idx, to_idx
 
-    def train(self):
-        val_split = 0.05
-
-        # Read input and output data
-        input_data, output_data, counts, vocab_size, from_idx, _ = self.read_training_dataset()
-
-        # Transform into dataset
-        dataset = tf.data.Dataset.from_tensor_slices((input_data, output_data))
-        dataset = dataset.shuffle(10000).batch(self.batch_size, drop_remainder=True)
-        dataset_count = input_data.shape[0] // self.batch_size
-
-        # Split dataset into train and validation
-        val_count = int(dataset_count * val_split)
-        train_count = dataset_count - val_count
-        dataset_train = dataset.take(train_count)
-        dataset_val = dataset.skip(train_count)
-
-        # Build the model. Start with Input and Embedding
-        inputs_layer = keras.layers.Input(shape=dataset.output_shapes[0][1:], name='inputs_layer')
+    def get_model(self, vocab_size, batch_shape, softmax=True):
+        # Start with Input and Embedding
+        inputs_layer = keras.layers.Input(batch_shape=batch_shape, name='inputs_layer')
         embedded_inputs = keras.layers.Embedding(vocab_size, 5, name='embedded_inputs')(inputs_layer)
 
         # Convolutional...
@@ -166,22 +150,25 @@ class SlidingWindowModel:
         dropout_3 = keras.layers.Dropout(0.2, name='dropout_3')(dense_3)
 
         # Output
-        dense_output = keras.layers.Dense(vocab_size, name='dense_output')(dropout_3)
+        activation = 'softmax' if softmax else None
+        dense_output = keras.layers.Dense(vocab_size, name='dense_output', activation=activation)(dropout_3)
         model = keras.Model(inputs=inputs_layer, outputs=dense_output)
+        return model
 
-        # Define loss and accuracy functions
-        def sparse_categorical_loss(labels, logits):
-            return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits)
+    def train(self):
+        val_split = 0.05
 
-        def sparse_categorical_accuracy(labels, logits):
-            pred = tf.argmax(logits, axis=-1)
-            return tf.keras.metrics.categorical_accuracy(labels, pred)
+        # Read input and output data
+        input_data, output_data, counts, vocab_size, from_idx, _ = self.read_training_dataset()
+        output_data = tf.keras.utils.to_categorical(output_data, vocab_size)
+
+        # Build the model.
+        model = self.get_model(vocab_size, (None, *input_data.shape[1:]), True)
 
         # Compile the model. Use sparse categorical crossentropy so we don't need one hot output vectors
         # When not using eager execution, the target shape needs to be defined explicitly using a custom placeholder
-        target_placeholder = tf.placeholder(dtype='int32')
-        model.compile(target_tensors=[target_placeholder], optimizer=tf.train.AdamOptimizer(),
-                      loss=sparse_categorical_loss, metrics=[sparse_categorical_accuracy])
+        model.compile(optimizer=tf.train.AdamOptimizer(),
+                      loss='categorical_crossentropy', metrics=['accuracy'])
         model.summary()
 
         # Fit the data. Use Tensorboard to visualize the progress
@@ -189,9 +176,8 @@ class SlidingWindowModel:
             log_date_str = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
             log_dir = '../tensorboard-log/{}'.format(log_date_str)
             tensor_board_logger = TensorBoardLogger(write_graph=True, log_dir=log_dir)
-            model.fit(dataset_train.repeat(), steps_per_epoch=train_count,
-                      validation_data=dataset_val.repeat(), validation_steps=val_count,
-                      epochs=self.epochs, callbacks=[tensor_board_logger])
+            model.fit(input_data, output_data, validation_split=val_split, batch_size=self.batch_size,
+                      epochs=self.epochs, callbacks=[tensor_board_logger], shuffle=True)
         except KeyboardInterrupt:
             print('Saving current state of model...')
             pathlib.Path(self.model_dir).mkdir(parents=True, exist_ok=True)
@@ -212,43 +198,51 @@ class SlidingWindowModel:
 
         # Create a tensorflow session
         sess = tf.Session()
+        with sess.as_default():
 
-        # Load vocabulary and the trained model
-        _, from_idx, to_idx = self.read_vocab()
-        model = keras.models.load_model(self.model_dir + 'sliding-window-model.h5')
+            # Load vocabulary and the trained model
+            vocab, from_idx, to_idx = self.read_vocab()
+            loaded_model = keras.models.load_model(self.model_dir + 'sliding-window-model.h5')
+            loaded_weights = loaded_model.get_weights()
 
-        # Keep a record of the generated bytes
-        generated = [to_idx[s] for s in start_string]
+            # Copy weights into new model that does not use the softmax output
+            model = self.get_model(vocab.size, (1, *self.window_shape), False)
+            model.set_weights(loaded_weights)
+            model.summary()
 
-        print('Generating')
-        for i in range(len(start_string) - width * self.window_shape[0], num_generate):
-            # Edges should be 0
-            if 0 <= (len(generated) + self.window_shape[1] // 2) % width < self.window_shape[1] - 1:
-                predicted_idx = to_idx[0]
+            # Build a graph to pick a prediction from the logits returned by the RNN
+            model_output = tf.placeholder(tf.float32, shape=(1, vocab.size))
+            temperature = tf.constant(temperature, dtype=tf.float32)
+            logits_scaled = tf.div(model_output, temperature)
+            prediction = tf.multinomial(logits_scaled, num_samples=1)[-1, 0]
 
-            # Use model everywhere else
-            else:
-                num_generated = len(generated)
-                generated_np = np.array(generated)
-                generated_np.resize((num_generated // width + 1, width), refcheck=False)
-                generated_np = np.flipud(generated_np)
+            # Keep a record of the generated bytes
+            generated = [to_idx[s] for s in start_string]
 
-                y_start = 0
-                y_end = self.window_shape[0]
-                x_start = (num_generated % width) - (self.window_shape[1] // 2)
-                x_end = x_start + self.window_shape[1]
-                prediction_input = generated_np[y_start:y_end, x_start:x_end]
-                prediction_input = prediction_input.reshape((1, *prediction_input.shape))
-                prediction_output = model.predict(prediction_input)
-                prediction_output = prediction_output / temperature
-                predicted_idx = tf.multinomial(prediction_output, num_samples=1)[-1, 0]
-                if tf.executing_eagerly():
-                    predicted_idx = predicted_idx.numpy()
+            print('Generating')
+            for i in range(len(start_string) - width * self.window_shape[0], num_generate):
+                # Edges should be 0
+                if 0 <= (len(generated) + self.window_shape[1] // 2) % width < self.window_shape[1] - 1:
+                    predicted_idx = to_idx[0]
+
+                # Use model everywhere else
                 else:
-                    predicted_idx = predicted_idx.eval(session=sess)
+                    num_generated = len(generated)
+                    generated_np = np.array(generated)
+                    generated_np.resize((num_generated // width + 1, width), refcheck=False)
+                    generated_np = np.flipud(generated_np)
 
-            generated.append(predicted_idx)
-            yield bytes([from_idx[predicted_idx]])
+                    y_start = 0
+                    y_end = self.window_shape[0]
+                    x_start = (num_generated % width) - (self.window_shape[1] // 2)
+                    x_end = x_start + self.window_shape[1]
+                    prediction_input = generated_np[y_start:y_end, x_start:x_end]
+                    prediction_input = prediction_input.reshape((1, *prediction_input.shape))
+                    prediction_output = model.predict(prediction_input)
+                    predicted_idx = sess.run(prediction, feed_dict={model_output: prediction_output})
+
+                generated.append(predicted_idx)
+                yield bytes([from_idx[predicted_idx]])
 
 
 if __name__ == '__main__':

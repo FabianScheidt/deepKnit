@@ -2,7 +2,7 @@ import os, logging
 from flask import Flask, Response, request
 from flask_cors import CORS
 from lstm import LSTMModel
-from sliding_window_tensorflow import SlidingWindowModelTensorflow
+from sliding_window import SlidingWindowModel
 
 # Create flask app that allows to sample from previously trained models
 app = Flask(__name__, static_url_path='', static_folder='../static')
@@ -82,7 +82,7 @@ def sample_model():
         model = LSTMModel()
         resp = Response(model.sample(start, temperature, num_generate), mimetype='application/octet-stream')
     elif model == 'sliding-window':
-        model = SlidingWindowModelTensorflow()
+        model = SlidingWindowModel()
         resp = Response(model.sample(width, start, temperature, num_generate), mimetype='application/octet-stream')
     else:
         resp = Response('Unknown model', status=400)
