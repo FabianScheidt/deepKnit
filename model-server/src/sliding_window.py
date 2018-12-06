@@ -155,14 +155,12 @@ class SlidingWindowModel:
         model = keras.Model(inputs=inputs_layer, outputs=dense_output)
         return model
 
-    def train(self):
-        val_split = 0.05
-
+    def train(self, val_split=0.05):
         # Read input and output data
-        input_data, output_data, counts, vocab_size, from_idx, _ = self.read_training_dataset()
+        input_data, output_data, _, vocab_size, _, _ = self.read_training_dataset()
         output_data = tf.keras.utils.to_categorical(output_data, vocab_size)
 
-        # Build the model.
+        # Get the model
         model = self.get_model(vocab_size, (None, *input_data.shape[1:]), True)
 
         # Compile the model. Use sparse categorical crossentropy so we don't need one hot output vectors

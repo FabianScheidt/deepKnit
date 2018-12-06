@@ -85,10 +85,11 @@ class LSTMModel:
 
         return vocab, from_idx, to_idx
 
-    def read_training_dataset(self, val_split=0.05):
+    def read_training_dataset(self):
         # Read sequences
         training_filename = self.get_training_filename()
         sequences = np.load(self.training_dir + training_filename + '.npy')
+        counts = np.load(self.training_dir + training_filename + '-counts.npy')
 
         # Read vocabulary
         vocab, from_idx, to_idx = self.read_vocab()
@@ -97,25 +98,11 @@ class LSTMModel:
         # Transform sequences to index representation
         sequences = to_idx[sequences]
 
-        # Generate dataset with inputs and outputs
-        chunks = tf.data.Dataset.from_tensor_slices(sequences)
+        # Split into inputs and outputs
+        input_data = sequences[:, :-1]
+        output_data = sequences[:, 1:]
 
-        def split_input_target(chunk):
-            input_text = chunk[:-1]
-            target_text = chunk[1:]
-            return input_text, target_text
-
-        dataset = chunks.map(split_input_target)
-        dataset = dataset.shuffle(10000).batch(self.batch_size, drop_remainder=True)
-        dataset_count = sequences.shape[0] // self.batch_size
-
-        # Split dataset into train and validation
-        val_count = int(dataset_count * val_split)
-        train_count = dataset_count - val_count
-        dataset_train = dataset.take(train_count)
-        dataset_val = dataset.skip(train_count)
-
-        return dataset_train, train_count, dataset_val, val_count, vocab_size, from_idx, to_idx
+        return input_data, output_data, counts, vocab_size, from_idx, to_idx
 
     def get_model(self, vocab_size, batch_shape):
         # Build the model. Start with Input and Embedding
@@ -143,12 +130,23 @@ class LSTMModel:
         model = keras.Model(inputs=inputs_layer, outputs=dense_output)
         return model
 
-    def train(self):
+    def train(self, val_split=0.05):
         # Read input and output data
-        dataset_train, train_count, dataset_val, val_count, vocab_size, _, _ = self.read_training_dataset()
+        input_data, output_data, _, vocab_size, _, _ = self.read_training_dataset()
+
+        # Split data manually into train and test since the batch size needs to be met
+        batch_count = input_data.shape[0] // self.batch_size
+        train_batch_count = int(batch_count * (1.0 - val_split))
+        val_batch_count = batch_count - train_batch_count
+        train_count = train_batch_count * self.batch_size
+        val_count = val_batch_count * self.batch_size
+        train_input_data = input_data[:train_count]
+        val_input_data = input_data[train_count:train_count + val_count]
+        train_output_data = output_data[:train_count]
+        val_output_data = output_data[train_count:train_count + val_count]
 
         # Get the model
-        model = self.get_model(vocab_size, dataset_train.output_shapes[0])
+        model = self.get_model(vocab_size, (self.batch_size, *input_data.shape[1:]))
 
         # Define loss and accuracy functions
         def sparse_categorical_loss(labels, logits):
@@ -160,7 +158,7 @@ class LSTMModel:
 
         # Compile the model. Use sparse categorical crossentropy so we don't need one hot output vectors
         # When not using eager execution, the target shape needs to be defined explicitly using a custom placeholder
-        target_placeholder = tf.placeholder(dtype='int32', shape=dataset_train.output_shapes[1])
+        target_placeholder = tf.placeholder(dtype='int32', shape=(self.batch_size, *output_data.shape[1:]))
         model.compile(target_tensors=[target_placeholder], optimizer=tf.train.AdamOptimizer(),
                       loss=sparse_categorical_loss, metrics=[sparse_categorical_accuracy])
         model.summary()
@@ -170,9 +168,8 @@ class LSTMModel:
             log_date_str = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
             log_dir = '../tensorboard-log/{}'.format(log_date_str)
             tensor_board_logger = TensorBoardLogger(write_graph=True, log_dir=log_dir)
-            model.fit(dataset_train.repeat(), steps_per_epoch=train_count,
-                      validation_data=dataset_val.repeat(), validation_steps=val_count,
-                      epochs=self.epochs, callbacks=[tensor_board_logger])
+            model.fit(train_input_data, train_output_data, validation_data=(val_input_data, val_output_data),
+                      batch_size=self.batch_size, epochs=self.epochs, callbacks=[tensor_board_logger], shuffle=True)
         except KeyboardInterrupt:
             print('Saving current state of model...')
             pathlib.Path(self.model_dir).mkdir(parents=True, exist_ok=True)
