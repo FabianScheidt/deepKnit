@@ -12,6 +12,7 @@ import { BehaviorSubject, fromEvent, Subject } from 'rxjs';
 import saveAs from 'file-saver';
 import { takeUntil } from 'rxjs/operators';
 import { TooltipService } from '../tooltip.service';
+import { KnitpaintConversionInterface, KnitpaintConversionService } from '../knitpaint-conversion.service';
 
 @Component({
   selector: 'app-knitpaint-viewer',
@@ -36,7 +37,9 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges, OnDes
   private knitpaintChanged: Subject<void> = new Subject();
   private isDestroyed: Subject<boolean> = new Subject<boolean>();
 
-  constructor(private ngZone: NgZone, private tooltipService: TooltipService) {
+  constructor(private ngZone: NgZone,
+              private tooltipService: TooltipService,
+              private knitpaintConversionService: KnitpaintConversionService) {
     // Redraw the canvas whenever the colors change
     this.colors.subscribe(() => {
       this.renderCanvas();
@@ -306,6 +309,35 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges, OnDes
   }
 
   /**
+   * Opens a dialog to import from a dat file
+   */
+  import() {
+    const input: HTMLInputElement = document.createElement('input');
+    input.type = 'file';
+    input.addEventListener('change', (e: Event) => {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        const buffer: ArrayBuffer = reader.result;
+        this.knitpaintConversionService.fromDat(buffer).subscribe((res: KnitpaintConversionInterface) => {
+          if (res.width !== this.pixelsPerRow) {
+            console.error('Width of imported dat does not match size of knitpaint viewer. Expected ' +
+              this.pixelsPerRow + ' but got ' + res.width + '.');
+          } else {
+            this.knitpaint.setData(res.data);
+          }
+        });
+      });
+      reader.readAsArrayBuffer(file);
+      console.log(e, file);
+    });
+    input.addEventListener('click', () => {
+      input.remove();
+    });
+    input.click();
+  }
+
+  /**
    * Exports the current canvas as a png file and immediately starts the download
    * @param filename
    */
@@ -324,6 +356,21 @@ export class KnitpaintViewerComponent implements AfterViewInit, OnChanges, OnDes
         saveAs(blob, filename);
       }
     }, 'image/png');
+  }
+
+  /**
+   * Exports the current canvas as knitpaint dat file and immediately starts the download
+   * @param filename
+   */
+  exportAsDat(filename?: string) {
+    const knitpaint: KnitpaintConversionInterface = {
+      data: this.knitpaint.data.value,
+      width: this.pixelsPerRow
+    };
+    this.knitpaintConversionService.toDat(knitpaint).subscribe((dat: ArrayBuffer) => {
+      const blob = new Blob([new Uint8Array(dat)]);
+      saveAs(blob, filename);
+    });
   }
 
 }

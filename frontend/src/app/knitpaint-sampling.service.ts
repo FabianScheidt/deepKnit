@@ -88,7 +88,7 @@ export class KnitpaintSamplingService {
       const headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/octet-stream',
-        'If-Unmodified-Since': (new Date()).getTime()
+        'If-Unmodified-Since': (new Date()).getTime().toString(10)
       };
       const body = JSON.stringify({
         start: Array.from(new Uint8Array(start)),
@@ -102,7 +102,7 @@ export class KnitpaintSamplingService {
         body
       };
       console.log('Fetch');
-      fetchStream(environment.backendUrl + 'stream', fetchOptions)
+      fetchStream(environment.backendUrl + 'sample', fetchOptions)
         .then(responseHandler)
         .catch((err) => observer.error(err));
 

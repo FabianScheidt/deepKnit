@@ -8,7 +8,7 @@ export class Knitpaint {
   public static readonly COLOR_TABLE: Color[] = <Color[]>COLOR_TABLE;
   public static readonly COLOR_LABELS: string[] = COLOR_LABELS;
 
-  public data: BehaviorSubject<ArrayBuffer> = new BehaviorSubject<ArrayBuffer>(null);
+  public data: BehaviorSubject<ArrayBufferLike> = new BehaviorSubject<ArrayBufferLike>(null);
 
   /**
    * Returns a string representing the color information of the provided color number
@@ -47,7 +47,7 @@ export class Knitpaint {
    * Creates a new Knitpaint object from a file blob or array buffer
    * @param data
    */
-  constructor(data?: Blob | ArrayBuffer) {
+  constructor(data?: Blob | ArrayBufferLike) {
     if (data) {
       this.setData(data);
     }
@@ -58,7 +58,7 @@ export class Knitpaint {
    *
    * @param data
    */
-  public setData(data: Blob | ArrayBuffer): void {
+  public setData(data: Blob | ArrayBufferLike): void {
     if (data instanceof Blob) {
       this.setDataFromBlob(data);
     } else {

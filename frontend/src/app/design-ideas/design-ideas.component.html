@@ -25,8 +25,9 @@
     </div>
     <div class="toolbar">
       <div class="export-buttons">
-        <button (click)="exportDesignAsImage()" *ngIf="!isiOS">Export Design</button>
-        <button (click)="exportIdeaAsImage()" *ngIf="!isiOS">Export Idea</button>
+        <button (click)="importDesign()" *ngIf="!isiOS">Import</button>
+        <button (click)="exportDesignAsDat()" *ngIf="!isiOS">Export Design</button>
+        <button (click)="exportIdeaAsDat()" *ngIf="!isiOS">Export Idea</button>
         <button (click)="copySelection()" (tap)="copySelection()" [disabled]="selection === null">Copy Idea</button>
         <button (click)="copySelection()" (tap)="clear()">Clear</button>
       </div>

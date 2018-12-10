@@ -89,12 +89,24 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
     });
   }
 
+  public importDesign() {
+    this.designKnitpaintViewer.import();
+  }
+
   public exportDesignAsImage() {
     this.designKnitpaintViewer.exportAsImage('design.png');
   }
 
+  public exportDesignAsDat() {
+    this.designKnitpaintViewer.exportAsDat('design.dat');
+  }
+
   public exportIdeaAsImage() {
     this.ideaKnitpaintViewer.exportAsImage('idea.png');
+  }
+
+  public exportIdeaAsDat() {
+    this.ideaKnitpaintViewer.exportAsDat('idea.dat');
   }
 
   public copySelection() {
