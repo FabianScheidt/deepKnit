@@ -61,7 +61,7 @@ class SlidingWindowModel:
             # Read file, get data as numpy, remove padding on all sides
             handler = KnitPaintFileHandler(dat_file)
             try:
-                handler.normalize_bitmap_data(remove_option_line=True)
+                handler.normalize_bitmap_data(option_line='remove')
             except AssertionError:
                 continue
             dat_data = handler.get_np_bitmap_data()[3:-3, 3:-3]

@@ -36,7 +36,7 @@ class LSTMModel:
             # Read file, normalize, remove option line and add linebreak character
             handler = KnitPaintFileHandler(dat_file)
             try:
-                handler.normalize_bitmap_data(remove_option_line=True)
+                handler.normalize_bitmap_data(option_line='remove')
                 handler.add_char_col(self.linebreak_char)
             except AssertionError:
                 continue
