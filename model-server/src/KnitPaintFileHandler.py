@@ -595,7 +595,7 @@ class KnitPaintFileHandler:
         else:
             return color_label_indices
 
-    def bitmap_syntax_check(self, maximum_tucks: int):
+    def bitmap_syntax_check(self, maximum_tucks: int, verbose = True):
         """
         Checks current bitmap data for syntactical correctness
         :param char:
@@ -610,8 +610,9 @@ class KnitPaintFileHandler:
         # Check1: Knit: 1: Total courses must be even number
         if not bitmap_height % 2 == 0:
             syntax_check = False
-            print('Error: Current Bitmap data did not pass the syntax check: '
-                  + 'Total courses number is ' + str(bitmap_height) + ' and should be an even number.')
+            if verbose:
+                print('Error: Current Bitmap data did not pass the syntax check: '
+                      + 'Total courses number is ' + str(bitmap_height) + ' and should be an even number.')
 
         # Check2: Knit: 2: Always check carrier position after ending
         # ...
@@ -624,9 +625,10 @@ class KnitPaintFileHandler:
                     or bitmap_np_shaped[line_index][self.get_width() - 1] in self.find_categories_by_keyword(['tuck'])
             ):
                 syntax_check = False
-                print('Error: Current Bitmap data did not pass the syntax check: '
-                      + 'Tuck on ending needle in numpy bitmap line ' + str(line_index + 1) + ' detected. '
-                      + 'Do not tuck on the ending needle')
+                if verbose:
+                    print('Error: Current Bitmap data did not pass the syntax check: '
+                          + 'Tuck on ending needle in numpy bitmap line ' + str(line_index + 1) + ' detected. '
+                          + 'Do not tuck on the ending needle')
 
         # Check4: Tuck: 2: Do not tuck more than x (depends on yarn)
         for column_index in range(bitmap_width):
@@ -642,10 +644,11 @@ class KnitPaintFileHandler:
                 # If number of continuous tucks exceeds the maximum number, the syntax is not correct
                 if tucks_in_row > maximum_tucks:
                     syntax_check = False
-                    print('Error: Current Bitmap data did not pass the syntax check: '
-                          + 'Maximum number of tucks in row exceeded in numpy bitmap column ' + str(line_index + 1)
-                          + ' and line ' + str(column_index + 1) + '. Do not do more tucks than ' + str(maximum_tucks)
-                          + ' per column.')
+                    if verbose:
+                        print('Error: Current Bitmap data did not pass the syntax check: '
+                              + 'Maximum number of tucks in row exceeded in numpy bitmap column ' + str(line_index + 1)
+                              + ' and line ' + str(column_index + 1) + '. Do not do more tucks than '
+                              + str(maximum_tucks) + ' per column.')
 
         # Check5: Miss: 1: if miss >= course; Color0 = Color16; Color13 = Color16
         for line_index in range(3, bitmap_height-3):
@@ -656,10 +659,11 @@ class KnitPaintFileHandler:
                 or (bitmap_np_shaped[line_index] == [13]*bitmap_width).all()
             ):
                 syntax_check = False
-                print('Error: Current Bitmap data did not pass the syntax check: '
-                      + 'Complete line of misses in line ' + str(line_index+1) + ' detected. '
-                      + 'Do not do only misses in a line with \'miss\' or \'auto yarn feeder point\'.'
-                      + 'Should have been set to \'no needle selection\' before knitting.')
+                if verbose:
+                    print('Error: Current Bitmap data did not pass the syntax check: '
+                          + 'Complete line of misses in line ' + str(line_index + 1) + ' detected. '
+                          + 'Do not do only misses in a line with \'miss\' or \'auto yarn feeder point\'.'
+                          + 'Should have been set to \'no needle selection\' before knitting.')
 
         # Check6: Transfer/Receive: 1: In stitch move, the overlapped and pick up stitch might be unstable
         # ...
@@ -713,7 +717,8 @@ class KnitPaintFileHandler:
             # If any cross stitch does not appear in a pair, the syntax is not correct
             if (cross_lower_set_1 ^ cross_upper_set_1) or (cross_lower_set_2 ^ cross_upper_set_2):
                 syntax_check = False
-                print('Error: Current Bitmap data did not pass the syntax check: '
-                      + 'Single category of cross stitch in line ' + str(line_index + 1) + ' detected. '
-                      + 'Cross stitches have to come in pairs.')
+                if verbose:
+                    print('Error: Current Bitmap data did not pass the syntax check: '
+                          + 'Single category of cross stitch in line ' + str(line_index + 1) + ' detected. '
+                          + 'Cross stitches have to come in pairs.')
         return syntax_check
