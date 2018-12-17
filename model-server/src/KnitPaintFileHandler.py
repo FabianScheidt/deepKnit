@@ -595,7 +595,7 @@ class KnitPaintFileHandler:
         else:
             return color_label_indices
 
-    def bitmap_syntax_check(self, maximum_tucks: int, verbose = True):
+    def bitmap_syntax_check(self, maximum_tucks: int, maximum_transfer_gaps: int, verbose = True):
         """
         Checks current bitmap data for syntactical correctness
         :param char:
@@ -721,4 +721,30 @@ class KnitPaintFileHandler:
                     print('Error: Current Bitmap data did not pass the syntax check: '
                           + 'Single category of cross stitch in line ' + str(line_index + 1) + ' detected. '
                           + 'Cross stitches have to come in pairs.')
+
+        # Check13: Transfer: Transfer stitches have to come in pairs in the same column
+        for column_index in range(bitmap_width):
+            transfer_counter = 0
+            for line_index in range(bitmap_height):
+
+                # Sum up the transfers appended continuous in a column
+                if (bitmap_np_shaped[line_index][column_index]
+                        in self.find_categories_by_keyword(['Front knit + transfer'])):
+                    transfer_counter += 1
+                elif (bitmap_np_shaped[line_index][column_index]
+                        in self.find_categories_by_keyword(['Back knit + transfer'])):
+                    transfer_counter -= 1
+                if abs(transfer_counter) > 1:
+                    syntax_check = False
+                    if verbose:
+                        print('Error: Current Bitmap data did not pass the syntax check: '
+                              + 'Maximum number of transfers in row exceeded in numpy bitmap column '
+                              + str(line_index + 1) + ' and line ' + str(column_index + 1)
+                              + '. Transfer stitches have to be transfered back in the next command line.')
+            if not transfer_counter == 0:
+                syntax_check = False
+                if verbose:
+                    print('Error: Current Bitmap data did not pass the syntax check: '
+                          + 'Some transfers in column ' + str(column_index + 1) + ' were not transfered back'
+                          + '. Transfer stitches have to appear in paris of front/back + transfer.')
         return syntax_check
