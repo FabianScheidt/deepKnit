@@ -595,7 +595,7 @@ class KnitPaintFileHandler:
         else:
             return color_label_indices
 
-    def bitmap_syntax_check(self, maximum_tucks: int, maximum_transfer_gaps: int, verbose = True):
+    def bitmap_syntax_check(self, maximum_tucks: int, verbose = True):
         """
         Checks current bitmap data for syntactical correctness
         :param char:
@@ -636,7 +636,7 @@ class KnitPaintFileHandler:
             for line_index in range(bitmap_height):
 
                 # Sum up the tucks appended continuous in a column
-                if (bitmap_np_shaped[line_index][column_index] in self.find_categories_by_keyword(['tuck'])):
+                if bitmap_np_shaped[line_index][column_index] in self.find_categories_by_keyword(['tuck']):
                     tucks_in_row += 1
                 else:
                     tucks_in_row = 0
@@ -699,19 +699,19 @@ class KnitPaintFileHandler:
             cross_upper_set_2 = False
 
             for color_label in color_labels_cross_lower_1:
-                if (color_label in bitmap_np_shaped[line_index]):
+                if color_label in bitmap_np_shaped[line_index]:
                     cross_lower_set_1 = True
 
             for color_label in color_labels_cross_upper_1:
-                if (color_label in bitmap_np_shaped[line_index]):
+                if color_label in bitmap_np_shaped[line_index]:
                     cross_upper_set_1 = True
 
             for color_label in color_labels_cross_lower_2:
-                if (color_label in bitmap_np_shaped[line_index]):
+                if color_label in bitmap_np_shaped[line_index]:
                     cross_lower_set_2 = True
 
             for color_label in color_labels_cross_upper_2:
-                if (color_label in bitmap_np_shaped[line_index]):
+                if color_label in bitmap_np_shaped[line_index]:
                     cross_upper_set_2 = True
 
             # If any cross stitch does not appear in a pair, the syntax is not correct
@@ -725,26 +725,56 @@ class KnitPaintFileHandler:
         # Check13: Transfer: Transfer stitches have to come in pairs in the same column
         for column_index in range(bitmap_width):
             transfer_counter = 0
+            transfer_in_last_line = False
+
             for line_index in range(bitmap_height):
 
-                # Sum up the transfers appended continuous in a column
+                # Sum up the transfers appended continuous in a column with +1 for front knit and -1 for back knit
                 if (bitmap_np_shaped[line_index][column_index]
                         in self.find_categories_by_keyword(['Front knit + transfer'])):
                     transfer_counter += 1
+                    transfer_in_last_line = True
+
                 elif (bitmap_np_shaped[line_index][column_index]
                         in self.find_categories_by_keyword(['Back knit + transfer'])):
                     transfer_counter -= 1
+                    transfer_in_last_line = True
+
+                else:
+                    # If the current stitch type is not a transfer and there was a transfer stitch in the last line,
+                    # the syntax of this pattern is not correct
+                    if transfer_in_last_line:
+                        syntax_check = False
+
+                        if verbose:
+                            print('Error: Current Bitmap data did not pass the syntax check: '
+                                  + 'Some transfers in column ' + str(column_index + 1) + ' were not transfered back'
+                                  + '. Transfer stitches have to appear in pairs within'
+                                  + ' the following line of front/back + transfer stitches.')
+
+                # If the current sum of transfer stitches is 0, the transfer stitches are balanced and for the syntax
+                # check for the current column it can be seen as if there were no transfers at all
+                if transfer_counter == 0:
+                    transfer_in_last_line = False
+
+                # If the transfer counter is greater/smaller +1/-1 there have been two transfers of same type front/back
+                # in a row, which in general should not be syntactical correct
                 if abs(transfer_counter) > 1:
                     syntax_check = False
+
                     if verbose:
                         print('Error: Current Bitmap data did not pass the syntax check: '
                               + 'Maximum number of transfers in row exceeded in numpy bitmap column '
                               + str(line_index + 1) + ' and line ' + str(column_index + 1)
                               + '. Transfer stitches have to be transfered back in the next command line.')
+
+            # If the total number of transfers at the end of a column is not 0, there have been transfers
+            # not appearing in a pair of front/back, which is not syntactical correct
             if not transfer_counter == 0:
                 syntax_check = False
+
                 if verbose:
                     print('Error: Current Bitmap data did not pass the syntax check: '
                           + 'Some transfers in column ' + str(column_index + 1) + ' were not transfered back'
-                          + '. Transfer stitches have to appear in paris of front/back + transfer.')
+                          + '. Transfer stitches have to appear in pairs of front/back + transfer.')
         return syntax_check
