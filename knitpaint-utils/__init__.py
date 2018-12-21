@@ -2,6 +2,7 @@ import numpy as np
 from .constants import default_color_table
 from .dat_reader import read_dat
 from .dat_writer import write_dat
+from .lep_reader import read_lep
 from .linebreak_reader import read_linebreak
 from .linebreak_writer import write_linebreak
 from .image_reader import read_image
@@ -125,12 +126,11 @@ class KnitPaint:
 
     def read_lep(self, input_file):
         """
-        Reads all information from the provided lep file or bytes
+        Reads all information from the provided lep file
         :param input_file:
         :return:
         """
-        # Todo...
-        raise NotImplementedError
+        read_lep(input_file, dst=self)
 
     def read_linebreak(self, input_file, linebreak_char, target_width=None, target_height=None):
         """
