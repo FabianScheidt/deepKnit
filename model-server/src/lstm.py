@@ -7,13 +7,15 @@ from TensorBoardLogger import TensorBoardLogger
 
 
 class LSTMModel:
-    trained_width = 50
-    linebreak_char = 151
-    lines_per_sequence = 4
-    batch_size = 32
-    epochs = 100
-    training_dir = '../data/processed/training-files/lstm/'
-    model_dir = '../output/models/lstm/'
+
+    def __init__(self):
+        self.trained_width = 50
+        self.linebreak_char = 151
+        self.lines_per_sequence = 4
+        self.batch_size = 32
+        self.epochs = 100
+        self.training_dir = '../data/processed/training-files/lstm/'
+        self.model_dir = '../output/models/lstm/'
 
     def get_training_filename(self):
         return 'training-sequences-' + str(self.trained_width) + '-' + str(self.lines_per_sequence)
@@ -68,7 +70,7 @@ class LSTMModel:
         training_filename = self.get_training_filename()
         pathlib.Path(self.training_dir).mkdir(parents=True, exist_ok=True)
         np.save(self.training_dir + training_filename + '.npy', sequences)
-        np.save(self.training_dir + training_filename + '-counts.npy', sequences_counts)
+        np.save(self.training_dir + training_filename + '-weights.npy', sequences_counts)
         np.save(self.training_dir + training_filename + '-vocab.npy', vocab)
 
     def read_vocab(self):
@@ -89,7 +91,7 @@ class LSTMModel:
         # Read sequences
         training_filename = self.get_training_filename()
         sequences = np.load(self.training_dir + training_filename + '.npy')
-        counts = np.load(self.training_dir + training_filename + '-counts.npy')
+        weights = np.load(self.training_dir + training_filename + '-weights.npy')
 
         # Read vocabulary
         vocab, from_idx, to_idx = self.read_vocab()
@@ -102,7 +104,7 @@ class LSTMModel:
         input_data = sequences[:, :-1]
         output_data = sequences[:, 1:]
 
-        return input_data, output_data, counts, vocab_size, from_idx, to_idx
+        return input_data, output_data, weights, vocab_size, from_idx, to_idx
 
     def get_model(self, vocab_size, batch_shape, softmax=True):
         # Build the model. Start with Input and Embedding
@@ -131,15 +133,22 @@ class LSTMModel:
         model = keras.Model(inputs=inputs_layer, outputs=dense_output)
         return model
 
-    def train(self, val_split=0.05):
+    def train(self, val_split=0.05, use_weights=False):
         # Read input and output data
-        input_data, output_data, _, vocab_size, _, _ = self.read_training_dataset()
+        input_data, output_data, weights, vocab_size, _, _ = self.read_training_dataset()
         output_data = tf.keras.utils.to_categorical(output_data, vocab_size)
+
+        # Bring weights into correct format
+        if not use_weights:
+            weights = np.ones_like(weights)
+        if len(weights.shape) == 2:
+            weights = weights[:, -output_data.shape[1]:]
 
         # Shuffle and split data manually into train to make sure that the batch size is correct
         p = np.random.permutation(input_data.shape[0])
         input_data = input_data[p]
         output_data = output_data[p]
+        weights = weights[p]
         batch_count = input_data.shape[0] // self.batch_size
         train_batch_count = int(batch_count * (1.0 - val_split))
         val_batch_count = batch_count - train_batch_count
@@ -149,13 +158,15 @@ class LSTMModel:
         val_input_data = input_data[train_count:train_count + val_count]
         train_output_data = output_data[:train_count]
         val_output_data = output_data[train_count:train_count + val_count]
+        train_weights = weights[:train_count]
+        val_weights = weights[train_count:train_count + val_count]
 
         # Get the model
         model = self.get_model(vocab_size, (self.batch_size, *input_data.shape[1:]))
 
-        # Compile the model. Use sparse categorical crossentropy so we don't need one hot output vectors
-        # When not using eager execution, the target shape needs to be defined explicitly using a custom placeholder
+        # Compile the model
         model.compile(optimizer=tf.train.AdamOptimizer(),
+                      sample_weight_mode='temporal' if len(weights.shape) == 2 else None,
                       loss='categorical_crossentropy', metrics=['accuracy'])
         model.summary()
 
@@ -164,7 +175,8 @@ class LSTMModel:
             log_date_str = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
             log_dir = '../tensorboard-log/{}'.format(log_date_str)
             tensor_board_logger = TensorBoardLogger(write_graph=True, log_dir=log_dir)
-            model.fit(train_input_data, train_output_data, validation_data=(val_input_data, val_output_data),
+            model.fit(x=train_input_data, y=train_output_data, sample_weight=train_weights,
+                      validation_data=(val_input_data, val_output_data, val_weights),
                       batch_size=self.batch_size, epochs=self.epochs, callbacks=[tensor_board_logger], shuffle=True)
         except KeyboardInterrupt:
             print('Saving current state of model...')
@@ -254,15 +266,18 @@ class LSTMModel:
             temperature = tf.constant(temperature, dtype=tf.float32)
             logits_scaled = tf.div(logits, temperature)
 
+            # Use rules only if the trained width is set
             index = tf.placeholder(tf.int32)
-            rules_modulo, rules = self.get_static_knitting_pattern_rules()
-            rules = tf.constant(rules, dtype=tf.float32)
-            rules_modulo = tf.constant(rules_modulo)
-            column = tf.mod(index, rules_modulo)
-            rule = tf.gather(rules, column)
-            logits_ruled = tf.add(logits_scaled, rule)
-
-            prediction = tf.multinomial(logits_ruled, num_samples=1)[-1, 0]
+            if self.trained_width is not None:
+                rules_modulo, rules = self.get_static_knitting_pattern_rules()
+                rules = tf.constant(rules, dtype=tf.float32)
+                rules_modulo = tf.constant(rules_modulo)
+                column = tf.mod(index, rules_modulo)
+                rule = tf.gather(rules, column)
+                logits_ruled = tf.add(logits_scaled, rule)
+                prediction = tf.multinomial(logits_ruled, num_samples=1)[-1, 0]
+            else:
+                prediction = tf.multinomial(logits_scaled, num_samples=1)[-1, 0]
 
             # Keep a record of the generated bytes
             generated = [to_idx[char] for char in start_string]
@@ -296,7 +311,7 @@ if __name__ == '__main__':
         lstm_model.generate_training_file()
     elif sys.argv[1] == 'train':
         print('Training...')
-        lstm_model.train()
+        lstm_model.train(use_weights=False)
     elif sys.argv[1] == 'sample':
         print('Sampling...')
         line = [0]*3 + [13] + [1, 2]*24 + [13] + [0]*3 + [51]
