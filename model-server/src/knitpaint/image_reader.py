@@ -14,8 +14,7 @@ def read_image(image_filename, dst=None):
         dst = KnitPaint()
 
     # Read image and bring it into the correct shape
-    image_bgr_flipped = cv2.imread(image_filename, cv2.IMREAD_COLOR)
-    image_bgr = cv2.flip(image_bgr_flipped, 0)
+    image_bgr = cv2.imread(image_filename, cv2.IMREAD_COLOR)
     image_rgb = image_bgr[:, :, ::-1]
     height, width, _ = image_rgb.shape
     colors = image_rgb.reshape((width * height, 3))
@@ -37,5 +36,5 @@ def read_image(image_filename, dst=None):
 
     # Reshape the result and set it
     bitmap_data = color_numbers.reshape((height, width))
-    dst.set_np_bitmap_data(bitmap_data)
+    dst.set_np_bitmap_data(bitmap_data, bottom_to_top=True)
     return dst
