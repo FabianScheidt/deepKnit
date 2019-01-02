@@ -97,13 +97,23 @@ class KnitPaint:
             print('Error: Bitmap data was not set because the dimensions were incorrect. '
                   + 'Bitmap data length is ' + str(len(bitmap_data)) + ' and should be ' + str(width*height) + '.')
 
-    def set_np_bitmap_data(self, bitmap_data):
+    def set_np_bitmap_data(self, bitmap_data, bottom_to_top=False):
         """
         Sets new bitmap data from a numpy array
+
         :param bitmap_data:
+        Numpy array containing the bitmap data. The array should have two dimensions and contain only integers from
+        0 to 255.
+
+        :param bottom_to_top:
+        Defines if instructions in the matrix go from bottom to top. Set this to true if the matrix has the same
+        orientation as a preview image.
+
         :return:
         """
-        new_bitmap_data = bitmap_data.flatten().tolist()
+        if bottom_to_top:
+            bitmap_data = np.flipud(bitmap_data)
+        new_bitmap_data = list(bitmap_data.flatten().tolist())
         height, width = bitmap_data.shape
         self.set_bitmap_data(new_bitmap_data, width, height)
 
@@ -186,15 +196,22 @@ class KnitPaint:
         """
         return self.header_y_end - self.header_y_start + 1
 
-    def get_np_bitmap_data(self):
+    def get_np_bitmap_data(self, bottom_to_top=False):
         """
         Returns the bitmap data as a numpy matrix
+
+        :param bottom_to_top:
+        Defines if instructions should go from bottom to top. Set this to true if you want the matrix to have the same
+        appearance as the preview image.
+
         :return:
         """
         current_height = self.get_height()
         current_width = self.get_width()
         bitmap_np = np.array(self.bitmap_data, dtype=int)
         bitmap_np_shaped = np.reshape(bitmap_np, (current_height, current_width))
+        if bottom_to_top:
+            bitmap_np_shaped = np.flipud(bitmap_np_shaped)
         return bitmap_np_shaped
 
     def normalize_bitmap_data(self, has_option_line=True, option_line='keep'):
