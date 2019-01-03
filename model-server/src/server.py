@@ -10,9 +10,9 @@ app = Flask(__name__, static_url_path='', static_folder='../static')
 app.logger.setLevel(logging.INFO)
 cors = CORS(app)
 
-# Use just one GPU for this server
+# Don't use the GPU for the server
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 @app.route('/', methods=['GET'], defaults={'path': ''})

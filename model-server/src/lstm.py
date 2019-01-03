@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
-import pathlib, sys, datetime, os
+import pathlib, sys, datetime, os, functools
 from knitpaint import KnitPaint
 from TensorBoardLogger import TensorBoardLogger
 
@@ -106,7 +106,7 @@ class LSTMModel:
 
         return input_data, output_data, weights, vocab_size, from_idx, to_idx
 
-    def get_model(self, vocab_size, batch_shape, softmax=True):
+    def get_model(self, vocab_size, batch_shape, stateful=False, softmax=True):
         # Build the model. Start with Input and Embedding
         inputs_layer = keras.layers.Input(batch_shape=batch_shape, name='inputs_layer')
         embedded_inputs = keras.layers.Embedding(vocab_size, 30, name='embedded_inputs')(inputs_layer)
@@ -115,16 +115,16 @@ class LSTMModel:
         if tf.test.is_gpu_available():
             lstm_layer = tf.keras.layers.CuDNNLSTM
         else:
-            lstm_layer = tf.keras.layers.LSTM
+            lstm_layer = functools.partial(tf.keras.layers.LSTM, activation='tanh', recurrent_activation='sigmoid')
 
         lstm_1 = lstm_layer(500, return_sequences=True, recurrent_initializer='glorot_uniform',
-                            stateful=True, name='lstm_1')(embedded_inputs)
+                            stateful=stateful, name='lstm_1')(embedded_inputs)
         dropout_1 = tf.keras.layers.Dropout(0.3, name='dropout_1')(lstm_1)
         lstm_2 = lstm_layer(500, return_sequences=True, recurrent_initializer='glorot_uniform',
-                            stateful=True, name='lstm_2')(dropout_1)
+                            stateful=stateful, name='lstm_2')(dropout_1)
         dropout_2 = tf.keras.layers.Dropout(0.3, name='dropout_2')(lstm_2)
         lstm_3 = lstm_layer(500, return_sequences=True, recurrent_initializer='glorot_uniform',
-                            stateful=True, name='lstm_3')(dropout_2)
+                            stateful=stateful, name='lstm_3')(dropout_2)
         dropout_3 = tf.keras.layers.Dropout(0.3, name='dropout_3')(lstm_3)
 
         # Dense output: One element for each color number in the vocabulary
@@ -228,11 +228,11 @@ class LSTMModel:
             if i in rules_positive:
                 rule = [ignore] * vocab.size
                 for char in rules_positive[i]:
-                    if char in to_idx:
+                    if char in vocab:
                         rule[to_idx[char]] = 0.
             if i in rules_negative:
                 for char in rules_negative[i]:
-                    if char in to_idx:
+                    if char in vocab:
                         rule[to_idx[char]] = ignore
             rules.append(rule)
         rules = np.array(rules)
@@ -247,16 +247,15 @@ class LSTMModel:
         sess = tf.Session()
         with sess.as_default():
 
-            # Load vocabulary and the trained model
+            # Load the vocabulary
             vocab, from_idx, to_idx = self.read_vocab()
-            loaded_model = keras.models.load_model(self.model_dir + 'lstm-model.h5')
-            loaded_weights = loaded_model.get_weights()
 
-            # Build a new model with the same weights but different batch-size and sequence-length and without softmax
-            # output. This allows the prediction of sequences of any size. Note that the RNN layers need to be stateful
-            # so Keras does not reset the state after every batch.
-            model = self.get_model(vocab.size, (1, 1), False)
-            model.set_weights(loaded_weights)
+            # Build a new model and load just the weights but use a batch-size and sequence-length different from the
+            # training without softmax output. This allows the prediction of sequences of any size. Additionally no CUDA
+            # is needed for the sampling. Note that the RNN layers need to be stateful so Keras does not reset the state
+            # after every batch.
+            model = self.get_model(vocab.size, (1, 1), stateful=True, softmax=False)
+            model.load_weights(self.model_dir + 'lstm-model.h5')
             model.summary()
 
             # Build a graph to pick a prediction from the logits returned by the RNN
