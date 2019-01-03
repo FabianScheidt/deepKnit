@@ -2,6 +2,8 @@ import os, logging
 from flask import Flask, Response, request, json
 from flask_cors import CORS
 from lstm import LSTMModel
+import lstm_staf
+from lstm_staf import LSTMModelStaf
 from sliding_window import SlidingWindowModel
 from knitpaint import KnitPaint
 
@@ -17,6 +19,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 # Initialize models
 lstm_model = LSTMModel()
 sample_lstm = lstm_model.sample()
+lstm_model_staf = LSTMModelStaf()
+sample_lstm_staf = lstm_model_staf.sample()
 sliding_window_model = SlidingWindowModel()
 sample_sliding_window = sliding_window_model.sample()
 
@@ -87,6 +91,22 @@ def sample_model():
     # Return respective response
     if model == 'lstm':
         resp = Response(sample_lstm(start, temperature, num_generate), mimetype='application/octet-stream')
+    elif model == 'lstm-staf':
+        start = [s for s in start if s != 0]
+
+        def lstm_staf_generator():
+            i = 0
+            for generated in sample_lstm_staf(start, temperature, num_generate):
+                yield generated
+                i += 1
+                if int(generated[0]) == lstm_staf.END_OF_LINE_CHAR:
+                    add_count = width - (i % width)
+                    yield bytes([0] * add_count)
+                    i += add_count
+                if i >= num_generate:
+                    break
+
+        resp = Response(lstm_staf_generator(), mimetype='application/octet-stream')
     elif model == 'sliding-window':
         resp = Response(sample_sliding_window(width, start, temperature, num_generate), mimetype='application/octet-stream')
     else:
