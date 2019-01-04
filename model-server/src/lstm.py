@@ -3,7 +3,6 @@ import tensorflow as tf
 import tensorflow.keras as keras
 import pathlib, sys, datetime, os, functools
 from knitpaint import KnitPaint
-from TensorBoardLogger import TensorBoardLogger
 
 
 class LSTMModel:
@@ -172,6 +171,7 @@ class LSTMModel:
 
         # Fit the data. Use Tensorboard to visualize the progress
         try:
+            from TensorBoardLogger import TensorBoardLogger
             log_date_str = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
             log_dir = '../tensorboard-log/{}'.format(log_date_str)
             tensor_board_logger = TensorBoardLogger(write_graph=True, log_dir=log_dir)

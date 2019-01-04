@@ -138,5 +138,6 @@ def to_dat():
     return resp
 
 
-# Run flask app and make it available
-app.run(host='0.0.0.0', threaded=True)
+# Run flask app to make it available for development
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', threaded=True)
