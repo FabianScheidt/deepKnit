@@ -16,6 +16,7 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
   @ViewChild('ideaKnitpaintViewer') ideaKnitpaintViewer: KnitpaintViewerComponent;
   knitpaint: Knitpaint;
   pixelsPerRow = 57;
+  rows = 70;
   selectedColorNumber = 1;
   designIdeas: Knitpaint;
   model: BehaviorSubject<string> = new BehaviorSubject<string>('lstm');
@@ -51,7 +52,8 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
           return {
             model,
             temperature,
-            start: <ArrayBuffer>start.buffer
+            start: <ArrayBuffer>start.buffer,
+            numGenerate: this.pixelsPerRow * this.rows
           };
         })
       );
@@ -71,8 +73,7 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
   }
 
   private initKnitpaintData() {
-    const rows = 70;
-    const length = this.pixelsPerRow * rows;
+    const length = this.pixelsPerRow * this.rows;
     this.knitpaint = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer);
     this.designIdeas = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer);
   }

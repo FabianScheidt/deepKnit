@@ -36,6 +36,7 @@
           <span>Model</span>
           <select [ngModel]="model | async" (ngModelChange)="setModel($event)">
             <option value="lstm" selected>LSTM</option>
+            <option value="lstm-staf" selected>LSTM staf</option>
             <option value="sliding-window">Sliding Window</option>
           </select>
         </label>
