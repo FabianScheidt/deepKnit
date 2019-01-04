@@ -14,6 +14,12 @@ cors = CORS(app)
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+# Initialize models
+lstm_model = LSTMModel()
+sample_lstm = lstm_model.sample()
+sliding_window_model = SlidingWindowModel()
+sample_sliding_window = sliding_window_model.sample()
+
 
 @app.route('/', methods=['GET'], defaults={'path': ''})
 @app.route('/<path>', methods=['GET'])
@@ -80,11 +86,9 @@ def sample_model():
 
     # Return respective response
     if model == 'lstm':
-        model = LSTMModel()
-        resp = Response(model.sample(start, temperature, num_generate), mimetype='application/octet-stream')
+        resp = Response(sample_lstm(start, temperature, num_generate), mimetype='application/octet-stream')
     elif model == 'sliding-window':
-        model = SlidingWindowModel()
-        resp = Response(model.sample(width, start, temperature, num_generate), mimetype='application/octet-stream')
+        resp = Response(sample_sliding_window(width, start, temperature, num_generate), mimetype='application/octet-stream')
     else:
         resp = Response('Unknown model', status=400)
     set_cache_headers(resp)
