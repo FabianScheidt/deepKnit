@@ -173,13 +173,12 @@ class LSTMModel:
 
         # Fit the data. Use Tensorboard to visualize the progress
         try:
-            from TensorBoardLogger import TensorBoardLogger
             log_date_str = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
             log_dir = '../tensorboard-log/{}'.format(log_date_str)
-            tensor_board_logger = TensorBoardLogger(write_graph=True, log_dir=log_dir)
+            tensor_board_callback = keras.callbacks.TensorBoard(log_dir=log_dir, write_graph=True)
             model.fit(x=train_input_data, y=train_output_data, sample_weight=train_weights,
                       validation_data=(val_input_data, val_output_data, val_weights),
-                      batch_size=self.batch_size, epochs=self.epochs, callbacks=[tensor_board_logger], shuffle=True)
+                      batch_size=self.batch_size, epochs=self.epochs, callbacks=[tensor_board_callback], shuffle=True)
         except KeyboardInterrupt:
             print('Saving current state of model...')
             pathlib.Path(self.model_dir).mkdir(parents=True, exist_ok=True)
