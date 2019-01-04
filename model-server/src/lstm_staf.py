@@ -1,6 +1,7 @@
 import pathlib, sys
 import pandas as pd
 import numpy as np
+import tensorflow.keras.backend as K
 from knitpaint import KnitPaint
 from lstm import LSTMModel
 
@@ -72,6 +73,29 @@ class LSTMModelStaf(LSTMModel):
         np.save(self.training_dir + training_filename + '-weights.npy', weights)
         np.save(self.training_dir + training_filename + '-vocab.npy', vocab)
 
+    def train(self, metrics=None, **kwargs):
+        """
+        Trains the model
+        :param metrics:
+        :param kwargs:
+        :return:
+        """
+        metrics = [] if metrics is None else metrics
+        _, _, to_idx = self.read_vocab()
+
+        # Define a accuracy function that ignores the padding
+        def acc(y_true, y_pred):
+            mask_class = to_idx[PADDING_CHAR]
+            true_class = K.argmax(y_true, axis=-1)
+            pred_class = K.argmax(y_pred, axis=-1)
+            accuracy_mask = K.cast(K.not_equal(true_class, mask_class), 'int32')
+            accuracy_tensor = K.cast(K.equal(true_class, pred_class), 'int32') * accuracy_mask
+            accuracy = K.sum(accuracy_tensor) / K.maximum(K.sum(accuracy_mask), 1)
+            return accuracy
+        metrics.append(acc)
+
+        super().train(metrics=metrics, **kwargs)
+
     def sample(self):
         """
         Samples using the inherited sampling function but stops when a end of file character is generated
@@ -104,7 +128,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'sample':
         print('Sampling...')
         start = [1]*8 + [END_OF_LINE_CHAR] + [1]*2
-        for test in lstm_model.sample(start, 0.01, 400):
+        for test in lstm_model.sample()(start, 0.01, 400):
             print('Sampled: ' + str(test))
 
     print('Done!')

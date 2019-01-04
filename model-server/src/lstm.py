@@ -12,7 +12,7 @@ class LSTMModel:
         self.linebreak_char = 151
         self.lines_per_sequence = 4
         self.batch_size = 32
-        self.epochs = 100
+        self.epochs = 1000
         self.training_dir = '../data/processed/training-files/lstm/'
         self.model_dir = '../output/models/lstm/'
 
@@ -132,7 +132,9 @@ class LSTMModel:
         model = keras.Model(inputs=inputs_layer, outputs=dense_output)
         return model
 
-    def train(self, val_split=0.05, use_weights=False):
+    def train(self, val_split=0.05, use_weights=False, metrics=None):
+        metrics = ['accuracy'] if metrics is None else metrics
+
         # Read input and output data
         input_data, output_data, weights, vocab_size, _, _ = self.read_training_dataset()
         output_data = tf.keras.utils.to_categorical(output_data, vocab_size)
@@ -166,7 +168,7 @@ class LSTMModel:
         # Compile the model
         model.compile(optimizer=tf.train.AdamOptimizer(),
                       sample_weight_mode='temporal' if len(weights.shape) == 2 else None,
-                      loss='categorical_crossentropy', metrics=['accuracy'])
+                      loss='categorical_crossentropy', metrics=metrics)
         model.summary()
 
         # Fit the data. Use Tensorboard to visualize the progress
