@@ -50,7 +50,7 @@ def set_cache_headers(resp):
     resp.headers['Expires'] = '0'
 
 
-@app.route('/*', methods=['OPTIONS'])
+@app.route('/api/*', methods=['OPTIONS'])
 def send_cors_options():
     """
     Handle any OPTIONS request to allow CORS
@@ -61,7 +61,7 @@ def send_cors_options():
     return resp
 
 
-@app.route('/sample', methods=['POST'])
+@app.route('/api/sample', methods=['POST'])
 def sample_model():
     """
     Samples knitpaint pixels and returns the result in chunks
@@ -115,7 +115,7 @@ def sample_model():
     return resp
 
 
-@app.route('/from-dat', methods=['POST'])
+@app.route('/api/from-dat', methods=['POST'])
 def from_dat():
     """
     Reads from a provided dat file and returns the content as list of color numbers
@@ -132,7 +132,7 @@ def from_dat():
     return resp
 
 
-@app.route('/to-dat', methods=['POST'])
+@app.route('/api/to-dat', methods=['POST'])
 def to_dat():
     """
     Converts the provided knitpaint data to a dat file and streams back the file
