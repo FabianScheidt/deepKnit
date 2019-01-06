@@ -1,6 +1,8 @@
-import pathlib, sys
+import pathlib, sys, functools
 import pandas as pd
 import numpy as np
+import tensorflow as tf
+import tensorflow.keras as keras
 import tensorflow.keras.backend as K
 from knitpaint import KnitPaint
 from lstm import LSTMModel
@@ -21,6 +23,7 @@ class LSTMModelStaf(LSTMModel):
         self.data_dir = '../data/raw/staf/'
         self.training_dir = '../data/processed/training-files/lstm-staf/'
         self.model_dir = '../output/models/lstm-staf/'
+        self.epochs = 130
 
     def get_training_filename(self):
         """
@@ -72,6 +75,27 @@ class LSTMModelStaf(LSTMModel):
         np.save(self.training_dir + training_filename + '.npy', sequences)
         np.save(self.training_dir + training_filename + '-weights.npy', weights)
         np.save(self.training_dir + training_filename + '-vocab.npy', vocab)
+
+    def get_model(self, vocab_size, batch_shape, stateful=False, softmax=True):
+        # Build the model. Start with Input and Embedding
+        inputs_layer = keras.layers.Input(batch_shape=batch_shape, name='inputs_layer')
+        embedded_inputs = keras.layers.Embedding(vocab_size, 30, name='embedded_inputs')(inputs_layer)
+
+        if tf.test.is_gpu_available():
+            lstm_layer = tf.keras.layers.CuDNNLSTM
+        else:
+            lstm_layer = functools.partial(tf.keras.layers.LSTM, activation='tanh', recurrent_activation='sigmoid')
+
+        lstm_1 = lstm_layer(200, return_sequences=True, recurrent_initializer='glorot_uniform',
+                            stateful=stateful, name='lstm_1')(embedded_inputs)
+        lstm_2 = lstm_layer(200, return_sequences=True, recurrent_initializer='glorot_uniform',
+                            stateful=stateful, name='lstm_2')(lstm_1)
+
+        # Dense output: One element for each color number in the vocabulary
+        activation = 'softmax' if softmax else None
+        dense_output = keras.layers.Dense(vocab_size, name='dense_output', activation=activation)(lstm_2)
+        model = keras.Model(inputs=inputs_layer, outputs=dense_output)
+        return model
 
     def train(self, metrics=None, **kwargs):
         """
