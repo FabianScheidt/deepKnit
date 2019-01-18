@@ -12,6 +12,8 @@ import { TooltipDirective } from './tooltip.directive';
 import { HammerGestureConfig, HAMMER_GESTURE_CONFIG } from '@angular/platform-browser';
 import { DesignIdeasComponent } from './design-ideas/design-ideas.component';
 import { ColorListComponent } from './color-list/color-list.component';
+import { KnitpaintCanvasComponent } from './knitpaint-canvas/knitpaint-canvas.component';
+import { CanvasTesterComponent } from './canvas-tester/canvas-tester.component';
 
 declare var Hammer: any;
 
@@ -30,7 +32,9 @@ export class CustomHammerConfig extends HammerGestureConfig {
     TooltipComponent,
     TooltipDirective,
     DesignIdeasComponent,
-    ColorListComponent
+    ColorListComponent,
+    KnitpaintCanvasComponent,
+    CanvasTesterComponent
   ],
   imports: [
     BrowserModule,

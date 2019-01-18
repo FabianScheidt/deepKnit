@@ -1,5 +1,5 @@
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
+import { map, distinctUntilChanged } from 'rxjs/operators';
 import { COLOR_TABLE, COLOR_LABELS } from './knitpaint-constants';
 
 export type Color = [number, number, number];
@@ -8,7 +8,12 @@ export class Knitpaint {
   public static readonly COLOR_TABLE: Color[] = <Color[]>COLOR_TABLE;
   public static readonly COLOR_LABELS: string[] = COLOR_LABELS;
 
-  public data: BehaviorSubject<ArrayBufferLike> = new BehaviorSubject<ArrayBufferLike>(null);
+  public readonly data: BehaviorSubject<ArrayBufferLike> = new BehaviorSubject<ArrayBufferLike>(new ArrayBuffer(0));
+  public readonly width: BehaviorSubject<number> = new BehaviorSubject<number>(0);
+  public readonly height: Observable<number> = combineLatest(this.data, this.width).pipe(
+    map(([data, width]) => Math.ceil(data.byteLength / width)),
+    distinctUntilChanged()
+  );
 
   /**
    * Returns a string representing the color information of the provided color number
@@ -46,10 +51,14 @@ export class Knitpaint {
   /**
    * Creates a new Knitpaint object from a file blob or array buffer
    * @param data
+   * @param width
    */
-  constructor(data?: Blob | ArrayBufferLike) {
+  constructor(data?: Blob | ArrayBufferLike, width?: number) {
     if (data) {
       this.setData(data);
+    }
+    if (width) {
+      this.width.next(width);
     }
   }
 
@@ -114,5 +123,34 @@ export class Knitpaint {
         return colorNumbers.map((colorNumber: number) => Knitpaint.COLOR_TABLE[colorNumber]);
       }
     ));
+  }
+
+  /**
+   * Returns a canvas containing a colored representation
+   */
+  public getImage(): Observable<HTMLCanvasElement> {
+    return this.getColors().pipe(
+      map((colors: Color[]) => {
+        const width = this.width.getValue();
+        const height = Math.ceil(colors.length / width);
+        const pixelData = Array(width * height * 4);
+        for (let i = 0; i < colors.length; i++) {
+          const x = i % width;
+          const y = Math.floor(i / width);
+          const index = (y * width + x) * 4;
+          pixelData[index] = colors[i][0];
+          pixelData[index + 1] = colors[i][1];
+          pixelData[index + 2] = colors[i][2];
+          pixelData[index + 3] = 255;
+        }
+        const clampedArray = new Uint8ClampedArray(pixelData);
+        const imageData =  new ImageData(clampedArray, width, height);
+        const imageCanvas = document.createElement('canvas');
+        imageCanvas.width = width;
+        imageCanvas.height = height;
+        imageCanvas.getContext('2d').putImageData(imageData, 0, 0);
+        return imageCanvas;
+      })
+    );
   }
 }
