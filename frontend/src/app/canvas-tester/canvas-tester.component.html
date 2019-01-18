@@ -7,8 +7,15 @@
   <input type="checkbox" [(ngModel)]="enableTransform">
 </p>
 <p>
+  Active Tool:
+  <select [(ngModel)]="activeTool">
+    <option [ngValue]="tool" *ngFor="let tool of tools">{{ tool.name }}</option>
+  </select>
+  {{ activeTool.name }}
+</p>
+<p>
   <app-knitpaint-canvas
     [knitpaint]="someKnitpaint"
     [enableGrid]="enableGrid"
-    [enableTransform]="enableTransform"></app-knitpaint-canvas>
+    [activeTools]="getActiveTools()"></app-knitpaint-canvas>
 </p>

@@ -1,28 +1,25 @@
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { Knitpaint } from '../knitpaint';
-import { Subject, combineLatest, fromEvent } from 'rxjs';
+import { Subject, combineLatest } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { KnitpaintTool } from '../knitpaint-tools/knitpaint-tool';
 
 @Component({
   selector: 'app-knitpaint-canvas',
   templateUrl: './knitpaint-canvas.component.html',
   styleUrls: ['./knitpaint-canvas.component.scss']
 })
-export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
+export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
 
   @Input() knitpaint: Knitpaint;
   @Input() enableGrid = true;
-  @Input() enableTransform = true;
-  @Input() activeTool = null;
+  @Input() activeTools: KnitpaintTool[] = [];
 
   @ViewChild('canvas') private canvas: ElementRef<HTMLCanvasElement>;
   private ctx: CanvasRenderingContext2D;
   private knitpaintChanged = new Subject();
-  private enableTransformChanged = new Subject();
-  private isDestroyed = new Subject<boolean>();
 
   // Cached state of the knitpaint
-  private colorNumbers: number[] = [];
   private image: HTMLCanvasElement;
   private width = 0;
   private height = 0;
@@ -47,49 +44,105 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges, OnDes
 
     // Render
     this.renderCanvas();
-
-    // Attach events for canvas transformations
-    this.attachTransformEvents();
   }
 
   /**
-   * Updates the cached state of the knitpaint whenever the input changes
+   * Updates cached values and notifies tools whenever inputs change
    *
    * @param changes
    */
   ngOnChanges(changes: SimpleChanges) {
+    // Update knitpaint
     if (changes['knitpaint'] && this.knitpaint) {
-
-      // Emit knitpaintChanged to unsubscribe from previous subscriptions
-      this.knitpaintChanged.next();
-
-      // Subscribe to color numbers, image data, width and height and render canvas whenever one of these changes
-      combineLatest(this.knitpaint.getColorNumbers(), this.knitpaint.getImage(), this.knitpaint.width, this.knitpaint.height)
-        .pipe(takeUntil(this.knitpaintChanged))
-        .subscribe(([colorNumbers, image, width, height]) => {
-          this.colorNumbers = colorNumbers;
-          this.image = image;
-          this.width = width;
-          this.height = height;
-          this.renderCanvas();
-        });
+      this.changeKnitpaint(this.knitpaint);
     }
 
+    // Render the canvas if the grid is toggled
     if (changes['enableGrid']) {
       this.renderCanvas();
     }
 
-    if (changes['enableTransform']) {
-      this.enableTransformChanged.next();
-      this.attachTransformEvents();
+    // Allow proper change of tools
+    if (changes['activeTools']) {
+      const prev = <KnitpaintTool[]>changes['activeTools'].previousValue;
+      const curr = <KnitpaintTool[]>changes['activeTools'].currentValue;
+      this.changeTools(prev, curr);
     }
   }
 
   /**
-   * Marks isDestroyed as true to unsubscribe from any open observable
+   * Sets a new knitpaint object and makes sure that cached values are correct and tools are informed
+   *
+   * @param knitpaint
    */
-  ngOnDestroy() {
-    this.isDestroyed.next(true);
+  private changeKnitpaint(knitpaint: Knitpaint) {
+    // Emit knitpaintChanged to unsubscribe from previous subscriptions
+    this.knitpaintChanged.next();
+
+    // Subscribe to color numbers, image data, width and height and render canvas whenever one of these changes
+    combineLatest(this.knitpaint.getImage(), this.knitpaint.width, this.knitpaint.height)
+      .pipe(takeUntil(this.knitpaintChanged))
+      .subscribe(([image, width, height]) => {
+        this.image = image;
+        this.width = width;
+        this.height = height;
+        this.renderCanvas();
+      });
+
+    // Notify tools about the change
+    for (const tool of this.activeTools) {
+      if (tool.knitpaintAvailable) {
+        tool.knitpaintAvailable(this.knitpaint);
+      }
+    }
+  }
+
+  /**
+   * Sets a new view transformations matrix and makes sure that tools are informed
+   *
+   * @param transform
+   */
+  private setTransform(transform: SVGMatrix) {
+    // Set the new matrix
+    this.transform = transform;
+
+    // Notify tools
+    for (const tool of this.activeTools) {
+      if (tool.transformAvailable) {
+        tool.transformAvailable(this.transform);
+      }
+    }
+
+    // Render the canvas
+    this.renderCanvas();
+  }
+
+  /**
+   * Sets a new set of tools and calls the appropriate load and unload methods
+   *
+   * @param prevTools
+   * @param currTools
+   */
+  private changeTools(prevTools: KnitpaintTool[], currTools: KnitpaintTool[]) {
+    prevTools = prevTools || [];
+    currTools = currTools || [];
+
+    // Unload old tools
+    for (const prevTool of prevTools) {
+      if (currTools.indexOf(prevTool) === -1 && prevTool.unload) {
+        prevTool.unload();
+      }
+    }
+
+    // Load new tools
+    for (const currTool of currTools) {
+      if (prevTools.indexOf(currTool) === -1 && currTool.load) {
+        currTool.load(
+          this.canvas.nativeElement,
+          () => this.renderCanvas(),
+          (transform: SVGMatrix) => this.setTransform(transform));
+      }
+    }
   }
 
   /**
@@ -109,87 +162,24 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges, OnDes
    * Resets the view transformation to be centered and fit the canvas
    */
   public resetTransform() {
-    this.transform = this.someSVG.createSVGMatrix();
+    let transform = this.someSVG.createSVGMatrix();
     const canvasWidth = this.canvas.nativeElement.offsetWidth;
     const canvasHeight = this.canvas.nativeElement.offsetHeight;
 
     // Move coordinates to center
-    this.transform = this.transform.translate(canvasWidth / 2, canvasHeight / 2);
+    transform = transform.translate(canvasWidth / 2, canvasHeight / 2);
 
     // Scale to fit
     const xScale = this.canvas.nativeElement.offsetWidth / this.width;
     const yScale = this.canvas.nativeElement.offsetHeight / this.height;
     const scale = Math.min(xScale, yScale);
-    this.transform = this.transform.scale(scale);
+    transform = transform.scale(scale);
 
     // Knitpaint flows bottom to top
-    this.transform = this.transform.flipY();
+    transform = transform.flipY();
 
     // Center knitpaint
-    this.transform = this.transform.translate(-this.width / 2, -this.height / 2);
-  }
-
-  /**
-   * Attaches event handlers to allow scaling and translating the canvas
-   */
-  private attachTransformEvents() {
-    if (!this.enableTransform) {
-      return;
-    }
-
-    const canvas = this.canvas.nativeElement;
-
-    // Define methods to translate and scale based on canvas coordinates
-    const doTranslate = (x: number, y: number) => {
-      const scale = Math.sqrt(this.transform.a * this.transform.a + this.transform.c * this.transform.c);
-      this.transform = this.transform.scale(1 / scale).translate(x, y).scale(scale);
-    };
-    const doScale = (scale: number) => {
-      const scaleCenter = mousePoint.matrixTransform(this.transform.inverse());
-      this.transform = this.transform.translate(scaleCenter.x, scaleCenter.y).scale(scale).translate(-scaleCenter.x, -scaleCenter.y);
-    };
-
-    // Track the mouse as origin for scaling
-    let mousePoint: SVGPoint;
-    fromEvent(canvas, 'mousemove').pipe(takeUntil(this.enableTransformChanged)).subscribe((e: MouseEvent) => {
-      mousePoint = this.createPoint(e.offsetX, e.offsetY);
-    });
-
-    // Track wheel events for translating and zooming
-    fromEvent(canvas, 'wheel').pipe(takeUntil(this.enableTransformChanged)).subscribe((e: MouseWheelEvent) => {
-      e.preventDefault();
-      if (e.ctrlKey) {
-        const t = this.transform;
-        const currentScale = Math.sqrt(t.a * t.a + t.c * t.c);
-        const scale = Math.abs((currentScale - e.deltaY * 0.1) / currentScale);
-        doScale(scale);
-      } else {
-        doTranslate(-e.deltaX * 2, e.deltaY * 2);
-      }
-      this.renderCanvas();
-    });
-
-    // Track gestures for translating and zooming in browsers like Safari
-    let gestureStartPoint: SVGPoint;
-    let gestureStartTransform: SVGMatrix;
-
-    fromEvent(canvas, 'gesturestart').pipe(takeUntil(this.enableTransformChanged)).subscribe((e: any) => {
-      e.preventDefault();
-      gestureStartPoint = this.createPoint(e.pageX, e.pageY);
-      gestureStartTransform = this.transform.scale(1);
-    });
-
-    fromEvent(canvas, 'gesturechange').pipe(takeUntil(this.enableTransformChanged)).subscribe((e: any) => {
-      e.preventDefault();
-      this.transform = gestureStartTransform;
-      doTranslate(e.pageX - gestureStartPoint.x, e.pageY - gestureStartPoint.y);
-      doScale(e.scale);
-      this.renderCanvas();
-    });
-
-    fromEvent(canvas, 'gestureend').pipe(takeUntil(this.enableTransformChanged)).subscribe((e: any) => {
-      e.preventDefault();
-    });
+    this.setTransform(transform.translate(-this.width / 2, -this.height / 2));
   }
 
   /**
@@ -255,6 +245,13 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges, OnDes
         this.ctx.lineTo(endPoint.x, endPoint.y);
         this.ctx.lineWidth = (x % 5 === 0 ? 0.5 : 0.2);
         this.ctx.stroke();
+      }
+    }
+
+    // Allow the active tools to render something
+    for (const tool of this.activeTools) {
+      if (tool.render) {
+        tool.render(this.ctx, this.transform);
       }
     }
   }
