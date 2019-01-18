@@ -9,6 +9,8 @@ import { Knitpaint } from '../knitpaint';
 export class CanvasTesterComponent implements OnInit {
 
   someKnitpaint: Knitpaint;
+  enableGrid = true;
+  enableTransform = true;
 
   constructor() {
     const someWidth = 50;

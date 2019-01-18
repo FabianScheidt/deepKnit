@@ -12,11 +12,13 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges, OnDes
 
   @Input() knitpaint: Knitpaint;
   @Input() enableGrid = true;
+  @Input() enableTransform = true;
   @Input() activeTool = null;
 
   @ViewChild('canvas') private canvas: ElementRef<HTMLCanvasElement>;
   private ctx: CanvasRenderingContext2D;
   private knitpaintChanged = new Subject();
+  private enableTransformChanged = new Subject();
   private isDestroyed = new Subject<boolean>();
 
   // Cached state of the knitpaint
@@ -72,6 +74,15 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges, OnDes
           this.renderCanvas();
         });
     }
+
+    if (changes['enableGrid']) {
+      this.renderCanvas();
+    }
+
+    if (changes['enableTransform']) {
+      this.enableTransformChanged.next();
+      this.attachTransformEvents();
+    }
   }
 
   /**
@@ -122,6 +133,10 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges, OnDes
    * Attaches event handlers to allow scaling and translating the canvas
    */
   private attachTransformEvents() {
+    if (!this.enableTransform) {
+      return;
+    }
+
     const canvas = this.canvas.nativeElement;
 
     // Define methods to translate and scale based on canvas coordinates
@@ -136,12 +151,12 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges, OnDes
 
     // Track the mouse as origin for scaling
     let mousePoint: SVGPoint;
-    fromEvent(canvas, 'mousemove').subscribe((e: MouseEvent) => {
+    fromEvent(canvas, 'mousemove').pipe(takeUntil(this.enableTransformChanged)).subscribe((e: MouseEvent) => {
       mousePoint = this.createPoint(e.offsetX, e.offsetY);
     });
 
     // Track wheel events for translating and zooming
-    fromEvent(canvas, 'wheel').subscribe((e: MouseWheelEvent) => {
+    fromEvent(canvas, 'wheel').pipe(takeUntil(this.enableTransformChanged)).subscribe((e: MouseWheelEvent) => {
       e.preventDefault();
       if (e.ctrlKey) {
         const t = this.transform;
@@ -158,13 +173,13 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges, OnDes
     let gestureStartPoint: SVGPoint;
     let gestureStartTransform: SVGMatrix;
 
-    fromEvent(canvas, 'gesturestart').subscribe((e: any) => {
+    fromEvent(canvas, 'gesturestart').pipe(takeUntil(this.enableTransformChanged)).subscribe((e: any) => {
       e.preventDefault();
       gestureStartPoint = this.createPoint(e.pageX, e.pageY);
       gestureStartTransform = this.transform.scale(1);
     });
 
-    fromEvent(canvas, 'gesturechange').subscribe((e: any) => {
+    fromEvent(canvas, 'gesturechange').pipe(takeUntil(this.enableTransformChanged)).subscribe((e: any) => {
       e.preventDefault();
       this.transform = gestureStartTransform;
       doTranslate(e.pageX - gestureStartPoint.x, e.pageY - gestureStartPoint.y);
@@ -172,7 +187,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges, OnDes
       this.renderCanvas();
     });
 
-    fromEvent(canvas, 'gestureend').subscribe((e: any) => {
+    fromEvent(canvas, 'gestureend').pipe(takeUntil(this.enableTransformChanged)).subscribe((e: any) => {
       e.preventDefault();
     });
   }

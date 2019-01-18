@@ -1,6 +1,14 @@
 <p>
-  canvas-tester works!
+  Enable Grid:
+  <input type="checkbox" [(ngModel)]="enableGrid">
 </p>
 <p>
-  <app-knitpaint-canvas [knitpaint]="someKnitpaint"></app-knitpaint-canvas>
+  Enable Transform:
+  <input type="checkbox" [(ngModel)]="enableTransform">
+</p>
+<p>
+  <app-knitpaint-canvas
+    [knitpaint]="someKnitpaint"
+    [enableGrid]="enableGrid"
+    [enableTransform]="enableTransform"></app-knitpaint-canvas>
 </p>
