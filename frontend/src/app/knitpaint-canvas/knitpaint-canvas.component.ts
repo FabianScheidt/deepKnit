@@ -123,10 +123,14 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
   private changeTools(prevTools: KnitpaintTool[], currTools: KnitpaintTool[]) {
     prevTools = prevTools || [];
     currTools = currTools || [];
+    let needsRender = false;
 
     // Unload old tools
     for (const prevTool of prevTools) {
       if (currTools.indexOf(prevTool) === -1 && prevTool.unload) {
+        if (prevTool.render) {
+          needsRender = true;
+        }
         prevTool.unload();
       }
     }
@@ -146,11 +150,16 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
         if (currTool.knitpaintAvailable) {
           currTool.knitpaintAvailable(this.knitpaint);
         }
+        if (currTool.render) {
+          needsRender = true;
+        }
       }
     }
 
     // Render to clean paintings from old tools and allow new tools to draw
-    this.renderCanvas();
+    if (needsRender) {
+      this.renderCanvas();
+    }
   }
 
   /**
