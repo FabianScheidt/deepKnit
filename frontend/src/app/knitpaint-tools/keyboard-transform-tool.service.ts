@@ -14,8 +14,11 @@ export class KeyboardTransformTool implements KnitpaintTool {
   private readonly unloadSubject: Subject<void> = new Subject<void>();
   private setTransform: (transform: SVGMatrix) => void;
 
+  // Keep track of some values for animation
+  private startTime;
   private originalTransform: SVGMatrix;
   private dstScale: number;
+  private dstCenter: SVGPoint;
 
   // Helper element to create SVGMatrix and SVGPoint
   private readonly someSVG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -62,39 +65,48 @@ export class KeyboardTransformTool implements KnitpaintTool {
    * @param scale
    */
   private scaleAroundCenter(scale: number) {
+    // Complete previous transform if it exists
+    this.scaleToDst(this.dstScale);
+
+    // Set new destination
+    this.dstScale = scale;
+    this.originalTransform = this.transform.scale(1);
+    this.startTime = null;
+
     // Calculate the canvas center in knitpaint coordinates
-    let center = this.someSVG.createSVGPoint();
+    const center = this.someSVG.createSVGPoint();
     center.x = this.canvas.offsetWidth / 2;
     center.y = this.canvas.offsetHeight / 2;
-    center = center.matrixTransform(this.transform.inverse());
-
-    // Complete previous transform if it exists
-    if (this.originalTransform && this.dstScale) {
-      this.setTransform(this.scaleAroundPoint(this.originalTransform, this.dstScale, center));
-    }
-
-    // Keep a copy of the original transform and the destination scale
-    this.originalTransform = this.transform.scale(1);
-    this.dstScale = scale;
+    this.dstCenter = center.matrixTransform(this.transform.inverse());
 
     // Now animate the zoom
     const animationDuration = 150;
-    let start = null;
     const animationStep = (time) => {
-      start = start || time;
-      const relativeTime = time - start;
+      this.startTime = this.startTime || time;
+      const relativeTime = time - this.startTime;
       const progress = relativeTime / animationDuration;
-      let nextScale = Math.pow(scale, progress);
-      nextScale = scale > 1 ? Math.min(nextScale, scale) : Math.max(nextScale, scale);
-      this.setTransform(this.scaleAroundPoint(this.originalTransform, nextScale, center));
+      let nextScale = Math.pow(this.dstScale, progress);
+      nextScale = this.dstScale > 1 ? Math.min(nextScale, this.dstScale) : Math.max(nextScale, this.dstScale);
+      this.scaleToDst(nextScale);
       if (relativeTime < animationDuration) {
         window.requestAnimationFrame(animationStep);
+      } else {
+        delete this.originalTransform;
+        delete this.dstScale;
+        delete this.dstCenter;
       }
     };
     window.requestAnimationFrame(animationStep);
   }
 
-  private scaleAroundPoint(transform: SVGMatrix, scale: number, point: SVGPoint) {
-    return transform.translate(point.x, point.y).scale(scale).translate(-point.x, -point.y);
+  private scaleToDst(scale: number) {
+    if (this.originalTransform && this.dstScale && this.dstCenter) {
+      this.setTransform(
+        this.originalTransform
+          .translate(this.dstCenter.x, this.dstCenter.y)
+          .scale(scale)
+          .translate(-this.dstCenter.x, -this.dstCenter.y)
+      );
+    }
   }
 }
