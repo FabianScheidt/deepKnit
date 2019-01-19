@@ -4,6 +4,7 @@ import { KnitpaintTool } from '../knitpaint-tools/knitpaint-tool';
 import { ColorInfoTool } from '../knitpaint-tools/color-info-tool.service';
 import { ColorPickerTool } from '../knitpaint-tools/color-picker-tool.service';
 import { MultitouchTransformTool } from '../knitpaint-tools/multitouch-transform-tool.service';
+import { KeyboardTransformTool } from '../knitpaint-tools/keyboard-transform-tool.service';
 
 @Component({
   selector: 'app-canvas-tester',
@@ -19,6 +20,7 @@ export class CanvasTesterComponent implements AfterViewChecked {
   activeTool: KnitpaintTool;
 
   constructor(private multitouchTransformTool: MultitouchTransformTool,
+              private keyboardTransformTool: KeyboardTransformTool,
               private colorInfoTool: ColorInfoTool,
               private colorPickerTool: ColorPickerTool) {
 
@@ -45,6 +47,7 @@ export class CanvasTesterComponent implements AfterViewChecked {
     const tools = [this.activeTool];
     if (this.enableTransform) {
       tools.push(this.multitouchTransformTool);
+      tools.push(this.keyboardTransformTool);
     }
     return tools;
   }
