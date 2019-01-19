@@ -36,6 +36,33 @@ export class KnitpaintCanvasUtils {
   }
 
   /**
+   * Generates a standard view matrix based on the provided canvas and knitpaint dimensions
+   *
+   * @param canvasWidth
+   * @param canvasHeight
+   * @param knitpaintWidth
+   * @param knitpaintHeight
+   */
+  public static createResetSVGMatrix(canvasWidth: number, canvasHeight: number, knitpaintWidth: number, knitpaintHeight: number) {
+    let transform = this.createSVGMatrix();
+
+    // Move coordinates to center
+    transform = transform.translate(canvasWidth / 2, canvasHeight / 2);
+
+    // Scale to fit
+    const xScale = canvasWidth / knitpaintWidth;
+    const yScale = canvasHeight / knitpaintHeight;
+    const scale = Math.min(xScale, yScale);
+    transform = transform.scale(scale);
+
+    // Knitpaint flows bottom to top
+    transform = transform.flipY();
+
+    // Center knitpaint
+    return transform.translate(-knitpaintWidth / 2, -knitpaintHeight / 2);
+  }
+
+  /**
    * Scales a transformation matrix around a point
    *
    * @param transform

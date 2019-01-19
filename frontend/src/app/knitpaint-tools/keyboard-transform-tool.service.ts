@@ -3,6 +3,7 @@ import { fromEvent, Subject } from 'rxjs';
 import { KnitpaintTool } from './knitpaint-tool';
 import { takeUntil } from 'rxjs/operators';
 import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
+import { Knitpaint } from '../knitpaint';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,10 @@ export class KeyboardTransformTool implements KnitpaintTool {
 
   public readonly name = 'Keyboard Transform Tool';
   private canvas: HTMLCanvasElement;
+  private width: number;
+  private height: number;
   private transform: SVGMatrix;
+  private readonly knitpaintChanged: Subject<void> = new Subject<void>();
   private readonly unloadSubject: Subject<void> = new Subject<void>();
   private setTransform: (transform: SVGMatrix) => void;
 
@@ -33,6 +37,16 @@ export class KeyboardTransformTool implements KnitpaintTool {
     this.transform = transform;
   }
 
+  knitpaintAvailable(knitpaint: Knitpaint): void {
+    this.knitpaintChanged.next();
+    knitpaint.width
+      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
+      .subscribe((width: number) => this.width = width);
+    knitpaint.height
+      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
+      .subscribe((height: number) => this.height = height);
+  }
+
   unload(): void {
     this.unloadSubject.next();
   }
@@ -52,6 +66,13 @@ export class KeyboardTransformTool implements KnitpaintTool {
         if (e.keyCode === 189 && (e.metaKey || e.ctrlKey)) {
           e.preventDefault();
           this.scaleAroundCenter(0.5);
+        }
+        // ctr 0 or ⌘ 0
+        if (e.keyCode === 48 && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          const canvasWidth = this.canvas.offsetWidth;
+          const canvasHeight = this.canvas.offsetHeight;
+          this.setTransform(KnitpaintCanvasUtils.createResetSVGMatrix(canvasWidth, canvasHeight, this.width, this.height));
         }
       });
     });

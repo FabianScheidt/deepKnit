@@ -166,24 +166,9 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
    * Resets the view transformation to be centered and fit the canvas
    */
   public resetTransform() {
-    let transform = KnitpaintCanvasUtils.createSVGMatrix();
     const canvasWidth = this.canvas.nativeElement.offsetWidth;
     const canvasHeight = this.canvas.nativeElement.offsetHeight;
-
-    // Move coordinates to center
-    transform = transform.translate(canvasWidth / 2, canvasHeight / 2);
-
-    // Scale to fit
-    const xScale = this.canvas.nativeElement.offsetWidth / this.width;
-    const yScale = this.canvas.nativeElement.offsetHeight / this.height;
-    const scale = Math.min(xScale, yScale);
-    transform = transform.scale(scale);
-
-    // Knitpaint flows bottom to top
-    transform = transform.flipY();
-
-    // Center knitpaint
-    this.setTransform(transform.translate(-this.width / 2, -this.height / 2));
+    this.setTransform(KnitpaintCanvasUtils.createResetSVGMatrix(canvasWidth, canvasHeight, this.width, this.height));
   }
 
   /**
