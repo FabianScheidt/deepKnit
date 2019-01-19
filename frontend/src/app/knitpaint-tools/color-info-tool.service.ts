@@ -32,13 +32,13 @@ export class ColorInfoTool implements KnitpaintTool {
   knitpaintAvailable(knitpaint: Knitpaint): void {
     this.knitpaintChanged.next();
     knitpaint.width
-      .pipe(takeUntil(this.knitpaintChanged))
+      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
       .subscribe((width: number) => this.width = width);
     knitpaint.height
-      .pipe(takeUntil(this.knitpaintChanged))
+      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
       .subscribe((height: number) => this.height = height);
     knitpaint.getColorNumbers()
-      .pipe(takeUntil(this.knitpaintChanged))
+      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
       .subscribe((colorNumbers: number[]) => this.colorNumbers = colorNumbers);
   }
 

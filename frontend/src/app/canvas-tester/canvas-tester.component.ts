@@ -5,6 +5,7 @@ import { ColorInfoTool } from '../knitpaint-tools/color-info-tool.service';
 import { ColorPickerTool } from '../knitpaint-tools/color-picker-tool.service';
 import { MultitouchTransformTool } from '../knitpaint-tools/multitouch-transform-tool.service';
 import { KeyboardTransformTool } from '../knitpaint-tools/keyboard-transform-tool.service';
+import { GridTool } from '../knitpaint-tools/grid-tool.service';
 
 @Component({
   selector: 'app-canvas-tester',
@@ -19,7 +20,8 @@ export class CanvasTesterComponent implements AfterViewChecked {
   tools: KnitpaintTool[] = [];
   activeTool: KnitpaintTool;
 
-  constructor(private multitouchTransformTool: MultitouchTransformTool,
+  constructor(private gridTool: GridTool,
+              private multitouchTransformTool: MultitouchTransformTool,
               private keyboardTransformTool: KeyboardTransformTool,
               private colorInfoTool: ColorInfoTool,
               private colorPickerTool: ColorPickerTool) {
@@ -44,11 +46,15 @@ export class CanvasTesterComponent implements AfterViewChecked {
   }
 
   getActiveTools() {
-    const tools = [this.activeTool];
+    const tools = [];
+    if (this.enableGrid) {
+      tools.push(this.gridTool);
+    }
     if (this.enableTransform) {
       tools.push(this.multitouchTransformTool);
       tools.push(this.keyboardTransformTool);
     }
+    tools.push(this.activeTool);
     return tools;
   }
 

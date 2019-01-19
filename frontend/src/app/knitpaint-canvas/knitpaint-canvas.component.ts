@@ -12,7 +12,6 @@ import { KnitpaintTool } from '../knitpaint-tools/knitpaint-tool';
 export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
 
   @Input() knitpaint: Knitpaint;
-  @Input() enableGrid = true;
   @Input() activeTools: KnitpaintTool[] = [];
 
   @ViewChild('canvas') private canvas: ElementRef<HTMLCanvasElement>;
@@ -154,19 +153,6 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
   }
 
   /**
-   * Helper method to create an SVGPoint
-   *
-   * @param x
-   * @param y
-   */
-  private createPoint(x: number, y: number): SVGPoint {
-    const point = this.someSVG.createSVGPoint();
-    point.x = x;
-    point.y = y;
-    return point;
-  }
-
-  /**
    * Resets the view transformation to be centered and fit the canvas
    */
   public resetTransform() {
@@ -214,47 +200,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
     // Draw pixels as image
     this.ctx.imageSmoothingEnabled = false;
     this.ctx.drawImage(this.image, 0, 0);
-
     this.ctx.restore();
-
-    // Draw grid
-    if (this.enableGrid) {
-      this.ctx.strokeStyle = '#ffffff';
-
-      // Helper function to manually transform coordinates and round them for crisper and scale independent lines
-      const roundTransform = (point: SVGPoint) => {
-        const transformedPoint = point.matrixTransform(this.transform);
-        transformedPoint.x = Math.round(transformedPoint.x);
-        transformedPoint.y = Math.round(transformedPoint.y);
-        return transformedPoint;
-      };
-
-      // Horizontal
-      for (let y = 1; y < this.height; y++) {
-        let startPoint = this.createPoint(0, y);
-        startPoint = roundTransform(startPoint);
-        let endPoint = this.createPoint(this.width, y);
-        endPoint = roundTransform(endPoint);
-        this.ctx.beginPath();
-        this.ctx.moveTo(startPoint.x, startPoint.y);
-        this.ctx.lineTo(endPoint.x, endPoint.y);
-        this.ctx.lineWidth = (y % 5 === 0 ? 0.5 : 0.2);
-        this.ctx.stroke();
-      }
-
-      // Vertical
-      for (let x = 1; x < this.width; x++) {
-        let startPoint = this.createPoint(x, 0);
-        startPoint = roundTransform(startPoint);
-        let endPoint = this.createPoint(x, this.height);
-        endPoint = roundTransform(endPoint);
-        this.ctx.beginPath();
-        this.ctx.moveTo(startPoint.x, startPoint.y);
-        this.ctx.lineTo(endPoint.x, endPoint.y);
-        this.ctx.lineWidth = (x % 5 === 0 ? 0.5 : 0.2);
-        this.ctx.stroke();
-      }
-    }
 
     // Allow the active tools to render something
     for (const tool of this.activeTools) {
