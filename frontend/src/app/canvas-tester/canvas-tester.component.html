@@ -1,25 +1,30 @@
-<p>
-  Enable Grid:
-  <input type="checkbox" [(ngModel)]="enableGrid">
-</p>
-<p>
-  Enable Transform:
-  <input type="checkbox" [(ngModel)]="enableTransform">
-</p>
-<p>
-  Active Tool:
-  <select [(ngModel)]="activeTool">
-    <option [ngValue]="tool" *ngFor="let tool of tools">{{ tool.name }}</option>
-  </select>
-  {{ activeTool.name }}
-</p>
-<p>
-  Picked Color: {{ pickedColor }}
-</p>
-<p>
-  <app-knitpaint-canvas
-    [knitpaint]="someKnitpaint"
-    [activeTools]="getActiveTools()"></app-knitpaint-canvas>
-</p>
-
+<div class="wrapper">
+  <div>
+    <p>
+      Enable Grid:
+      <input type="checkbox" [(ngModel)]="enableGrid">
+    </p>
+    <p>
+      Enable Transform:
+      <input type="checkbox" [(ngModel)]="enableTransform">
+    </p>
+    <p>
+      Active Tool:
+      <select [(ngModel)]="activeTool">
+        <option [ngValue]="tool" *ngFor="let tool of tools">{{ tool.name }}</option>
+      </select>
+    </p>
+    <p>
+      Picked Color: {{ pickedColor }}
+    </p>
+  </div>
+  <div>
+    <p>
+      <app-knitpaint-canvas
+        [knitpaint]="someKnitpaint"
+        [activeTools]="getActiveTools()"></app-knitpaint-canvas>
+    </p>
+  </div>
+</div>
 <app-tooltip></app-tooltip>
+

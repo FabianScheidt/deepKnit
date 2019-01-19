@@ -6,6 +6,7 @@ import { ColorPickerTool } from '../knitpaint-tools/color-picker-tool.service';
 import { MultitouchTransformTool } from '../knitpaint-tools/multitouch-transform-tool.service';
 import { KeyboardTransformTool } from '../knitpaint-tools/keyboard-transform-tool.service';
 import { GridTool } from '../knitpaint-tools/grid-tool.service';
+import { DrawTool } from '../knitpaint-tools/draw-tool.service';
 
 @Component({
   selector: 'app-canvas-tester',
@@ -25,7 +26,8 @@ export class CanvasTesterComponent implements AfterViewChecked {
               private multitouchTransformTool: MultitouchTransformTool,
               private keyboardTransformTool: KeyboardTransformTool,
               private colorInfoTool: ColorInfoTool,
-              private colorPickerTool: ColorPickerTool) {
+              private colorPickerTool: ColorPickerTool,
+              private drawTool: DrawTool) {
 
     // Build some knitpaint to test with
     const someWidth = 50;
@@ -42,11 +44,12 @@ export class CanvasTesterComponent implements AfterViewChecked {
     this.someKnitpaint = new Knitpaint(someArrayBuffer, someWidth);
 
     // Register tools
-    this.tools = [colorInfoTool, colorPickerTool];
-    this.activeTool = colorInfoTool;
+    this.tools = [colorInfoTool, colorPickerTool, drawTool];
+    this.activeTool = drawTool;
 
     this.colorPickerTool.colorPicked.subscribe((colorNumber: number) => {
       this.pickedColor = colorNumber;
+      this.drawTool.colorNumber = colorNumber;
     });
   }
 

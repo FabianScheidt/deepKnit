@@ -1,3 +1,12 @@
+.wrapper {
+  display: flex;
+
+  & > div:first-child {
+    min-width: 250px;
+    padding: 20px;
+  }
+}
+
 app-knitpaint-canvas {
   width: 640px;
   height: 360px;

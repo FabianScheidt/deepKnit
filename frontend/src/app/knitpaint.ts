@@ -99,6 +99,9 @@ export class Knitpaint {
    * @param colorNumber
    */
   public setColorNumber(index: number, colorNumber: number) {
+    if ((!index && index !== 0) || index < 0 || index >= this.data.getValue().byteLength) {
+      return;
+    }
     const uint: Uint8Array = new Uint8Array(this.data.getValue());
     uint.fill(colorNumber, index, index + 1);
     this.data.next(this.data.getValue());
