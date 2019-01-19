@@ -3,6 +3,7 @@ import { Knitpaint } from '../knitpaint';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { KnitpaintTool } from '../knitpaint-tools/knitpaint-tool';
+import { KnitpaintCanvasUtils } from './knitpaint-canvas-utils';
 
 @Component({
   selector: 'app-knitpaint-canvas',
@@ -25,9 +26,6 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
 
   // Current view transformation
   private transform: SVGMatrix;
-
-  // Helper element to create SVGMatrix and SVGPoint
-  private readonly someSVG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
   constructor() {}
 
@@ -156,7 +154,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
    * Resets the view transformation to be centered and fit the canvas
    */
   public resetTransform() {
-    let transform = this.someSVG.createSVGMatrix();
+    let transform = KnitpaintCanvasUtils.createSVGMatrix();
     const canvasWidth = this.canvas.nativeElement.offsetWidth;
     const canvasHeight = this.canvas.nativeElement.offsetHeight;
 

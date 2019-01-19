@@ -3,6 +3,7 @@ import { KnitpaintTool } from './knitpaint-tool';
 import { Subject } from 'rxjs';
 import { Knitpaint } from '../knitpaint';
 import { takeUntil } from 'rxjs/operators';
+import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
 
 @Injectable({
   providedIn: 'root'
@@ -15,9 +16,6 @@ export class GridTool implements KnitpaintTool {
   private requestRender: () => void;
   private readonly knitpaintChanged: Subject<void> = new Subject<void>();
   private readonly unloadSubject: Subject<void> = new Subject<void>();
-
-  // Helper element to create SVGMatrix and SVGPoint
-  private readonly someSVG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
   constructor() { }
 
@@ -46,19 +44,6 @@ export class GridTool implements KnitpaintTool {
   }
 
   /**
-   * Helper method to create an SVGPoint
-   *
-   * @param x
-   * @param y
-   */
-  private createPoint(x: number, y: number): SVGPoint {
-    const point = this.someSVG.createSVGPoint();
-    point.x = x;
-    point.y = y;
-    return point;
-  }
-
-  /**
    * Renders a grid into the provided canvas context
    *
    * @param ctx
@@ -78,9 +63,9 @@ export class GridTool implements KnitpaintTool {
 
     // Horizontal
     for (let y = 1; y < this.height; y++) {
-      let startPoint = this.createPoint(0, y);
+      let startPoint = KnitpaintCanvasUtils.createSVGPoint(0, y);
       startPoint = roundTransform(startPoint);
-      let endPoint = this.createPoint(this.width, y);
+      let endPoint = KnitpaintCanvasUtils.createSVGPoint(this.width, y);
       endPoint = roundTransform(endPoint);
       ctx.beginPath();
       ctx.moveTo(startPoint.x, startPoint.y);
@@ -91,9 +76,9 @@ export class GridTool implements KnitpaintTool {
 
     // Vertical
     for (let x = 1; x < this.width; x++) {
-      let startPoint = this.createPoint(x, 0);
+      let startPoint = KnitpaintCanvasUtils.createSVGPoint(x, 0);
       startPoint = roundTransform(startPoint);
-      let endPoint = this.createPoint(x, this.height);
+      let endPoint = KnitpaintCanvasUtils.createSVGPoint(x, this.height);
       endPoint = roundTransform(endPoint);
       ctx.beginPath();
       ctx.moveTo(startPoint.x, startPoint.y);

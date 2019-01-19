@@ -4,6 +4,7 @@ import { Knitpaint } from '../knitpaint';
 import { TooltipService } from '../tooltip.service';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
 
 @Injectable({
   providedIn: 'root'
@@ -12,16 +13,12 @@ export class ColorInfoTool implements KnitpaintTool {
 
   public name = 'Color Info';
   private width: number;
-  private height: number;
   private colorNumbers: number[];
   private transform: SVGMatrix;
   private mouseX: number;
   private mouseY: number;
   private readonly knitpaintChanged: Subject<void> = new Subject<void>();
   private readonly unloadSubject: Subject<void> = new Subject<void>();
-
-  // Helper element to create SVGMatrix and SVGPoint
-  private readonly someSVG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
   constructor(private ngZone: NgZone, private tooltipService: TooltipService) { }
 
@@ -34,9 +31,6 @@ export class ColorInfoTool implements KnitpaintTool {
     knitpaint.width
       .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
       .subscribe((width: number) => this.width = width);
-    knitpaint.height
-      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
-      .subscribe((height: number) => this.height = height);
     knitpaint.getColorNumbers()
       .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
       .subscribe((colorNumbers: number[]) => this.colorNumbers = colorNumbers);
@@ -51,7 +45,6 @@ export class ColorInfoTool implements KnitpaintTool {
 
   unload(): void {
     delete this.width;
-    delete this.height;
     delete this.colorNumbers;
     delete this.transform;
     delete this.mouseX;
@@ -72,7 +65,7 @@ export class ColorInfoTool implements KnitpaintTool {
         this.mouseY = event.offsetY;
         this.updateTooltip();
       });
-      fromEvent(canvas, 'mouseout').pipe(takeUntil(this.unloadSubject)).subscribe((event: MouseEvent) => {
+      fromEvent(canvas, 'mouseout').pipe(takeUntil(this.unloadSubject)).subscribe(() => {
         this.tooltipService.visible.next(false);
       });
     });
@@ -100,13 +93,8 @@ export class ColorInfoTool implements KnitpaintTool {
    */
   private getColorNumber(x: number, y: number): number {
     if (this.colorNumbers && this.transform) {
-      let point = this.someSVG.createSVGPoint();
-      point.x = x;
-      point.y = y;
-      point = point.matrixTransform(this.transform.inverse());
-
-      if (point.x >= 0 && point.x < this.width && point.y >= 0 && point.y < this.height) {
-        const index = Math.floor(point.y) * this.width + Math.floor(point.x);
+      const index = KnitpaintCanvasUtils.getIndexAtCoordinates(x, y, this.width, this.transform.inverse());
+      if (index && index < this.colorNumbers.length) {
         return this.colorNumbers[index];
       }
     }

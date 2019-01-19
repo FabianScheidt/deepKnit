@@ -2,6 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { fromEvent, Subject } from 'rxjs';
 import { KnitpaintTool } from './knitpaint-tool';
 import { takeUntil } from 'rxjs/operators';
+import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
 
 @Injectable({
   providedIn: 'root'
@@ -19,9 +20,6 @@ export class KeyboardTransformTool implements KnitpaintTool {
   private originalTransform: SVGMatrix;
   private dstScale: number;
   private dstCenter: SVGPoint;
-
-  // Helper element to create SVGMatrix and SVGPoint
-  private readonly someSVG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
   constructor(private ngZone: NgZone) { }
 
@@ -74,10 +72,9 @@ export class KeyboardTransformTool implements KnitpaintTool {
     this.startTime = null;
 
     // Calculate the canvas center in knitpaint coordinates
-    const center = this.someSVG.createSVGPoint();
-    center.x = this.canvas.offsetWidth / 2;
-    center.y = this.canvas.offsetHeight / 2;
-    this.dstCenter = center.matrixTransform(this.transform.inverse());
+    const canvasCenterX = this.canvas.offsetWidth / 2;
+    const canvasCenterY = this.canvas.offsetHeight / 2;
+    this.dstCenter = KnitpaintCanvasUtils.createTransformedSVGPoint(canvasCenterX, canvasCenterY, this.transform.inverse());
 
     // Now animate the zoom
     const animationDuration = 150;
@@ -101,12 +98,7 @@ export class KeyboardTransformTool implements KnitpaintTool {
 
   private scaleToDst(scale: number) {
     if (this.originalTransform && this.dstScale && this.dstCenter) {
-      this.setTransform(
-        this.originalTransform
-          .translate(this.dstCenter.x, this.dstCenter.y)
-          .scale(scale)
-          .translate(-this.dstCenter.x, -this.dstCenter.y)
-      );
+      this.setTransform(KnitpaintCanvasUtils.scaleAroundPoint(this.originalTransform, scale, this.dstCenter));
     }
   }
 }
