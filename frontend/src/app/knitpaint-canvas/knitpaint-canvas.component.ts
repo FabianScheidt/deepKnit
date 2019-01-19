@@ -148,6 +148,9 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
         }
       }
     }
+
+    // Render to clean paintings from old tools and allow new tools to draw
+    this.renderCanvas();
   }
 
   /**

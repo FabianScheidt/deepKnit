@@ -21,7 +21,6 @@ export class GridTool implements KnitpaintTool {
 
   load(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void {
     this.requestRender = requestRender;
-    this.requestRender();
   }
 
   knitpaintAvailable(knitpaint: Knitpaint): void {
@@ -39,7 +38,9 @@ export class GridTool implements KnitpaintTool {
   }
 
   unload(): void {
-    this.requestRender();
+    delete this.width;
+    delete this.height;
+    delete this.requestRender;
     this.unloadSubject.next();
   }
 
