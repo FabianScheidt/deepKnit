@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewChecked, Component } from '@angular/core';
 import { Knitpaint } from '../knitpaint';
 import { KnitpaintTool } from '../knitpaint-tools/knitpaint-tool';
 import { ColorInfoTool } from '../knitpaint-tools/color-info-tool.service';
@@ -10,7 +10,7 @@ import { MultitouchTransformTool } from '../knitpaint-tools/multitouch-transform
   templateUrl: './canvas-tester.component.html',
   styleUrls: ['./canvas-tester.component.scss']
 })
-export class CanvasTesterComponent implements OnInit {
+export class CanvasTesterComponent implements AfterViewChecked {
 
   someKnitpaint: Knitpaint;
   enableGrid = true;
@@ -49,7 +49,8 @@ export class CanvasTesterComponent implements OnInit {
     return tools;
   }
 
-  ngOnInit() {
+  ngAfterViewChecked(): void {
+    console.log('View checked');
   }
 
 }
