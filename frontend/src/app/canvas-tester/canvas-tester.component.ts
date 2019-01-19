@@ -19,6 +19,7 @@ export class CanvasTesterComponent implements AfterViewChecked {
   enableTransform = true;
   tools: KnitpaintTool[] = [];
   activeTool: KnitpaintTool;
+  pickedColor = 0;
 
   constructor(private gridTool: GridTool,
               private multitouchTransformTool: MultitouchTransformTool,
@@ -43,6 +44,10 @@ export class CanvasTesterComponent implements AfterViewChecked {
     // Register tools
     this.tools = [colorInfoTool, colorPickerTool];
     this.activeTool = colorInfoTool;
+
+    this.colorPickerTool.colorPicked.subscribe((colorNumber: number) => {
+      this.pickedColor = colorNumber;
+    });
   }
 
   getActiveTools() {
