@@ -136,11 +136,19 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
 
     // Load new tools
     for (const currTool of currTools) {
-      if (prevTools.indexOf(currTool) === -1 && currTool.load) {
-        currTool.load(
-          this.canvas.nativeElement,
-          () => this.renderCanvas(),
-          (transform: SVGMatrix) => this.setTransform(transform));
+      if (prevTools.indexOf(currTool) === -1) {
+        if (currTool.load) {
+          currTool.load(
+            this.canvas.nativeElement,
+            () => this.renderCanvas(),
+            (transform: SVGMatrix) => this.setTransform(transform));
+        }
+        if (currTool.transformAvailable) {
+          currTool.transformAvailable(this.transform);
+        }
+        if (currTool.knitpaintAvailable) {
+          currTool.knitpaintAvailable(this.knitpaint);
+        }
       }
     }
   }
