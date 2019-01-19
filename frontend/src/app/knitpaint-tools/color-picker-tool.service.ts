@@ -49,7 +49,7 @@ export class ColorPickerTool implements KnitpaintTool {
   private attachPickerEvents(canvas: HTMLCanvasElement) {
     fromEvent(canvas, 'click').pipe(takeUntil(this.unloadSubject)).subscribe((e: MouseEvent) => {
       const index = KnitpaintCanvasUtils.getIndexAtCoordinates(e.offsetX, e.offsetY, this.width, this.transform.inverse());
-      if (index && index < this.colorNumbers.length) {
+      if (index === 0 || (index && index < this.colorNumbers.length)) {
         const colorNumber = this.colorNumbers[index];
         this.colorPickedSubject.next(colorNumber);
       }

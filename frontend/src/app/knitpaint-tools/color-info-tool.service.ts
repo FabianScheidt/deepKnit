@@ -94,7 +94,7 @@ export class ColorInfoTool implements KnitpaintTool {
   private getColorNumber(x: number, y: number): number {
     if (this.colorNumbers && this.transform) {
       const index = KnitpaintCanvasUtils.getIndexAtCoordinates(x, y, this.width, this.transform.inverse());
-      if (index && index < this.colorNumbers.length) {
+      if (index === 0 || (index && index < this.colorNumbers.length)) {
         return this.colorNumbers[index];
       }
     }
