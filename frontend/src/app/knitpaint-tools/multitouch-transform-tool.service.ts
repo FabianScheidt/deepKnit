@@ -30,6 +30,8 @@ export class MultitouchTransformTool extends AbstractKnitpaintTool implements Kn
    */
   private attachTransformEvents(canvas: HTMLCanvasElement) {
     this.ngZone.runOutsideAngular(() => {
+      let mousePoint: SVGPoint;
+
       // Define methods to translate and scale based on canvas coordinates
       const doTranslate = (transform: SVGMatrix, x: number, y: number): SVGMatrix => {
         return transform.multiply(transform.inverse()).translate(x, y).multiply(transform);
@@ -40,7 +42,6 @@ export class MultitouchTransformTool extends AbstractKnitpaintTool implements Kn
       };
 
       // Track the mouse as origin for scaling
-      let mousePoint: SVGPoint;
       fromEvent(canvas, 'mousemove').pipe(takeUntil(this.unloadSubject)).subscribe((e: MouseEvent) => {
         mousePoint = KnitpaintCanvasUtils.createSVGPoint(e.offsetX, e.offsetY);
       });
