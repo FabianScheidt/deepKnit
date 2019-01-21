@@ -1,22 +1,17 @@
 import { Injectable, NgZone } from '@angular/core';
-import { fromEvent, Subject } from 'rxjs';
+import { fromEvent } from 'rxjs';
 import { KnitpaintTool } from './knitpaint-tool';
+import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 import { takeUntil } from 'rxjs/operators';
 import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
-import { Knitpaint } from '../knitpaint';
 
 @Injectable({
   providedIn: 'root'
 })
-export class KeyboardTransformTool implements KnitpaintTool {
+export class KeyboardTransformTool extends AbstractKnitpaintTool implements KnitpaintTool {
 
   public readonly name = 'Keyboard Transform Tool';
   private canvas: HTMLCanvasElement;
-  private width: number;
-  private height: number;
-  private transform: SVGMatrix;
-  private readonly knitpaintChanged: Subject<void> = new Subject<void>();
-  private readonly unloadSubject: Subject<void> = new Subject<void>();
   private setTransform: (transform: SVGMatrix) => void;
 
   // Keep track of some values for animation
@@ -25,30 +20,14 @@ export class KeyboardTransformTool implements KnitpaintTool {
   private dstScale: number;
   private dstCenter: SVGPoint;
 
-  constructor(private ngZone: NgZone) { }
+  constructor(private ngZone: NgZone) {
+    super();
+  }
 
   load(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void {
     this.canvas = canvas;
     this.setTransform = setTransform;
     this.attachTransformEvents();
-  }
-
-  transformAvailable(transform: SVGMatrix): void {
-    this.transform = transform;
-  }
-
-  knitpaintAvailable(knitpaint: Knitpaint): void {
-    this.knitpaintChanged.next();
-    knitpaint.width
-      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
-      .subscribe((width: number) => this.width = width);
-    knitpaint.height
-      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
-      .subscribe((height: number) => this.height = height);
-  }
-
-  unload(): void {
-    this.unloadSubject.next();
   }
 
   /**
@@ -72,7 +51,8 @@ export class KeyboardTransformTool implements KnitpaintTool {
           e.preventDefault();
           const canvasWidth = this.canvas.offsetWidth;
           const canvasHeight = this.canvas.offsetHeight;
-          this.setTransform(KnitpaintCanvasUtils.createResetSVGMatrix(canvasWidth, canvasHeight, this.width, this.height));
+          this.setTransform(
+            KnitpaintCanvasUtils.createResetSVGMatrix(canvasWidth, canvasHeight, this.knitpaintWidth, this.knitpaintHeight));
         }
       });
     });

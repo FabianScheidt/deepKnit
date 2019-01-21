@@ -1,36 +1,18 @@
 import { Injectable } from '@angular/core';
 import { KnitpaintTool } from './knitpaint-tool';
-import { Subject } from 'rxjs';
-import { Knitpaint } from '../knitpaint';
-import { takeUntil } from 'rxjs/operators';
 import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
+import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 
 @Injectable({
   providedIn: 'root'
 })
-export class GridTool implements KnitpaintTool {
+export class GridTool extends AbstractKnitpaintTool implements KnitpaintTool {
 
   public readonly name = 'Grid';
-  private width: number;
-  private height: number;
   private requestRender: () => void;
-  private readonly knitpaintChanged: Subject<void> = new Subject<void>();
-  private readonly unloadSubject: Subject<void> = new Subject<void>();
-
-  constructor() { }
 
   load(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void {
     this.requestRender = requestRender;
-  }
-
-  knitpaintAvailable(knitpaint: Knitpaint): void {
-    this.knitpaintChanged.next();
-    knitpaint.width
-      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
-      .subscribe((width: number) => this.width = width);
-    knitpaint.height
-      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
-      .subscribe((height: number) => this.height = height);
   }
 
   render(ctx: CanvasRenderingContext2D, transform: SVGMatrix): void {
@@ -38,10 +20,8 @@ export class GridTool implements KnitpaintTool {
   }
 
   unload(): void {
-    delete this.width;
-    delete this.height;
+    super.unload();
     delete this.requestRender;
-    this.unloadSubject.next();
   }
 
   /**
@@ -63,10 +43,10 @@ export class GridTool implements KnitpaintTool {
     };
 
     // Horizontal
-    for (let y = 1; y < this.height; y++) {
+    for (let y = 1; y < this.knitpaintHeight; y++) {
       let startPoint = KnitpaintCanvasUtils.createSVGPoint(0, y);
       startPoint = roundTransform(startPoint);
-      let endPoint = KnitpaintCanvasUtils.createSVGPoint(this.width, y);
+      let endPoint = KnitpaintCanvasUtils.createSVGPoint(this.knitpaintWidth, y);
       endPoint = roundTransform(endPoint);
       ctx.beginPath();
       ctx.moveTo(startPoint.x, startPoint.y);
@@ -76,10 +56,10 @@ export class GridTool implements KnitpaintTool {
     }
 
     // Vertical
-    for (let x = 1; x < this.width; x++) {
+    for (let x = 1; x < this.knitpaintWidth; x++) {
       let startPoint = KnitpaintCanvasUtils.createSVGPoint(x, 0);
       startPoint = roundTransform(startPoint);
-      let endPoint = KnitpaintCanvasUtils.createSVGPoint(x, this.height);
+      let endPoint = KnitpaintCanvasUtils.createSVGPoint(x, this.knitpaintHeight);
       endPoint = roundTransform(endPoint);
       ctx.beginPath();
       ctx.moveTo(startPoint.x, startPoint.y);

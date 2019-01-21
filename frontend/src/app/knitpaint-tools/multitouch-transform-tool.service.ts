@@ -1,32 +1,25 @@
 import { Injectable, NgZone } from '@angular/core';
 import { KnitpaintTool } from './knitpaint-tool';
-import { fromEvent, Subject } from 'rxjs';
+import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
+import { fromEvent } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
 
 @Injectable({
   providedIn: 'root'
 })
-export class MultitouchTransformTool implements KnitpaintTool {
+export class MultitouchTransformTool extends AbstractKnitpaintTool implements KnitpaintTool {
 
   public readonly name = 'Multitouch Transform Tool';
-  private transform: SVGMatrix;
-  private readonly unloadSubject: Subject<void> = new Subject<void>();
   private setTransform: (transform: SVGMatrix) => void;
 
-  constructor(private ngZone: NgZone) { }
+  constructor(private ngZone: NgZone) {
+    super();
+  }
 
   load(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void {
     this.setTransform = setTransform;
     this.attachTransformEvents(canvas);
-  }
-
-  transformAvailable(transform: SVGMatrix): void {
-    this.transform = transform;
-  }
-
-  unload(): void {
-    this.unloadSubject.next();
   }
 
   /**

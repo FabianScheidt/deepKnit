@@ -1,55 +1,40 @@
 import { Injectable, NgZone } from '@angular/core';
 import { KnitpaintTool } from './knitpaint-tool';
+import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 import { Knitpaint } from '../knitpaint';
 import { TooltipService } from '../tooltip.service';
-import { fromEvent, Subject } from 'rxjs';
+import { fromEvent } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ColorInfoTool implements KnitpaintTool {
+export class ColorInfoTool extends AbstractKnitpaintTool implements KnitpaintTool {
 
   public name = 'Color Info';
-  private width: number;
-  private colorNumbers: number[];
-  private transform: SVGMatrix;
   private mouseX: number;
   private mouseY: number;
-  private readonly knitpaintChanged: Subject<void> = new Subject<void>();
-  private readonly unloadSubject: Subject<void> = new Subject<void>();
 
-  constructor(private ngZone: NgZone, private tooltipService: TooltipService) { }
+  constructor(private ngZone: NgZone, private tooltipService: TooltipService) {
+    super();
+  }
 
   load(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void {
     this.attachTooltipEvents(canvas);
   }
 
-  knitpaintAvailable(knitpaint: Knitpaint): void {
-    this.knitpaintChanged.next();
-    knitpaint.width
-      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
-      .subscribe((width: number) => this.width = width);
-    knitpaint.getColorNumbers()
-      .pipe(takeUntil(this.knitpaintChanged), takeUntil(this.unloadSubject))
-      .subscribe((colorNumbers: number[]) => this.colorNumbers = colorNumbers);
-  }
-
   transformAvailable(transform: SVGMatrix): void {
-    this.transform = transform;
+    super.transformAvailable(transform);
     this.ngZone.runOutsideAngular(() => {
       this.updateTooltip();
     });
   }
 
   unload(): void {
-    delete this.width;
-    delete this.colorNumbers;
-    delete this.transform;
+    super.unload();
     delete this.mouseX;
     delete this.mouseY;
-    this.unloadSubject.next();
   }
 
   /**
@@ -92,10 +77,10 @@ export class ColorInfoTool implements KnitpaintTool {
    * @param y
    */
   private getColorNumber(x: number, y: number): number {
-    if (this.colorNumbers && this.transform) {
-      const index = KnitpaintCanvasUtils.getIndexAtCoordinates(x, y, this.width, this.transform.inverse());
-      if (index === 0 || (index && index < this.colorNumbers.length)) {
-        return this.colorNumbers[index];
+    if (this.knitpaintColorNumbers && this.transform) {
+      const index = KnitpaintCanvasUtils.getIndexAtCoordinates(x, y, this.knitpaintWidth, this.transform.inverse());
+      if (index === 0 || (index && index < this.knitpaintColorNumbers.length)) {
+        return this.knitpaintColorNumbers[index];
       }
     }
     return null;
