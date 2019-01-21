@@ -17,7 +17,7 @@ export class MultitouchTransformTool extends AbstractKnitpaintTool implements Kn
     super();
   }
 
-  load(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void {
+  load(canvas: HTMLCanvasElement, _, __, setTransform: (transform: SVGMatrix) => void): void {
     this.setTransform = setTransform;
     this.attachTransformEvents(canvas);
   }

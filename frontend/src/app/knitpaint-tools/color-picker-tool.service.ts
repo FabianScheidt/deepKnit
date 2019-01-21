@@ -14,15 +14,16 @@ export class ColorPickerTool extends AbstractKnitpaintTool implements KnitpaintT
   private readonly colorPickedSubject: Subject<number> = new Subject<number>();
   public readonly colorPicked: Observable<number> = this.colorPickedSubject.asObservable();
 
-  load(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void {
+  load(canvas: HTMLCanvasElement): void {
     this.attachPickerEvents(canvas);
   }
 
   private attachPickerEvents(canvas: HTMLCanvasElement) {
     fromEvent(canvas, 'click').pipe(takeUntil(this.unloadSubject)).subscribe((e: MouseEvent) => {
-      const index = KnitpaintCanvasUtils.getIndexAtCoordinates(e.offsetX, e.offsetY, this.knitpaintWidth, this.transform.inverse());
-      if (index === 0 || (index && index < this.knitpaintColorNumbers.length)) {
-        const colorNumber = this.knitpaintColorNumbers[index];
+      const index = KnitpaintCanvasUtils.getIndexAtCoordinates(e.offsetX, e.offsetY, this.knitpaint.width, this.transform.inverse());
+      const colorNumbers = this.knitpaint.getColorNumbers();
+      if (index === 0 || (index && index < colorNumbers.length)) {
+        const colorNumber = colorNumbers[index];
         this.colorPickedSubject.next(colorNumber);
       }
     });

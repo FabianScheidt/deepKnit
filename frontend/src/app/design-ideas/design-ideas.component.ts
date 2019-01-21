@@ -18,8 +18,8 @@ import saveAs from 'file-saver';
 })
 export class DesignIdeasComponent implements OnInit, AfterViewChecked {
 
-  designKnitpaint: Knitpaint;
-  ideaKnitpaint: Knitpaint;
+  designKnitpaint: BehaviorSubject<Knitpaint> = new BehaviorSubject<Knitpaint>(null);
+  ideaKnitpaint: BehaviorSubject<Knitpaint> = new BehaviorSubject<Knitpaint>(null);
   designTools: KnitpaintTool[] = [];
   ideaTools: KnitpaintTool[] = [];
   knitpaintWidth = 57;
@@ -42,8 +42,7 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
 
   isiOS = !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
 
-  constructor(private ngZone: NgZone,
-              private knitpaintSamplingService: KnitpaintSamplingService,
+  constructor(private knitpaintSamplingService: KnitpaintSamplingService,
               private knitpaintConversionService: KnitpaintConversionService,
               private gridTool: GridTool,
               private colorInfoTool: ColorInfoTool,
@@ -53,52 +52,47 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
     this.ideaTools = [gridTool, colorInfoTool, verticalSelectionTool];
     drawTool.colorNumber = this.selectedColorNumber;
     this.selection = verticalSelectionTool.selection;
-    this.selection.subscribe((selection) => {
-      this.selection_ = selection;
-      this.ngZone.run(() => {});
-    });
+    this.selection.subscribe((selection) => this.selection_ = selection);
   }
 
   ngOnInit() {
     this.initKnitpaintData();
 
-    this.ngZone.runOutsideAngular(() => {
+    // Generate the options for the sampling of the design ideas whenever the knitpaint or the temperature changes
+    const options: Observable<KnitpaintSamplingOptions> = combineLatest(this.designKnitpaint, this.model, this.temperature).pipe(
+      skip(1),
+      debounceTime(500),
+      map((res: [Knitpaint, string, number]) => {
+        const data = res[0].data;
+        const model = res[1];
+        const temperature = res[2];
+        const dataUint8Array = new Uint8Array(data);
 
-      // Generate the options for the sampling of the design ideas whenever the knitpaint or the temperature changes
-      const options: Observable<KnitpaintSamplingOptions> = combineLatest(this.designKnitpaint.data, this.model, this.temperature).pipe(
-        skip(1),
-        debounceTime(500),
-        map((res: [ArrayBuffer, string, number]) => {
-          const data = res[0];
-          const model = res[1];
-          const temperature = res[2];
-          const dataUint8Array = new Uint8Array(data);
+        // Find the last non-black index
+        let lastNonBlackIndex = 0;
+        dataUint8Array.forEach((value, index) => {
+          if (value !== 0) {
+            lastNonBlackIndex = index;
+          }
+        });
+        const start = dataUint8Array.slice(0, lastNonBlackIndex + 1);
+        return {
+          model,
+          temperature,
+          start: <ArrayBuffer>start.buffer,
+          numGenerate: this.knitpaintWidth * this.knitpaintHeight
+        };
+      })
+    );
 
-          // Find the last non-black index
-          let lastNonBlackIndex = 0;
-          dataUint8Array.forEach((value, index) => {
-            if (value !== 0) {
-              lastNonBlackIndex = index;
-            }
-          });
-          const start = dataUint8Array.slice(0, lastNonBlackIndex + 1);
-          return {
-            model,
-            temperature,
-            start: <ArrayBuffer>start.buffer,
-            numGenerate: this.knitpaintWidth * this.knitpaintHeight
-          };
-        })
-      );
-
-      this.knitpaintSamplingService.getContinuousSampleStream(options).subscribe((arrayBuffer) => {
-        this.ideaKnitpaint.setData(arrayBuffer);
-      }, (err) => {
-        console.error('Error', err);
-      }, () => {
-        console.log('Complete');
-      });
+    this.knitpaintSamplingService.getContinuousSampleStream(options).subscribe((arrayBuffer) => {
+      this.ideaKnitpaint.next(new Knitpaint(arrayBuffer, this.knitpaintWidth));
+    }, (err) => {
+      console.error('Error', err);
+    }, () => {
+      console.log('Complete');
     });
+
   }
 
   ngAfterViewChecked() {
@@ -107,20 +101,18 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
 
   private initKnitpaintData() {
     const length = this.knitpaintWidth * this.knitpaintHeight;
-    this.designKnitpaint = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer, this.knitpaintWidth);
-    this.ideaKnitpaint = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer, this.knitpaintWidth);
+    const designKnitpaint = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer, this.knitpaintWidth);
+    const ideaKnitpaint = new Knitpaint(<ArrayBuffer>(new Uint8Array(length)).buffer, this.knitpaintWidth);
+    this.designKnitpaint.next(designKnitpaint);
+    this.ideaKnitpaint.next(ideaKnitpaint);
   }
 
   public setModel(model: string) {
-    this.ngZone.runOutsideAngular(() => {
-      this.model.next(model);
-    });
+    this.model.next(model);
   }
 
   public setTemperature(temperature) {
-    this.ngZone.runOutsideAngular(() => {
-      this.temperature.next(temperature);
-    });
+    this.temperature.next(temperature);
   }
 
   /**
@@ -139,7 +131,7 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
             console.error('Width of imported dat does not match size of knitpaint viewer. Expected ' +
               this.knitpaintWidth + ' but got ' + res.width + '.');
           } else {
-            this.designKnitpaint.setData(res.data);
+            this.designKnitpaint.next(new Knitpaint(res.data, this.knitpaintWidth));
           }
         });
       });
@@ -152,11 +144,11 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
   }
 
   public exportDesignAsDat() {
-    this.exportAsDat(this.designKnitpaint, 'design.dat');
+    this.exportAsDat(this.designKnitpaint.getValue(), 'design.dat');
   }
 
   public exportIdeaAsDat() {
-    this.exportAsDat(this.ideaKnitpaint, 'idea.dat');
+    this.exportAsDat(this.ideaKnitpaint.getValue(), 'idea.dat');
   }
 
   /**
@@ -166,7 +158,7 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
    */
   exportAsDat(knitpaintData: Knitpaint, filename?: string) {
     const knitpaint: KnitpaintConversionInterface = {
-      data: knitpaintData.data.getValue(),
+      data: knitpaintData.data,
       width: this.knitpaintWidth
     };
     this.knitpaintConversionService.toDat(knitpaint).subscribe((dat: ArrayBuffer) => {
@@ -177,26 +169,26 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
 
   public copySelection() {
     const selection = this.selection.getValue();
+    const designKnitpaunt = this.designKnitpaint.getValue();
+    const ideaKnitpaint = this.ideaKnitpaint.getValue();
     if (selection) {
-      this.ngZone.runOutsideAngular(() => {
-        // Extract the selection content
-        const ideaUint8Array = new Uint8Array(this.ideaKnitpaint.data.getValue());
-        const copyContent = ideaUint8Array.slice(selection[0], selection[1] + 1);
+      // Extract the selection content
+      const ideaUint8Array = new Uint8Array(ideaKnitpaint.data);
+      const copyContent = ideaUint8Array.slice(selection[0], selection[1] + 1);
 
-        // Find out where to paste it
-        const knitpaintUint8Array = new Uint8Array(this.designKnitpaint.data.getValue());
-        let lastNonBlackIndex = 0;
-        knitpaintUint8Array.forEach((value, index) => {
-          if (value !== 0) {
-            lastNonBlackIndex = index;
-          }
-        });
-        const startIndex = Math.ceil((lastNonBlackIndex + 1) / this.knitpaintWidth) * this.knitpaintWidth;
-
-        // Perform the copy and update the knitpaint
-        knitpaintUint8Array.set(copyContent, startIndex);
-        this.designKnitpaint.setData(<ArrayBuffer>knitpaintUint8Array.buffer);
+      // Find out where to paste it
+      const knitpaintUint8Array = new Uint8Array(designKnitpaunt.data);
+      let lastNonBlackIndex = 0;
+      knitpaintUint8Array.forEach((value, index) => {
+        if (value !== 0) {
+          lastNonBlackIndex = index;
+        }
       });
+      const startIndex = Math.ceil((lastNonBlackIndex + 1) / this.knitpaintWidth) * this.knitpaintWidth;
+
+      // Perform the copy and update the knitpaint
+      knitpaintUint8Array.set(copyContent, startIndex);
+      this.designKnitpaint.next(new Knitpaint(<ArrayBuffer>knitpaintUint8Array.buffer, this.knitpaintWidth));
 
       // Clear the selection after copy
       this.selection.next(null);
@@ -206,6 +198,6 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
   public clear() {
     const length = this.knitpaintWidth * this.knitpaintHeight;
     const clear = new Uint8Array(length);
-    this.designKnitpaint.setData(<ArrayBuffer>clear.buffer);
+    this.designKnitpaint.next(new Knitpaint(<ArrayBuffer>clear.buffer, this.knitpaintWidth));
   }
 }

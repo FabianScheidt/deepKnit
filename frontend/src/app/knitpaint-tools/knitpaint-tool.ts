@@ -16,10 +16,16 @@ export interface KnitpaintTool {
    * @param requestRender
    * This method should be called when the tools requires the canvas to render.
    *
+   * @param setKnitpaint
+   * This method can be called to set a new knitpaint
+   *
    * @param setTransform
    * This method can be called to set a new view transform matrix
    */
-  load?(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void;
+  load?(canvas: HTMLCanvasElement,
+        requestRender: () => void,
+        setKnitpaint: (knitpaint: Knitpaint) => void,
+        setTransform: (transform: SVGMatrix) => void): void;
 
   /**
    * Is called when a new knitpaint object is set

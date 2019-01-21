@@ -18,7 +18,7 @@ export class VerticalSelectionTool extends AbstractKnitpaintTool implements Knit
     super();
   }
 
-  load(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void {
+  load(canvas: HTMLCanvasElement, requestRender: () => void): void {
     this.canvas = canvas;
     this.selection.next(null);
 
@@ -42,8 +42,8 @@ export class VerticalSelectionTool extends AbstractKnitpaintTool implements Knit
     ctx.save();
     ctx.transform(transform.a, transform.b, transform.c, transform.d, transform.e, transform.f);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.fillRect(0, 0, this.knitpaintWidth, selection[0] / this.knitpaintWidth);
-    ctx.fillRect(0, this.knitpaintHeight, this.knitpaintWidth, selection[1] / this.knitpaintWidth - this.knitpaintHeight);
+    ctx.fillRect(0, 0, this.knitpaint.width, selection[0] / this.knitpaint.width);
+    ctx.fillRect(0, this.knitpaint.height, this.knitpaint.width, selection[1] / this.knitpaint.width - this.knitpaint.height);
     ctx.restore();
   }
 
@@ -79,11 +79,11 @@ export class VerticalSelectionTool extends AbstractKnitpaintTool implements Knit
 
           // Find the indices of the selection based on the start and end coordinates
           const startX = 0;
-          const endX = this.knitpaintWidth - 0.1;
+          const endX = this.knitpaint.width - 0.1;
           const startY = Math.min(selectionStartTransformed.y, selectionEndTransformed.y);
           const endY = Math.max(selectionStartTransformed.y, selectionEndTransformed.y);
-          const startIndex = KnitpaintCanvasUtils.getIndexAtCoordinates(startX, startY, this.knitpaintWidth);
-          const endIndex = KnitpaintCanvasUtils.getIndexAtCoordinates(endX, endY, this.knitpaintWidth);
+          const startIndex = KnitpaintCanvasUtils.getIndexAtCoordinates(startX, startY, this.knitpaint.width);
+          const endIndex = KnitpaintCanvasUtils.getIndexAtCoordinates(endX, endY, this.knitpaint.width);
           const newSelection: [number, number] = [startIndex, endIndex];
 
           // Only emit the update if the selection actually changed

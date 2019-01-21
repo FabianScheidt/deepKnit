@@ -4,7 +4,9 @@
       <h1>Your Design</h1>
     </div>
     <div class="knitpaint">
-      <app-knitpaint-canvas [knitpaint]="designKnitpaint" [activeTools]="designTools"></app-knitpaint-canvas>
+      <app-knitpaint-canvas [knitpaint]="designKnitpaint | async"
+                            (knitpaintChanged)="designKnitpaint.next($event)"
+                            [activeTools]="designTools"></app-knitpaint-canvas>
     </div>
     <div class="toolbar">
       <app-color-picker [(selectedColorNumber)]="selectedColorNumber"></app-color-picker>
@@ -15,7 +17,9 @@
       <h1>ML Design Ideas</h1>
     </div>
     <div class="knitpaint">
-      <app-knitpaint-canvas [knitpaint]="ideaKnitpaint" [activeTools]="ideaTools"></app-knitpaint-canvas>
+      <app-knitpaint-canvas [knitpaint]="ideaKnitpaint | async"
+                            (knitpaintChanged)="ideaKnitpaint.next($event)"
+                            [activeTools]="ideaTools"></app-knitpaint-canvas>
     </div>
     <div class="toolbar">
       <div class="export-buttons">

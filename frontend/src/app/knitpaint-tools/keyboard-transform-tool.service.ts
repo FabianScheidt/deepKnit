@@ -24,7 +24,7 @@ export class KeyboardTransformTool extends AbstractKnitpaintTool implements Knit
     super();
   }
 
-  load(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void {
+  load(canvas: HTMLCanvasElement, _, __, setTransform: (transform: SVGMatrix) => void): void {
     this.canvas = canvas;
     this.setTransform = setTransform;
     this.attachTransformEvents();
@@ -52,7 +52,7 @@ export class KeyboardTransformTool extends AbstractKnitpaintTool implements Knit
           const canvasWidth = this.canvas.offsetWidth;
           const canvasHeight = this.canvas.offsetHeight;
           this.setTransform(
-            KnitpaintCanvasUtils.createResetSVGMatrix(canvasWidth, canvasHeight, this.knitpaintWidth, this.knitpaintHeight));
+            KnitpaintCanvasUtils.createResetSVGMatrix(canvasWidth, canvasHeight, this.knitpaint.width, this.knitpaint.height));
         }
       });
     });

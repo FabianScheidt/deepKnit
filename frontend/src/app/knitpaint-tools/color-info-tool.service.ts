@@ -20,7 +20,7 @@ export class ColorInfoTool extends AbstractKnitpaintTool implements KnitpaintToo
     super();
   }
 
-  load(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void {
+  load(canvas: HTMLCanvasElement): void {
     this.attachTooltipEvents(canvas);
   }
 
@@ -77,10 +77,11 @@ export class ColorInfoTool extends AbstractKnitpaintTool implements KnitpaintToo
    * @param y
    */
   private getColorNumber(x: number, y: number): number {
-    if (this.knitpaintColorNumbers && this.transform) {
-      const index = KnitpaintCanvasUtils.getIndexAtCoordinates(x, y, this.knitpaintWidth, this.transform.inverse());
-      if (index === 0 || (index && index < this.knitpaintColorNumbers.length)) {
-        return this.knitpaintColorNumbers[index];
+    if (this.knitpaint && this.transform) {
+      const colorNumbers = this.knitpaint.getColorNumbers();
+      const index = KnitpaintCanvasUtils.getIndexAtCoordinates(x, y, this.knitpaint.width, this.transform.inverse());
+      if (index === 0 || (index && index < colorNumbers.length)) {
+        return colorNumbers[index];
       }
     }
     return null;

@@ -1,7 +1,5 @@
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Knitpaint } from '../knitpaint';
-import { Subject, combineLatest } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 import { KnitpaintTool } from '../knitpaint-tools/knitpaint-tool';
 import { KnitpaintCanvasUtils } from './knitpaint-canvas-utils';
 
@@ -13,16 +11,11 @@ import { KnitpaintCanvasUtils } from './knitpaint-canvas-utils';
 export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
 
   @Input() knitpaint: Knitpaint;
+  @Output() readonly knitpaintChanged: EventEmitter<Knitpaint> = new EventEmitter<Knitpaint>();
   @Input() activeTools: KnitpaintTool[] = [];
 
   @ViewChild('canvas') private canvas: ElementRef<HTMLCanvasElement>;
   private ctx: CanvasRenderingContext2D;
-  private knitpaintChanged = new Subject();
-
-  // Cached state of the knitpaint
-  private image: HTMLCanvasElement;
-  private width = 0;
-  private height = 0;
 
   // Current view transformation
   private transform: SVGMatrix;
@@ -51,12 +44,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     // Update knitpaint
     if (changes['knitpaint'] && this.knitpaint) {
-      this.changeKnitpaint(this.knitpaint);
-    }
-
-    // Render the canvas if the grid is toggled
-    if (changes['enableGrid']) {
-      this.renderCanvas();
+      this.setKnitpaint(this.knitpaint);
     }
 
     // Allow proper change of tools
@@ -68,23 +56,13 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
   }
 
   /**
-   * Sets a new knitpaint object and makes sure that cached values are correct and tools are informed
+   * Sets a new knitpaint object and makes sure that tools are informed
    *
    * @param knitpaint
    */
-  private changeKnitpaint(knitpaint: Knitpaint) {
-    // Emit knitpaintChanged to unsubscribe from previous subscriptions
-    this.knitpaintChanged.next();
-
-    // Subscribe to color numbers, image data, width and height and render canvas whenever one of these changes
-    combineLatest(this.knitpaint.getImage(), this.knitpaint.width, this.knitpaint.height)
-      .pipe(takeUntil(this.knitpaintChanged))
-      .subscribe(([image, width, height]) => {
-        this.image = image;
-        this.width = width;
-        this.height = height;
-        this.renderCanvas();
-      });
+  private setKnitpaint(knitpaint: Knitpaint) {
+    // Set new knitpaint
+    this.knitpaint = knitpaint;
 
     // Notify tools about the change
     for (const tool of this.activeTools) {
@@ -92,6 +70,12 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
         tool.knitpaintAvailable(this.knitpaint);
       }
     }
+
+    // Render
+    this.renderCanvas();
+
+    // Notify others
+    this.knitpaintChanged.emit(this.knitpaint);
   }
 
   /**
@@ -142,6 +126,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
           currTool.load(
             this.canvas.nativeElement,
             () => this.renderCanvas(),
+            (knitpaint: Knitpaint) => this.setKnitpaint(knitpaint),
             (transform: SVGMatrix) => this.setTransform(transform));
         }
         if (currTool.transformAvailable) {
@@ -168,7 +153,9 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
   public resetTransform() {
     const canvasWidth = this.canvas.nativeElement.offsetWidth;
     const canvasHeight = this.canvas.nativeElement.offsetHeight;
-    this.setTransform(KnitpaintCanvasUtils.createResetSVGMatrix(canvasWidth, canvasHeight, this.width, this.height));
+    const knitpaintWidth = this.knitpaint.width;
+    const knitpaintHeight = this.knitpaint.height;
+    this.setTransform(KnitpaintCanvasUtils.createResetSVGMatrix(canvasWidth, canvasHeight, knitpaintWidth, knitpaintHeight));
   }
 
   /**
@@ -194,7 +181,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
 
     // Draw pixels as image
     this.ctx.imageSmoothingEnabled = false;
-    this.ctx.drawImage(this.image, 0, 0);
+    this.ctx.drawImage(this.knitpaint.getImage(), 0, 0);
     this.ctx.restore();
 
     // Allow the active tools to render something

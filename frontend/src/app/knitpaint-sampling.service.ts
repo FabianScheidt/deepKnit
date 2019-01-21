@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
-import { Observable, Observer, Subject } from 'rxjs';
+import { Injectable, NgZone } from '@angular/core';
+import { Observable, Observer } from 'rxjs';
 import fetchStream from 'fetch-readablestream';
-import { takeUntil } from 'rxjs/operators';
+import { flatMap, takeUntil, tap, throttleTime } from 'rxjs/operators';
 import { environment } from '../environments/environment';
 
 export interface KnitpaintSamplingOptions {
@@ -16,7 +16,7 @@ export interface KnitpaintSamplingOptions {
 })
 export class KnitpaintSamplingService {
 
-  constructor() { }
+  constructor(private ngZone: NgZone) { }
 
   /**
    * Fetches new samples whenever the options change
@@ -24,13 +24,14 @@ export class KnitpaintSamplingService {
    * @param options
    */
   public getContinuousSampleStream(options: Observable<KnitpaintSamplingOptions>): Observable<ArrayBuffer> {
-    const subject: Subject<ArrayBuffer> = new Subject<ArrayBuffer>();
-    options.subscribe((currentOptions?: KnitpaintSamplingOptions) => {
-      this.fetchSamples(currentOptions)
-        .pipe(takeUntil(options))
-        .subscribe((val) => subject.next(val), (err) => subject.error(err));
-    });
-    return subject.asObservable();
+    return options.pipe(
+      flatMap((currentOptions: KnitpaintSamplingOptions) =>
+        this.fetchSamples(currentOptions).pipe(
+          takeUntil(options),
+          throttleTime(40),
+          tap(() => this.ngZone.run(() => {})))
+      )
+    );
   }
 
   /**
@@ -102,9 +103,11 @@ export class KnitpaintSamplingService {
         body
       };
       console.log('Fetch');
-      fetchStream(environment.backendUrl + 'sample', fetchOptions)
-        .then(responseHandler)
-        .catch((err) => observer.error(err));
+      this.ngZone.runOutsideAngular(() => {
+        fetchStream(environment.backendUrl + 'sample', fetchOptions)
+          .then(responseHandler)
+          .catch((err) => observer.error(err));
+      });
 
       // Mark that response stream should be canceled when the subscription is canceled
       return () => {

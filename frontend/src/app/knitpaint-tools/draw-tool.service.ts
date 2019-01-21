@@ -4,6 +4,7 @@ import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 import { fromEvent } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
+import { Knitpaint } from '../knitpaint';
 
 @Injectable({
   providedIn: 'root'
@@ -12,13 +13,15 @@ export class DrawTool extends AbstractKnitpaintTool implements KnitpaintTool {
 
   public readonly name = 'Draw';
   public colorNumber = 0;
+  private setKnitpaint: (knitpaint: Knitpaint) => void;
 
   constructor(private ngZone: NgZone) {
     super();
   }
 
-  load(canvas: HTMLCanvasElement, requestRender: () => void, setTransform: (transform: SVGMatrix) => void): void {
+  load(canvas: HTMLCanvasElement, _, setKnitpaint: (knitpaint: Knitpaint) => void): void {
     this.attachDrawEvents(canvas);
+    this.setKnitpaint = setKnitpaint;
   }
 
   private attachDrawEvents(canvas: HTMLCanvasElement): void {
@@ -47,8 +50,9 @@ export class DrawTool extends AbstractKnitpaintTool implements KnitpaintTool {
    * @param y
    */
   private draw(x: number, y: number): void {
-    const index = KnitpaintCanvasUtils.getIndexAtCoordinates(x, y, this.knitpaintWidth, this.transform.inverse());
-    this.knitpaint.setColorNumber(index, this.colorNumber);
+    const index = KnitpaintCanvasUtils.getIndexAtCoordinates(x, y, this.knitpaint.width, this.transform.inverse());
+    const newKnitpaint = this.knitpaint.setColorNumber(index, this.colorNumber);
+    this.ngZone.run(() => this.setKnitpaint(newKnitpaint));
   }
 
 }
