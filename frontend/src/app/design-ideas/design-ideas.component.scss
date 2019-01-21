@@ -18,7 +18,13 @@
 
     .knitpaint {
       flex-grow: 1;
-      overflow-y: scroll;
+      position: relative;
+
+      app-knitpaint-canvas {
+        position: absolute;
+        width:100%;
+        height: calc(100% - 20px);
+      }
     }
 
     .toolbar {

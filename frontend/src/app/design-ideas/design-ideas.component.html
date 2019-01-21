@@ -4,10 +4,7 @@
       <h1>Your Design</h1>
     </div>
     <div class="knitpaint">
-      <app-knitpaint-viewer
-        #designKnitpaintViewer
-        [knitpaint]="knitpaint" [pixelsPerRow]="pixelsPerRow"
-        [enableDrawing]="true" [drawingColorNumber]="selectedColorNumber"></app-knitpaint-viewer>
+      <app-knitpaint-canvas [knitpaint]="designKnitpaint" [activeTools]="designTools"></app-knitpaint-canvas>
     </div>
     <div class="toolbar">
       <app-color-picker [(selectedColorNumber)]="selectedColorNumber"></app-color-picker>
@@ -18,17 +15,14 @@
       <h1>ML Design Ideas</h1>
     </div>
     <div class="knitpaint">
-      <app-knitpaint-viewer
-        #ideaKnitpaintViewer
-        [knitpaint]="designIdeas" [pixelsPerRow]="pixelsPerRow"
-        [enableSelection]="true" [(selection)]="selection"></app-knitpaint-viewer>
+      <app-knitpaint-canvas [knitpaint]="ideaKnitpaint" [activeTools]="ideaTools"></app-knitpaint-canvas>
     </div>
     <div class="toolbar">
       <div class="export-buttons">
         <button (click)="importDesign()" *ngIf="!isiOS">Import</button>
         <button (click)="exportDesignAsDat()" *ngIf="!isiOS">Export Design</button>
         <button (click)="exportIdeaAsDat()" *ngIf="!isiOS">Export Idea</button>
-        <button (click)="copySelection()" (tap)="copySelection()" [disabled]="selection === null">Copy Idea</button>
+        <button (click)="copySelection()" (tap)="copySelection()" [disabled]="selection_ === null">Copy Idea</button>
         <button (click)="copySelection()" (tap)="clear()">Clear</button>
       </div>
       <div class="model">

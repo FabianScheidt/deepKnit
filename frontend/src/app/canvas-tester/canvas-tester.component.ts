@@ -7,6 +7,7 @@ import { MultitouchTransformTool } from '../knitpaint-tools/multitouch-transform
 import { KeyboardTransformTool } from '../knitpaint-tools/keyboard-transform-tool.service';
 import { GridTool } from '../knitpaint-tools/grid-tool.service';
 import { DrawTool } from '../knitpaint-tools/draw-tool.service';
+import { VerticalSelectionTool } from '../knitpaint-tools/vertical-selection-tool.service';
 
 @Component({
   selector: 'app-canvas-tester',
@@ -27,6 +28,7 @@ export class CanvasTesterComponent implements AfterViewChecked {
               private keyboardTransformTool: KeyboardTransformTool,
               private colorInfoTool: ColorInfoTool,
               private colorPickerTool: ColorPickerTool,
+              private verticalSelectionTool: VerticalSelectionTool,
               private drawTool: DrawTool) {
 
     // Build some knitpaint to test with
@@ -44,8 +46,8 @@ export class CanvasTesterComponent implements AfterViewChecked {
     this.someKnitpaint = new Knitpaint(someArrayBuffer, someWidth);
 
     // Register tools
-    this.tools = [colorInfoTool, colorPickerTool, drawTool];
-    this.activeTool = drawTool;
+    this.tools = [colorInfoTool, colorPickerTool, drawTool, verticalSelectionTool];
+    this.activeTool = verticalSelectionTool;
 
     this.colorPickerTool.colorPicked.subscribe((colorNumber: number) => {
       this.pickedColor = colorNumber;
