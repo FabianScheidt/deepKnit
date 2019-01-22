@@ -1,0 +1,24 @@
+@import "editor-constants";
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: $main-background;
+
+  & /deep/ > * {
+    display: block;
+    flex-grow: 1;
+    flex-shrink: 1;
+  }
+
+  app-navigation,
+  router-outlet {
+    flex-grow: 0;
+    flex-shrink: 0;
+  }
+
+  app-navigation {
+    margin-bottom: 4px;
+  }
+}

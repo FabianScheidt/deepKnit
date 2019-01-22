@@ -1,0 +1,43 @@
+@import "../editor-constants";
+
+:host {
+  display: flex;
+}
+
+.tools {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 40px;
+  margin: 0 4px 0 0;
+  background-color: $panel-background;
+}
+
+.patterns {
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding: 60px;
+  line-height: 0;
+  text-align: center;
+
+  .pattern {
+    display: inline-block;
+    width: 160px;
+    height: 160px;
+    margin: 2px;
+    background-color: $panel-background;
+  }
+
+  .fill {
+    display: inline-block;
+    width: 160px;
+    margin: 2px;
+  }
+}
+
+.sidebar {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 300px;
+  margin: 0 0 0 4px;
+  background-color: $panel-background;
+}

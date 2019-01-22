@@ -1,0 +1,33 @@
+@import "../editor-constants";
+
+:host {
+  display: flex;
+}
+
+.tools {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 40px;
+  margin: 0 4px 0 0;
+  background-color: $panel-background;
+}
+
+.knitpaint {
+  flex-grow: 1;
+  flex-shrink: 1;
+  position: relative;
+
+  app-knitpaint-canvas {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.sidebar {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 300px;
+  margin: 0 0 0 4px;
+  background-color: $panel-background;
+}

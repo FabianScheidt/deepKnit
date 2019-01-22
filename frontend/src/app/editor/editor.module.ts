@@ -6,11 +6,13 @@ import { PatternsComponent } from './patterns/patterns.component';
 import { AssemblyComponent } from './assembly/assembly.component';
 import { NavigationComponent } from './navigation/navigation.component';
 import { EditorRoutingModule } from './editor-routing.module';
+import { KnitpaintCanvasModule } from '../knitpaint-canvas/knitpaint-canvas.module';
 
 @NgModule({
   imports: [
     CommonModule,
-    EditorRoutingModule
+    EditorRoutingModule,
+    KnitpaintCanvasModule
   ],
   declarations: [
     EditorComponent,
