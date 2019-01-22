@@ -4,10 +4,8 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HttpClientModule } from '@angular/common/http';
-import { ColorPickerComponent } from './design-ideas/color-picker/color-picker.component';
 import { FormsModule } from '@angular/forms';
 import { HammerGestureConfig, HAMMER_GESTURE_CONFIG } from '@angular/platform-browser';
-import { DesignIdeasComponent } from './design-ideas/design-ideas.component';
 import { TooltipModule } from './tooltip/tooltip.module';
 import { KnitpaintCanvasModule } from './knitpaint-canvas/knitpaint-canvas.module';
 
@@ -22,9 +20,7 @@ export class CustomHammerConfig extends HammerGestureConfig {
 }
 @NgModule({
   declarations: [
-    AppComponent,
-    ColorPickerComponent,
-    DesignIdeasComponent
+    AppComponent
   ],
   imports: [
     BrowserModule,

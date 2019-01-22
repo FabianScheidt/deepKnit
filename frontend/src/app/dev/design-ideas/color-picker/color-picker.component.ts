@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output } from '@angular/core';
-import { Knitpaint } from '../../knitpaint';
+import { Knitpaint } from '../../../knitpaint';
 import * as _ from 'lodash';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';

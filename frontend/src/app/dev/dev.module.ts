@@ -6,6 +6,8 @@ import { DevRoutingModule } from './dev-routing.module';
 import { KnitpaintCanvasModule } from '../knitpaint-canvas/knitpaint-canvas.module';
 import { TooltipModule } from '../tooltip/tooltip.module';
 import { ColorListComponent } from './color-list/color-list.component';
+import { DesignIdeasComponent } from './design-ideas/design-ideas.component';
+import { ColorPickerComponent } from './design-ideas/color-picker/color-picker.component';
 
 @NgModule({
   imports: [
@@ -16,8 +18,10 @@ import { ColorListComponent } from './color-list/color-list.component';
     TooltipModule
   ],
   declarations: [
-    CanvasTesterComponent,
-    ColorListComponent
+    DesignIdeasComponent,
+    ColorPickerComponent,
+    ColorListComponent,
+    CanvasTesterComponent
   ],
   exports: [
     CanvasTesterComponent,

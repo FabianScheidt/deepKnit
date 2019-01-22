@@ -1,11 +1,10 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { DesignIdeasComponent } from './design-ideas/design-ideas.component';
 
 const routes: Routes = [
   {
     path: '',
-    component: DesignIdeasComponent
+    loadChildren: './editor/editor.module#EditorModule'
   },
   {
     path: '',
