@@ -43,7 +43,6 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
 
   constructor(injector: Injector) {
     for (const knitpaintTool of knitpaintTools) {
-      console.log(injector.get(knitpaintTool));
       this.availableTools.push(injector.get(knitpaintTool));
     }
   }
