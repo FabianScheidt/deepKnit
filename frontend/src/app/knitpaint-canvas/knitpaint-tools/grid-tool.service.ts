@@ -40,8 +40,12 @@ export class GridTool extends AbstractKnitpaintTool implements KnitpaintTool {
       return transformedPoint;
     };
 
+    // Hide fine grid when pixel size becomes small
+    const pixelSize = Math.sqrt(transform.a * transform.a + transform.c * transform.c);
+    const minDistance = pixelSize > 5 ? 1 : (pixelSize < 1 ? 10 : 5);
+
     // Horizontal
-    for (let y = 1; y < this.knitpaint.height; y++) {
+    for (let y = minDistance; y < this.knitpaint.height; y += minDistance) {
       let startPoint = KnitpaintCanvasUtils.createSVGPoint(0, y);
       startPoint = roundTransform(startPoint);
       let endPoint = KnitpaintCanvasUtils.createSVGPoint(this.knitpaint.width, y);
@@ -54,7 +58,7 @@ export class GridTool extends AbstractKnitpaintTool implements KnitpaintTool {
     }
 
     // Vertical
-    for (let x = 1; x < this.knitpaint.width; x++) {
+    for (let x = minDistance; x < this.knitpaint.width; x += minDistance) {
       let startPoint = KnitpaintCanvasUtils.createSVGPoint(x, 0);
       startPoint = roundTransform(startPoint);
       let endPoint = KnitpaintCanvasUtils.createSVGPoint(x, this.knitpaint.height);
