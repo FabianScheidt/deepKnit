@@ -1,15 +1,15 @@
-import { AfterViewChecked, Component, NgZone, OnInit } from '@angular/core';
+import { AfterViewChecked, Component, OnInit, ViewChild } from '@angular/core';
 import { Knitpaint } from '../knitpaint';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { KnitpaintSamplingOptions, KnitpaintSamplingService } from '../knitpaint-sampling.service';
 import { debounceTime, map, skip } from 'rxjs/operators';
-import { KnitpaintTool } from '../knitpaint-tools/knitpaint-tool';
-import { ColorInfoTool } from '../knitpaint-tools/color-info-tool.service';
-import { DrawTool } from '../knitpaint-tools/draw-tool.service';
-import { GridTool } from '../knitpaint-tools/grid-tool.service';
-import { VerticalSelectionTool } from '../knitpaint-tools/vertical-selection-tool.service';
 import { KnitpaintConversionInterface, KnitpaintConversionService } from '../knitpaint-conversion.service';
 import saveAs from 'file-saver';
+import { KnitpaintCanvasComponent } from '../knitpaint-canvas/knitpaint-canvas.component';
+import { DrawTool } from '../knitpaint-canvas/knitpaint-tools/draw-tool.service';
+import { GridTool } from '../knitpaint-canvas/knitpaint-tools/grid-tool.service';
+import { ColorInfoTool } from '../knitpaint-canvas/knitpaint-tools/color-info-tool.service';
+import { VerticalSelectionTool } from '../knitpaint-canvas/knitpaint-tools/vertical-selection-tool.service';
 
 @Component({
   selector: 'app-design-ideas',
@@ -20,10 +20,11 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
 
   designKnitpaint: BehaviorSubject<Knitpaint> = new BehaviorSubject<Knitpaint>(null);
   ideaKnitpaint: BehaviorSubject<Knitpaint> = new BehaviorSubject<Knitpaint>(null);
-  designTools: KnitpaintTool[] = [];
-  ideaTools: KnitpaintTool[] = [];
   knitpaintWidth = 57;
   knitpaintHeight = 70;
+
+  @ViewChild('designCanvas') designCanvas: KnitpaintCanvasComponent;
+  @ViewChild('ideaCanvas') ideaCanvas: KnitpaintCanvasComponent;
 
   _selectedColorNumber = 1;
   public get selectedColorNumber(): number {
@@ -31,11 +32,11 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
   }
   public set selectedColorNumber(selectedColorNumber: number) {
     this._selectedColorNumber = selectedColorNumber;
-    this.drawTool.colorNumber = selectedColorNumber;
+    this.designCanvas.getTool(DrawTool).colorNumber = selectedColorNumber;
   }
 
   selection_: [number, number] = null;
-  readonly selection: BehaviorSubject<[number, number]>;
+  selection: BehaviorSubject<[number, number]>;
 
   model: BehaviorSubject<string> = new BehaviorSubject<string>('lstm');
   temperature: BehaviorSubject<number> = new BehaviorSubject(1.0);
@@ -43,20 +44,21 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
   isiOS = !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
 
   constructor(private knitpaintSamplingService: KnitpaintSamplingService,
-              private knitpaintConversionService: KnitpaintConversionService,
-              private gridTool: GridTool,
-              private colorInfoTool: ColorInfoTool,
-              private drawTool: DrawTool,
-              private verticalSelectionTool: VerticalSelectionTool) {
-    this.designTools = [gridTool, colorInfoTool, drawTool];
-    this.ideaTools = [gridTool, colorInfoTool, verticalSelectionTool];
-    drawTool.colorNumber = this.selectedColorNumber;
-    this.selection = verticalSelectionTool.selection;
-    this.selection.subscribe((selection) => this.selection_ = selection);
-  }
+              private knitpaintConversionService: KnitpaintConversionService) {}
 
   ngOnInit() {
+    // Init data
     this.initKnitpaintData();
+
+    // Register tools
+    this.designCanvas.activateTools(
+      [this.designCanvas.getTool(GridTool), this.designCanvas.getTool(ColorInfoTool), this.designCanvas.getTool(DrawTool)]);
+    this.ideaCanvas.activateTools([
+      this.ideaCanvas.getTool(GridTool), this.ideaCanvas.getTool(ColorInfoTool), this.ideaCanvas.getTool(VerticalSelectionTool)
+    ]);
+    this.designCanvas.getTool(DrawTool).colorNumber = this.selectedColorNumber;
+    this.selection = this.ideaCanvas.getTool(VerticalSelectionTool).selection;
+    this.selection.subscribe((selection) => this.selection_ = selection);
 
     // Generate the options for the sampling of the design ideas whenever the knitpaint or the temperature changes
     const options: Observable<KnitpaintSamplingOptions> = combineLatest(this.designKnitpaint, this.model, this.temperature).pipe(

@@ -1,13 +1,11 @@
 import { Injectable } from '@angular/core';
 import { fromEvent, Observable, Subject } from 'rxjs';
-import { KnitpaintTool } from './knitpaint-tool';
+import { KnitpaintTool } from '../knitpaint-tool';
 import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 import { takeUntil } from 'rxjs/operators';
-import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
+import { KnitpaintCanvasUtils } from '../knitpaint-canvas-utils';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class ColorPickerTool extends AbstractKnitpaintTool implements KnitpaintTool {
 
   name = 'Color Picker';

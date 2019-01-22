@@ -1,20 +1,21 @@
-import { AfterViewChecked, Component } from '@angular/core';
+import { AfterViewChecked, Component, OnInit, ViewChild } from '@angular/core';
 import { Knitpaint } from '../knitpaint';
-import { KnitpaintTool } from '../knitpaint-tools/knitpaint-tool';
-import { ColorInfoTool } from '../knitpaint-tools/color-info-tool.service';
-import { ColorPickerTool } from '../knitpaint-tools/color-picker-tool.service';
-import { MultitouchTransformTool } from '../knitpaint-tools/multitouch-transform-tool.service';
-import { KeyboardTransformTool } from '../knitpaint-tools/keyboard-transform-tool.service';
-import { GridTool } from '../knitpaint-tools/grid-tool.service';
-import { DrawTool } from '../knitpaint-tools/draw-tool.service';
-import { VerticalSelectionTool } from '../knitpaint-tools/vertical-selection-tool.service';
+import { KnitpaintTool } from '../knitpaint-canvas/knitpaint-tool';
+import { ColorInfoTool } from '../knitpaint-canvas/knitpaint-tools/color-info-tool.service';
+import { ColorPickerTool } from '../knitpaint-canvas/knitpaint-tools/color-picker-tool.service';
+import { MultitouchTransformTool } from '../knitpaint-canvas/knitpaint-tools/multitouch-transform-tool.service';
+import { KeyboardTransformTool } from '../knitpaint-canvas/knitpaint-tools/keyboard-transform-tool.service';
+import { GridTool } from '../knitpaint-canvas/knitpaint-tools/grid-tool.service';
+import { DrawTool } from '../knitpaint-canvas/knitpaint-tools/draw-tool.service';
+import { VerticalSelectionTool } from '../knitpaint-canvas/knitpaint-tools/vertical-selection-tool.service';
+import { KnitpaintCanvasComponent } from '../knitpaint-canvas/knitpaint-canvas.component';
 
 @Component({
   selector: 'app-canvas-tester',
   templateUrl: './canvas-tester.component.html',
   styleUrls: ['./canvas-tester.component.scss']
 })
-export class CanvasTesterComponent implements AfterViewChecked {
+export class CanvasTesterComponent implements OnInit, AfterViewChecked {
 
   someKnitpaint: Knitpaint;
   enableGrid = true;
@@ -23,14 +24,9 @@ export class CanvasTesterComponent implements AfterViewChecked {
   activeTool: KnitpaintTool;
   pickedColor = 0;
 
-  constructor(private gridTool: GridTool,
-              private multitouchTransformTool: MultitouchTransformTool,
-              private keyboardTransformTool: KeyboardTransformTool,
-              private colorInfoTool: ColorInfoTool,
-              private colorPickerTool: ColorPickerTool,
-              private verticalSelectionTool: VerticalSelectionTool,
-              private drawTool: DrawTool) {
+  @ViewChild('knitpaintCanvas') knitpaintCanvas: KnitpaintCanvasComponent;
 
+  constructor() {
     // Build some knitpaint to test with
     const someWidth = 50;
     const someHeight = 100;
@@ -44,28 +40,40 @@ export class CanvasTesterComponent implements AfterViewChecked {
     ]).flat(4);
     const someArrayBuffer = (new Uint8Array(someArray)).buffer;
     this.someKnitpaint = new Knitpaint(someArrayBuffer, someWidth);
+  }
 
+  ngOnInit(): void {
     // Register tools
+    const colorInfoTool = this.knitpaintCanvas.getTool(ColorInfoTool);
+    const colorPickerTool = this.knitpaintCanvas.getTool(ColorPickerTool);
+    const drawTool = this.knitpaintCanvas.getTool(DrawTool);
+    const verticalSelectionTool = this.knitpaintCanvas.getTool(VerticalSelectionTool);
     this.tools = [colorInfoTool, colorPickerTool, drawTool, verticalSelectionTool];
-    this.activeTool = verticalSelectionTool;
 
-    this.colorPickerTool.colorPicked.subscribe((colorNumber: number) => {
+    this.setActiveTool(verticalSelectionTool);
+
+    colorPickerTool.colorPicked.subscribe((colorNumber: number) => {
       this.pickedColor = colorNumber;
-      this.drawTool.colorNumber = colorNumber;
+      drawTool.colorNumber = colorNumber;
     });
   }
 
-  getActiveTools() {
+  setActiveTool(tool: KnitpaintTool) {
+    this.activeTool = tool;
+    this.activateTools();
+  }
+
+  activateTools() {
     const tools = [];
     if (this.enableGrid) {
-      tools.push(this.gridTool);
+      tools.push(this.knitpaintCanvas.getTool(GridTool));
     }
     if (this.enableTransform) {
-      tools.push(this.multitouchTransformTool);
-      tools.push(this.keyboardTransformTool);
+      tools.push(this.knitpaintCanvas.getTool(MultitouchTransformTool));
+      tools.push(this.knitpaintCanvas.getTool(KeyboardTransformTool));
     }
     tools.push(this.activeTool);
-    return tools;
+    this.knitpaintCanvas.activateTools(tools);
   }
 
   ngAfterViewChecked(): void {

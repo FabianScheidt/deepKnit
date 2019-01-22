@@ -1,4 +1,4 @@
-import { Knitpaint } from '../knitpaint';
+import { Knitpaint } from '../../knitpaint';
 import { Subject } from 'rxjs';
 
 export abstract class AbstractKnitpaintTool {

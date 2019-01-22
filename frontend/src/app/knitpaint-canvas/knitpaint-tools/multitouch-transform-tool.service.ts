@@ -1,13 +1,11 @@
 import { Injectable, NgZone } from '@angular/core';
-import { KnitpaintTool } from './knitpaint-tool';
+import { KnitpaintTool } from '../knitpaint-tool';
 import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 import { fromEvent } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
+import { KnitpaintCanvasUtils } from '../knitpaint-canvas-utils';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class MultitouchTransformTool extends AbstractKnitpaintTool implements KnitpaintTool {
 
   public readonly name = 'Multitouch Transform Tool';

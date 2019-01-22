@@ -1,26 +1,52 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Injector,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  Type,
+  ViewChild
+} from '@angular/core';
 import { Knitpaint } from '../knitpaint';
-import { KnitpaintTool } from '../knitpaint-tools/knitpaint-tool';
+import { KnitpaintTool } from './knitpaint-tool';
+import { knitpaintTools } from './knitpaint-tools';
 import { KnitpaintCanvasUtils } from './knitpaint-canvas-utils';
+
+
 
 @Component({
   selector: 'app-knitpaint-canvas',
   templateUrl: './knitpaint-canvas.component.html',
-  styleUrls: ['./knitpaint-canvas.component.scss']
+  styleUrls: ['./knitpaint-canvas.component.scss'],
+  providers: knitpaintTools
 })
 export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
 
+  // Knitpaint in- and output
   @Input() knitpaint: Knitpaint;
   @Output() readonly knitpaintChanged: EventEmitter<Knitpaint> = new EventEmitter<Knitpaint>();
-  @Input() activeTools: KnitpaintTool[] = [];
-
-  @ViewChild('canvas') private canvas: ElementRef<HTMLCanvasElement>;
-  private ctx: CanvasRenderingContext2D;
 
   // Current view transformation
   private transform: SVGMatrix;
 
-  constructor() {}
+  // Reference to the canvas and its rendering context
+  @ViewChild('canvas') private canvas: ElementRef<HTMLCanvasElement>;
+  private ctx: CanvasRenderingContext2D;
+
+  // Available and active tools
+  private availableTools: KnitpaintTool[] = [];
+  private activeTools: KnitpaintTool[] = [];
+
+  constructor(injector: Injector) {
+    for (const knitpaintTool of knitpaintTools) {
+      console.log(injector.get(knitpaintTool));
+      this.availableTools.push(injector.get(knitpaintTool));
+    }
+  }
 
   /**
    * Prepares the canvas
@@ -45,13 +71,6 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
     // Update knitpaint
     if (changes['knitpaint'] && this.knitpaint) {
       this.setKnitpaint(this.knitpaint);
-    }
-
-    // Allow proper change of tools
-    if (changes['activeTools']) {
-      const prev = <KnitpaintTool[]>changes['activeTools'].previousValue;
-      const curr = <KnitpaintTool[]>changes['activeTools'].currentValue;
-      this.changeTools(prev, curr);
     }
   }
 
@@ -99,14 +118,36 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
   }
 
   /**
+   * Returns a list of available tools
+   */
+  public getAvailableTools(): KnitpaintTool[] {
+    return this.availableTools.slice();
+  }
+
+  /**
+   * Returns a list of activated tools
+   */
+  public getActiveTools(): KnitpaintTool[] {
+    return this.activeTools.slice();
+  }
+
+  /**
+   * Returns the tool with the provided class
+   *
+   * @param toolClass
+   */
+  public getTool<T>(toolClass: Type<T>): T {
+    return <any>this.availableTools.find((tool) => tool instanceof toolClass);
+  }
+
+  /**
    * Sets a new set of tools and calls the appropriate load and unload methods
    *
-   * @param prevTools
-   * @param currTools
+   * @param tools
    */
-  private changeTools(prevTools: KnitpaintTool[], currTools: KnitpaintTool[]) {
-    prevTools = prevTools || [];
-    currTools = currTools || [];
+  public activateTools(tools?: KnitpaintTool[]) {
+    const prevTools = this.activeTools || [];
+    const currTools = tools || [];
     let needsRender = false;
 
     // Unload old tools
@@ -140,6 +181,9 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
         }
       }
     }
+
+    // Update list of tools
+    this.activeTools = currTools;
 
     // Render to clean paintings from old tools and allow new tools to draw
     if (needsRender) {

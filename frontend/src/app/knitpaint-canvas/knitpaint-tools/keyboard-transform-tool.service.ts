@@ -1,13 +1,11 @@
 import { Injectable, NgZone } from '@angular/core';
 import { fromEvent } from 'rxjs';
-import { KnitpaintTool } from './knitpaint-tool';
+import { KnitpaintTool } from '../knitpaint-tool';
 import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 import { takeUntil } from 'rxjs/operators';
-import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
+import { KnitpaintCanvasUtils } from '../knitpaint-canvas-utils';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class KeyboardTransformTool extends AbstractKnitpaintTool implements KnitpaintTool {
 
   public readonly name = 'Keyboard Transform Tool';

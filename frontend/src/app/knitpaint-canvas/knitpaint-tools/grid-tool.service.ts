@@ -1,11 +1,9 @@
 import { Injectable } from '@angular/core';
-import { KnitpaintTool } from './knitpaint-tool';
-import { KnitpaintCanvasUtils } from '../knitpaint-canvas/knitpaint-canvas-utils';
+import { KnitpaintTool } from '../knitpaint-tool';
+import { KnitpaintCanvasUtils } from '../knitpaint-canvas-utils';
 import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class GridTool extends AbstractKnitpaintTool implements KnitpaintTool {
 
   public readonly name = 'Grid';

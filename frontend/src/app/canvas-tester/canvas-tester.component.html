@@ -10,7 +10,7 @@
     </p>
     <p>
       Active Tool:
-      <select [(ngModel)]="activeTool">
+      <select [ngModel]="activeTool" (ngModelChange)="setActiveTool($event)">
         <option [ngValue]="tool" *ngFor="let tool of tools">{{ tool.name }}</option>
       </select>
     </p>
@@ -21,8 +21,8 @@
   <div>
     <p>
       <app-knitpaint-canvas
-        [knitpaint]="someKnitpaint"
-        [activeTools]="getActiveTools()"></app-knitpaint-canvas>
+        #knitpaintCanvas
+        [knitpaint]="someKnitpaint"></app-knitpaint-canvas>
     </p>
   </div>
 </div>
