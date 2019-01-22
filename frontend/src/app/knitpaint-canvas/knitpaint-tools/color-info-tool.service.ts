@@ -2,7 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { KnitpaintTool } from '../knitpaint-tool';
 import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 import { Knitpaint } from '../../knitpaint';
-import { TooltipService } from '../../tooltip.service';
+import { TooltipService } from '../../tooltip/tooltip.service';
 import { fromEvent } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { KnitpaintCanvasUtils } from '../knitpaint-canvas-utils';

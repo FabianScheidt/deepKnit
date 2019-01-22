@@ -2,11 +2,11 @@
   <div>
     <p>
       Enable Grid:
-      <input type="checkbox" [(ngModel)]="enableGrid">
+      <input type="checkbox" [ngModel]="enableGrid" (ngModelChange)="setEnableGrid($event)">
     </p>
     <p>
       Enable Transform:
-      <input type="checkbox" [(ngModel)]="enableTransform">
+      <input type="checkbox" [ngModel]="enableTransform" (ngModelChange)="setEnableTransform($event)">
     </p>
     <p>
       Active Tool:
@@ -26,5 +26,5 @@
     </p>
   </div>
 </div>
-<app-tooltip></app-tooltip>
+<app-tooltip-outlet></app-tooltip-outlet>
 

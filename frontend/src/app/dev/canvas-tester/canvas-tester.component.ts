@@ -1,14 +1,14 @@
 import { AfterViewChecked, Component, OnInit, ViewChild } from '@angular/core';
-import { Knitpaint } from '../knitpaint';
-import { KnitpaintTool } from '../knitpaint-canvas/knitpaint-tool';
-import { ColorInfoTool } from '../knitpaint-canvas/knitpaint-tools/color-info-tool.service';
-import { ColorPickerTool } from '../knitpaint-canvas/knitpaint-tools/color-picker-tool.service';
-import { MultitouchTransformTool } from '../knitpaint-canvas/knitpaint-tools/multitouch-transform-tool.service';
-import { KeyboardTransformTool } from '../knitpaint-canvas/knitpaint-tools/keyboard-transform-tool.service';
-import { GridTool } from '../knitpaint-canvas/knitpaint-tools/grid-tool.service';
-import { DrawTool } from '../knitpaint-canvas/knitpaint-tools/draw-tool.service';
-import { VerticalSelectionTool } from '../knitpaint-canvas/knitpaint-tools/vertical-selection-tool.service';
-import { KnitpaintCanvasComponent } from '../knitpaint-canvas/knitpaint-canvas.component';
+import { Knitpaint } from '../../knitpaint';
+import { KnitpaintTool } from '../../knitpaint-canvas/knitpaint-tool';
+import { ColorInfoTool } from '../../knitpaint-canvas/knitpaint-tools/color-info-tool.service';
+import { ColorPickerTool } from '../../knitpaint-canvas/knitpaint-tools/color-picker-tool.service';
+import { MultitouchTransformTool } from '../../knitpaint-canvas/knitpaint-tools/multitouch-transform-tool.service';
+import { KeyboardTransformTool } from '../../knitpaint-canvas/knitpaint-tools/keyboard-transform-tool.service';
+import { GridTool } from '../../knitpaint-canvas/knitpaint-tools/grid-tool.service';
+import { DrawTool } from '../../knitpaint-canvas/knitpaint-tools/draw-tool.service';
+import { VerticalSelectionTool } from '../../knitpaint-canvas/knitpaint-tools/vertical-selection-tool.service';
+import { KnitpaintCanvasComponent } from '../../knitpaint-canvas/knitpaint-canvas.component';
 
 @Component({
   selector: 'app-canvas-tester',
@@ -56,6 +56,16 @@ export class CanvasTesterComponent implements OnInit, AfterViewChecked {
       this.pickedColor = colorNumber;
       drawTool.colorNumber = colorNumber;
     });
+  }
+
+  setEnableGrid(enableGrid: boolean) {
+    this.enableGrid = enableGrid;
+    this.activateTools();
+  }
+
+  setEnableTransform(enableTransform: boolean) {
+    this.enableTransform = enableTransform;
+    this.activateTools();
   }
 
   setActiveTool(tool: KnitpaintTool) {

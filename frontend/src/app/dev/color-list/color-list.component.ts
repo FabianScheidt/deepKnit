@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Knitpaint } from '../knitpaint';
+import { Knitpaint } from '../../knitpaint';
 import * as _ from 'lodash';
 
 @Component({
@@ -10,7 +10,9 @@ import * as _ from 'lodash';
 export class ColorListComponent implements OnInit {
   colorNumbers = _.range(0, 256);
 
-  constructor() { }
+  constructor() {
+    console.log('!!!!');
+  }
 
   ngOnInit() {
   }

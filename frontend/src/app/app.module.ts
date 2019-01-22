@@ -4,15 +4,12 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HttpClientModule } from '@angular/common/http';
-import { ColorPickerComponent } from './color-picker/color-picker.component';
+import { ColorPickerComponent } from './design-ideas/color-picker/color-picker.component';
 import { FormsModule } from '@angular/forms';
-import { TooltipComponent } from './tooltip/tooltip.component';
-import { TooltipDirective } from './tooltip.directive';
 import { HammerGestureConfig, HAMMER_GESTURE_CONFIG } from '@angular/platform-browser';
 import { DesignIdeasComponent } from './design-ideas/design-ideas.component';
-import { ColorListComponent } from './color-list/color-list.component';
-import { KnitpaintCanvasComponent } from './knitpaint-canvas/knitpaint-canvas.component';
-import { CanvasTesterComponent } from './canvas-tester/canvas-tester.component';
+import { TooltipModule } from './tooltip/tooltip.module';
+import { KnitpaintCanvasModule } from './knitpaint-canvas/knitpaint-canvas.module';
 
 declare var Hammer: any;
 
@@ -27,18 +24,15 @@ export class CustomHammerConfig extends HammerGestureConfig {
   declarations: [
     AppComponent,
     ColorPickerComponent,
-    TooltipComponent,
-    TooltipDirective,
-    DesignIdeasComponent,
-    ColorListComponent,
-    KnitpaintCanvasComponent,
-    CanvasTesterComponent
+    DesignIdeasComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    FormsModule
+    FormsModule,
+    TooltipModule,
+    KnitpaintCanvasModule
   ],
   providers: [
     { provide: HAMMER_GESTURE_CONFIG, useClass: CustomHammerConfig }

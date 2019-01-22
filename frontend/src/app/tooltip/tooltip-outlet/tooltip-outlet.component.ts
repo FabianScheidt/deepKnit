@@ -4,11 +4,11 @@ import { fromEvent, Subject } from 'rxjs';
 import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-tooltip',
-  templateUrl: './tooltip.component.html',
-  styleUrls: ['./tooltip.component.scss']
+  selector: 'app-tooltip-outlet',
+  templateUrl: './tooltip-outlet.component.html',
+  styleUrls: ['./tooltip-outlet.component.scss']
 })
-export class TooltipComponent implements OnInit, OnDestroy {
+export class TooltipOutletComponent implements OnInit, OnDestroy {
   @ViewChild('tooltip') tooltip: ElementRef<HTMLDivElement>;
   private isDestroyed: Subject<boolean> = new Subject<boolean>();
 
