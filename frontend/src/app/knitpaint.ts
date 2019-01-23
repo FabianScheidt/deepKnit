@@ -118,16 +118,14 @@ export class Knitpaint {
    * Returns a canvas containing a colored representation
    */
   public getImage(): HTMLCanvasElement {
-    const colors = this.getColors();
+    const data = new Uint8Array(this.data);
     const pixelData = Array(this.data.byteLength * 4);
-    for (let i = 0; i < colors.length; i++) {
-      const x = i % this.width;
-      const y = Math.floor(i / this.width);
-      const index = (y * this.width + x) * 4;
-      pixelData[index] = colors[i][0];
-      pixelData[index + 1] = colors[i][1];
-      pixelData[index + 2] = colors[i][2];
-      pixelData[index + 3] = 255;
+    for (let i = 0; i < data.byteLength; i++) {
+      const color = Knitpaint.COLOR_TABLE[data[i]];
+      pixelData[i * 4] = color[0];
+      pixelData[i * 4 + 1] = color[1];
+      pixelData[i * 4 + 2] = color[2];
+      pixelData[i * 4 + 3] = 255;
     }
     const clampedArray = new Uint8ClampedArray(pixelData);
     const imageData =  new ImageData(clampedArray, this.width, this.height);

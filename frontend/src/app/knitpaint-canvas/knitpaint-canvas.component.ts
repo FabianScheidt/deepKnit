@@ -41,6 +41,10 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
   private availableTools: KnitpaintTool[] = [];
   private activeTools: KnitpaintTool[] = [];
 
+  // Helpers for rendering
+  private frameRequested = false;
+  private knitpaintImage: HTMLCanvasElement;
+
   constructor(injector: Injector) {
     for (const knitpaintTool of knitpaintTools) {
       this.availableTools.push(injector.get(knitpaintTool));
@@ -58,7 +62,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
     this.resetTransform();
 
     // Render
-    this.renderCanvas();
+    this.requestRender();
   }
 
   /**
@@ -86,6 +90,9 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
     // Set new knitpaint
     this.knitpaint = knitpaint;
 
+    // Read the image
+    this.knitpaintImage = knitpaint.getImage();
+
     // Notify tools about the change
     for (const tool of this.activeTools) {
       if (tool.knitpaintAvailable) {
@@ -94,7 +101,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
     }
 
     // Render
-    this.renderCanvas();
+    this.requestRender();
 
     // Notify others
     if (typeof triggerChanged === 'undefined' || triggerChanged) {
@@ -119,7 +126,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
     }
 
     // Render the canvas
-    this.renderCanvas();
+    this.requestRender();
   }
 
   /**
@@ -171,7 +178,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
         if (currTool.load) {
           currTool.load(
             this.canvas.nativeElement,
-            () => this.renderCanvas(),
+            () => this.requestRender(),
             (knitpaint: Knitpaint, triggerChange?: boolean) => this.setKnitpaint(knitpaint, triggerChange),
             (transform: SVGMatrix) => this.setTransform(transform));
         }
@@ -192,7 +199,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
 
     // Render to clean paintings from old tools and allow new tools to draw
     if (needsRender) {
-      this.renderCanvas();
+      this.requestRender();
     }
   }
 
@@ -208,9 +215,22 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
   }
 
   /**
+   * Requests to render the canvas when the browser is ready for a new frame
+   */
+  private requestRender() {
+    if (!this.frameRequested) {
+      this.frameRequested = true;
+      window.requestAnimationFrame(() => {
+        this.frameRequested = false;
+        this.render();
+      });
+    }
+  }
+
+  /**
    * Renders the canvas with the knitpaint and optionally the grid
    */
-  private renderCanvas() {
+  private render() {
     console.log('Rendering Knitpaint Canvas');
     if (!this.canvas || !this.canvas.nativeElement || !this.ctx) {
       console.warn('Knitpaint canvas not ready for drawing');
@@ -230,7 +250,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
 
     // Draw pixels as image
     this.ctx.imageSmoothingEnabled = false;
-    this.ctx.drawImage(this.knitpaint.getImage(), 0, 0);
+    this.ctx.drawImage(this.knitpaintImage, 0, 0);
     this.ctx.restore();
 
     // Allow the active tools to render something
