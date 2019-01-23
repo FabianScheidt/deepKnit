@@ -2,7 +2,9 @@
   &nbsp;
 </div>
 <div class="knitpaint">
-  <app-knitpaint-canvas #knitpaintCanvas [knitpaint]="knitpaint"></app-knitpaint-canvas>
+  <app-knitpaint-canvas #knitpaintCanvas
+                        [knitpaint]="knitpaint"
+                        (knitpaintChanged)="setAssembly($event)"></app-knitpaint-canvas>
 </div>
 <div class="sidebar">
   &nbsp;

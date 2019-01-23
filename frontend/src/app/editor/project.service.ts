@@ -19,9 +19,6 @@ export class ProjectService {
   private undoStack: Project[] = [];
   private redoStack: Project[] = [];
 
-  // Keep track if the current project should be restorable using undo and redo
-  private restorable = true;
-
   constructor() {}
 
   /**
@@ -37,20 +34,14 @@ export class ProjectService {
    * @param project
    * New project version
    *
-   * @param restorable
-   * Set to true to make the version restorable using undo and redo
-   *
    * @param clearHistory
    * Set to true to remove all previous undo steps
    */
-  public setProject(project: Project, restorable?: boolean, clearHistory?: boolean): void {
-    if (this.restorable) {
-      this.addUndoStep(this.project);
-    }
+  public setProject(project: Project, clearHistory?: boolean): void {
+    this.addUndoStep(this.project);
     if (clearHistory) {
       this.undoStack = [];
     }
-    this.restorable = !!restorable;
     this.project = project;
     this.projectChangedSubject.next();
     this.redoStack = [];

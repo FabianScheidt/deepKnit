@@ -69,7 +69,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     // Update knitpaint
     if (changes['knitpaint'] && this.knitpaint) {
-      this.setKnitpaint(this.knitpaint);
+      this.setKnitpaint(this.knitpaint, false);
     }
   }
 
@@ -77,8 +77,12 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
    * Sets a new knitpaint object and makes sure that tools are informed
    *
    * @param knitpaint
+   * Knitpaint to be set
+   *
+   * @param triggerChanged
+   * Set to false to avoid triggering the knitpaintChanged Event
    */
-  private setKnitpaint(knitpaint: Knitpaint) {
+  private setKnitpaint(knitpaint: Knitpaint, triggerChanged?: boolean) {
     // Set new knitpaint
     this.knitpaint = knitpaint;
 
@@ -93,7 +97,9 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
     this.renderCanvas();
 
     // Notify others
-    this.knitpaintChanged.emit(this.knitpaint);
+    if (typeof triggerChanged === 'undefined' || triggerChanged) {
+      this.knitpaintChanged.emit(this.knitpaint);
+    }
   }
 
   /**
@@ -166,7 +172,7 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
           currTool.load(
             this.canvas.nativeElement,
             () => this.renderCanvas(),
-            (knitpaint: Knitpaint) => this.setKnitpaint(knitpaint),
+            (knitpaint: Knitpaint, triggerChange?: boolean) => this.setKnitpaint(knitpaint, triggerChange),
             (transform: SVGMatrix) => this.setTransform(transform));
         }
         if (currTool.transformAvailable) {

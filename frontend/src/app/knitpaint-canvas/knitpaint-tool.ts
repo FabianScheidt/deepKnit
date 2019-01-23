@@ -17,14 +17,15 @@ export interface KnitpaintTool {
    * This method should be called when the tools requires the canvas to render.
    *
    * @param setKnitpaint
-   * This method can be called to set a new knitpaint
+   * This method can be called to set a new knitpaint. triggerChange can be set to false to avoid that the knitpaint canvas triggers the
+   * knitpaintChanged event.
    *
    * @param setTransform
    * This method can be called to set a new view transform matrix
    */
   load?(canvas: HTMLCanvasElement,
         requestRender: () => void,
-        setKnitpaint: (knitpaint: Knitpaint) => void,
+        setKnitpaint: (knitpaint: Knitpaint, triggerChange?: boolean) => void,
         setTransform: (transform: SVGMatrix) => void): void;
 
   /**

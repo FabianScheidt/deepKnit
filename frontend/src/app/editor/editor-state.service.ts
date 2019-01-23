@@ -58,7 +58,7 @@ export class EditorStateService {
    */
   public init(): void {
     const project = new Project();
-    this.projectService.setProject(project, true, true);
+    this.projectService.setProject(project, true);
   }
 
   /**
@@ -79,7 +79,7 @@ export class EditorStateService {
       if (projectJSON) {
         const projectSerialized = JSON.parse(projectJSON);
         const project = Project.fromJSON(projectSerialized);
-        this.projectService.setProject(project, true, true);
+        this.projectService.setProject(project, true);
       }
     }
   }
@@ -90,7 +90,7 @@ export class EditorStateService {
 
   public setStage(stage: ProjectStage) {
     const project = this.project.setStage(stage);
-    this.projectService.setProject(project, true);
+    this.projectService.setProject(project);
   }
 
   public getPatterns(): Knitpaint[] {
@@ -99,16 +99,16 @@ export class EditorStateService {
 
   public setPatterns(patters: Knitpaint[]) {
     const project = this.project.setPatterns(patters);
-    this.projectService.setProject(project, true);
+    this.projectService.setProject(project);
   }
 
   public getAssembly(): Knitpaint {
     return this.project.assembly;
   }
 
-  public setAssembly(assembly: Knitpaint, restorable?: boolean) {
+  public setAssembly(assembly: Knitpaint) {
     const project = this.project.setAssembly(assembly);
-    this.projectService.setProject(project, restorable);
+    this.projectService.setProject(project);
   }
 
   public undoAvailable(): boolean {
