@@ -9,9 +9,9 @@
 
 <div class="more-overlay" [hidden]="!moreOverlayVisible">
   <ul>
-    <li class="item" (click)="undo()">Undo</li>
-    <li class="item" (click)="redo()">Redo</li>
+    <li class="item" (click)="clearProject()">Clear project</li>
     <li class="break"></li>
-    <li class="item" (click)="logProject()">Log Project</li>
+    <li class="item" [class.disabled]="!undoAvailable()" (click)="undo()">Undo</li>
+    <li class="item" [class.disabled]="!redoAvailable()" (click)="redo()">Redo</li>
   </ul>
 </div>

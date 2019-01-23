@@ -21,11 +21,26 @@ export class EditorStateService {
   public assemblyChanged: Observable<void> = this.assemblyChangedSubject.asObservable();
 
   constructor(private projectService: ProjectService) {
-    // Configure observables for project properties
+    // Get the current project
     this.project = projectService.getProject();
-    projectService.projectChanged.subscribe(() => {
+
+    // Register local observables for project changes
+    this.registerProjectChanges();
+
+    // Try to load a project from local storage
+    this.initFromLocalStorage();
+
+    // Save whenever the project changes
+    this.projectService.projectChanged.subscribe(() => this.saveToLocalStorage());
+  }
+
+  /**
+   * Registers the observables for changes on stage, patterns or assembly
+   */
+  private registerProjectChanges() {
+    this.projectService.projectChanged.subscribe(() => {
       const lastProject = this.project;
-      this.project = projectService.getProject();
+      this.project = this.projectService.getProject();
       if (this.project.stage !== lastProject.stage) {
         this.stageChangedSubject.next();
       }
@@ -36,6 +51,37 @@ export class EditorStateService {
         this.assemblyChangedSubject.next();
       }
     });
+  }
+
+  /**
+   * Initializes an empty project
+   */
+  public init(): void {
+    const project = new Project();
+    this.projectService.setProject(project, true, true);
+  }
+
+  /**
+   * Saves the current project to local storage
+   */
+  private saveToLocalStorage(): void {
+    if (localStorage) {
+      localStorage.setItem('project', JSON.stringify(this.project));
+    }
+  }
+
+  /**
+   * Loads the project from local storage
+   */
+  private initFromLocalStorage(): void {
+    if (localStorage) {
+      const projectJSON = localStorage.getItem('project');
+      if (projectJSON) {
+        const projectSerialized = JSON.parse(projectJSON);
+        const project = Project.fromJSON(projectSerialized);
+        this.projectService.setProject(project, true, true);
+      }
+    }
   }
 
   public getStage(): ProjectStage {
@@ -79,9 +125,5 @@ export class EditorStateService {
 
   public redo(): void {
     this.projectService.redo();
-  }
-
-  public serializeProject(): any {
-    return JSON.stringify(this.project);
   }
 }

@@ -9,6 +9,13 @@ export class Project {
   public readonly patterns: Knitpaint[] = [];
   public readonly assembly: Knitpaint;
 
+  public static fromJSON(json: any): Project {
+    const stage = json.stage;
+    const patterns = json.patterns.map((pattern) => Knitpaint.fromJSON(pattern));
+    const assembly = Knitpaint.fromJSON(json.assembly);
+    return new Project(stage, patterns, assembly);
+  }
+
   constructor(stage?: ProjectStage, patterns?: Knitpaint[], assembly?: Knitpaint) {
     if (stage) {
       this.stage = stage;

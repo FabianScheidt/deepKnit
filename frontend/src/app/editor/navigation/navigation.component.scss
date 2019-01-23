@@ -74,6 +74,11 @@
     &:hover {
       color: $active;
     }
+
+    &.disabled {
+      color: $inactive;
+      cursor: default;
+    }
   }
 
   li.break {

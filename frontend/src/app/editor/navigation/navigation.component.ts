@@ -29,45 +29,32 @@ export class NavigationComponent {
     });
   }
 
-  public isSetup(): boolean {
-    return this.editorStateService.getStage() === ProjectStage.Setup;
-  }
-
-  public setup(): void {
-    this.editorStateService.setStage(ProjectStage.Setup);
-  }
-
-  public isPatterns(): boolean {
-    return this.editorStateService.getStage() === ProjectStage.Patterns;
-  }
-
-  public patterns(): void {
-    this.editorStateService.setStage(ProjectStage.Patterns);
-  }
-
-  public isAssembly(): boolean {
-    return this.editorStateService.getStage() === ProjectStage.Assembly;
-  }
-
-  public assembly(): void {
-    this.editorStateService.setStage(ProjectStage.Assembly);
-  }
+  public isSetup = () => this.editorStateService.getStage() === ProjectStage.Setup;
+  public setup = () => this.editorStateService.setStage(ProjectStage.Setup);
+  public isPatterns = () => this.editorStateService.getStage() === ProjectStage.Patterns;
+  public patterns = () => this.editorStateService.setStage(ProjectStage.Patterns);
+  public isAssembly = () => this.editorStateService.getStage() === ProjectStage.Assembly;
+  public assembly = () => this.editorStateService.setStage(ProjectStage.Assembly);
+  public undoAvailable = () => this.editorStateService.undoAvailable();
+  public redoAvailable = () => this.editorStateService.redoAvailable();
 
   public toggleMoreOverlay(): void {
     this.moreOverlayVisible = !this.moreOverlayVisible;
   }
 
+  public clearProject(): void {
+    this.editorStateService.init();
+    this.moreOverlayVisible = false;
+  }
+
   public undo(): void {
     this.editorStateService.undo();
+    this.moreOverlayVisible = false;
   }
-
-  public redo(): void {
+  public redo() {
     this.editorStateService.redo();
+    this.moreOverlayVisible = false;
   }
 
-  public logProject(): void {
-    const project = JSON.parse(this.editorStateService.serializeProject());
-    console.log('Current Project:', project);
-  }
 
 }
