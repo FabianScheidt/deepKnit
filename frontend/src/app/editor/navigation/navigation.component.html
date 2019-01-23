@@ -1,6 +1,17 @@
-<ul>
-  <li class="step"><a (click)="setup()" [class.active]="isSetup()">1. Set up your project</a></li>
-  <li class="step"><a (click)="patterns()" [class.active]="isPatterns()">2. Pick your patterns</a></li>
-  <li class="step"><a (click)="assembly()" [class.active]="isAssembly()">3. Assemble your knitting</a></li>
-  <li class="options"><i class="material-icons">more_horiz</i></li>
-</ul>
+<div class="nav">
+  <ul>
+    <li class="step"><a (click)="setup()" [class.active]="isSetup()">1. Set up your project</a></li>
+    <li class="step"><a (click)="patterns()" [class.active]="isPatterns()">2. Pick your patterns</a></li>
+    <li class="step"><a (click)="assembly()" [class.active]="isAssembly()">3. Assemble your knitting</a></li>
+    <li class="options" (click)="toggleMoreOverlay()"><i class="material-icons">more_horiz</i></li>
+  </ul>
+</div>
+
+<div class="more-overlay" [hidden]="!moreOverlayVisible">
+  <ul>
+    <li class="item" (click)="undo()">Undo</li>
+    <li class="item" (click)="redo()">Redo</li>
+    <li class="break"></li>
+    <li class="item" (click)="logProject()">Log Project</li>
+  </ul>
+</div>

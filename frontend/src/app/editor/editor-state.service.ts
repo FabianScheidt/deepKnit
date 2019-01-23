@@ -80,4 +80,8 @@ export class EditorStateService {
   public redo(): void {
     this.projectService.redo();
   }
+
+  public serializeProject(): any {
+    return JSON.stringify(this.project);
+  }
 }

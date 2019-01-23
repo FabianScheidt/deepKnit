@@ -46,6 +46,21 @@ export class Knitpaint {
   }
 
   /**
+   * Creates a new Knitpaint instance from a serializable representation by base64 decoding the data
+   *
+   * @param json
+   */
+  public static fromJSON(json: any) {
+    const binaryData = atob(json.data);
+    const data = new Uint8Array(binaryData.length);
+    for (let i = 0; i < binaryData.length; i++)        {
+      data[i] = binaryData.charCodeAt(i);
+    }
+    const width = parseInt(json.width, 10);
+    return new Knitpaint(data.buffer, width);
+  }
+
+  /**
    * Creates a new Knitpaint object from an array buffer
    * @param data
    * @param width
@@ -53,6 +68,18 @@ export class Knitpaint {
   constructor(data: ArrayBufferLike, width: number) {
     this.data = data;
     this.width = width;
+  }
+
+  /**
+   * Returns a serializable representation of the knitpaint by base64 encoding the data
+   */
+  public toJSON(): any {
+    const binaryData = new Uint8Array(this.data).reduce((data, byte) => data + String.fromCharCode(byte), '');
+    const base64Data = btoa(binaryData);
+    return {
+      width: this.width,
+      data: base64Data
+    };
   }
 
   /**

@@ -11,6 +11,8 @@ import { ProjectStage } from '../project';
 })
 export class NavigationComponent {
 
+  public moreOverlayVisible;
+
   constructor(private editorStateService: EditorStateService, private router: Router) {
     editorStateService.stageChanged.subscribe(() => {
       switch (editorStateService.getStage()) {
@@ -49,6 +51,23 @@ export class NavigationComponent {
 
   public assembly(): void {
     this.editorStateService.setStage(ProjectStage.Assembly);
+  }
+
+  public toggleMoreOverlay(): void {
+    this.moreOverlayVisible = !this.moreOverlayVisible;
+  }
+
+  public undo(): void {
+    this.editorStateService.undo();
+  }
+
+  public redo(): void {
+    this.editorStateService.redo();
+  }
+
+  public logProject(): void {
+    const project = JSON.parse(this.editorStateService.serializeProject());
+    console.log('Current Project:', project);
   }
 
 }

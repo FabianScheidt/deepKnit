@@ -98,6 +98,7 @@ export class ProjectService {
     if (this.redoAvailable()) {
       this.undoStack.push(this.project);
       this.project = this.redoStack.pop();
+      this.projectChangedSubject.next();
     }
   }
 }

@@ -2,10 +2,11 @@
 
 :host {
   display: block;
+  position: relative;
   background-color: $panel-background;
 }
 
-ul {
+.nav ul {
   display: flex;
   margin: 0;
 
@@ -36,6 +37,48 @@ ul {
     &.options {
       padding: 16px 16px 0 16px;
       color: $inactive;
+      cursor: pointer;
+
+      &:hover {
+        color: $active;
+      }
     }
+  }
+}
+
+.more-overlay {
+  position: absolute;
+  right: 18px;
+  top: 50px;
+  width: 120px;
+  background-color: $panel-background;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+
+  ul, li {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul {
+    padding: 4px;
+  }
+
+  li.item {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 6px;
+    color: $inactive;
+    cursor: pointer;
+
+    &:hover {
+      color: $active;
+    }
+  }
+
+  li.break {
+    padding: 0;
+    margin: 2px 0;
+    border-top: 1px solid $main-background;
   }
 }
