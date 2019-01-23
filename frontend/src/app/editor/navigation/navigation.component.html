@@ -1,6 +1,6 @@
 <ul>
-  <li class="step"><a routerLink="/setup" routerLinkActive="active">1. Set up your project</a></li>
-  <li class="step"><a routerLink="/patterns" routerLinkActive="active">2. Pick your patterns</a></li>
-  <li class="step"><a routerLink="/assembly" routerLinkActive="active">3. Assemble your knitting</a></li>
+  <li class="step"><a (click)="setup()" [class.active]="isSetup()">1. Set up your project</a></li>
+  <li class="step"><a (click)="patterns()" [class.active]="isPatterns()">2. Pick your patterns</a></li>
+  <li class="step"><a (click)="assembly()" [class.active]="isAssembly()">3. Assemble your knitting</a></li>
   <li class="options"><i class="material-icons">more_horiz</i></li>
 </ul>

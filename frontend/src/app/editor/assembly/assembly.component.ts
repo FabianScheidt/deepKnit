@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, ViewChild } from '@angular/core';
 import { Knitpaint } from '../../knitpaint';
 import { KnitpaintCanvasComponent } from '../../knitpaint-canvas/knitpaint-canvas.component';
 import { GridTool } from '../../knitpaint-canvas/knitpaint-tools/grid-tool.service';
@@ -8,7 +8,8 @@ import { KeyboardTransformTool } from '../../knitpaint-canvas/knitpaint-tools/ke
 @Component({
   selector: 'app-assembly',
   templateUrl: './assembly.component.html',
-  styleUrls: ['./assembly.component.scss']
+  styleUrls: ['./assembly.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AssemblyComponent implements OnInit {
 
