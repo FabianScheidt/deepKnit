@@ -1,5 +1,8 @@
 <div class="tools">
-  <app-toolbar [activeTools]="activeTools" (activeToolChanged)="activateTools($event)"></app-toolbar>
+  <app-toolbar
+    [activeTools]="activeTools"
+    (activeToolChange)="activateTools($event)"
+    [(activeColorNumber)]="colorNumber"></app-toolbar>
 </div>
 <div class="knitpaint">
   <app-knitpaint-canvas #knitpaintCanvas

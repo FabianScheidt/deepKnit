@@ -11,6 +11,7 @@ import { ToolbarComponent } from './toolbar/toolbar.component';
 import { TooltipModule } from '../tooltip/tooltip.module';
 import { ToolbarToolsComponent } from './toolbar/toolbar-tools/toolbar-tools.component';
 import { ToolbarViewComponent } from './toolbar/toolbar-view/toolbar-view.component';
+import { ToolbarColorComponent } from './toolbar/toolbar-color/toolbar-color.component';
 
 @NgModule({
   imports: [
@@ -27,7 +28,8 @@ import { ToolbarViewComponent } from './toolbar/toolbar-view/toolbar-view.compon
     NavigationComponent,
     ToolbarComponent,
     ToolbarToolsComponent,
-    ToolbarViewComponent
+    ToolbarViewComponent,
+    ToolbarColorComponent
   ]
 })
 export class EditorModule { }

@@ -9,10 +9,17 @@ import { KnitpaintTool } from '../../knitpaint-canvas/knitpaint-tool';
 export class ToolbarComponent {
 
   @Input() activeTools: Type<KnitpaintTool>[] = [];
-  @Output() activeToolChanged: EventEmitter<Type<KnitpaintTool>[]> = new EventEmitter<Type<KnitpaintTool>[]>();
+  @Output() activeToolChange: EventEmitter<Type<KnitpaintTool>[]> = new EventEmitter<Type<KnitpaintTool>[]>();
+
+  @Input() activeColorNumber = 0;
+  @Output() activeColorNumberChange: EventEmitter<number> = new EventEmitter<number>();
 
   emitActiveToolsChanged() {
-    this.activeToolChanged.emit(this.activeTools);
+    this.activeToolChange.emit(this.activeTools);
+  }
+
+  emitActiveColorNumberChanged() {
+    this.activeColorNumberChange.emit(this.activeColorNumber);
   }
 
 }

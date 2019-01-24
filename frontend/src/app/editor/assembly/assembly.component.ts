@@ -7,6 +7,7 @@ import { KeyboardTransformTool } from '../../knitpaint-canvas/knitpaint-tools/ke
 import { DrawTool } from '../../knitpaint-canvas/knitpaint-tools/draw-tool.service';
 import { EditorStateService } from '../editor-state.service';
 import { KnitpaintTool } from '../../knitpaint-canvas/knitpaint-tool';
+import { ColorPickerTool } from '../../knitpaint-canvas/knitpaint-tools/color-picker-tool.service';
 
 @Component({
   selector: 'app-assembly',
@@ -19,26 +20,56 @@ export class AssemblyComponent implements OnInit {
   @ViewChild('knitpaintCanvas') knitpaintCanvas: KnitpaintCanvasComponent;
   public activeTools: Type<KnitpaintTool>[] = [GridTool, MultitouchTransformTool, KeyboardTransformTool, DrawTool];
 
-  constructor(private editorStateService: EditorStateService) {
-    this.knitpaint = editorStateService.getAssembly();
+  constructor(private editorStateService: EditorStateService) {}
 
+  ngOnInit() {
+    // Update the knitpaint whenever it changes
+    this.knitpaint = this.editorStateService.getAssembly();
     this.editorStateService.assemblyChanged.subscribe(() => {
-      this.knitpaint = editorStateService.getAssembly();
+      this.knitpaint = this.editorStateService.getAssembly();
+    });
+
+    // Activate the default tools
+    this.activateTools(this.activeTools);
+
+    // The picker tool should be able to update the color number
+    this.knitpaintCanvas.getTool(ColorPickerTool).colorPicked.subscribe((colorNumber: number) => {
+      this.colorNumber = colorNumber;
     });
   }
 
-  ngOnInit() {
-    this.knitpaintCanvas.getTool(DrawTool).colorNumber = 1;
-    this.activateTools(this.activeTools);
-  }
-
+  /**
+   * Sets new knitpaint data for the assembly
+   *
+   * @param assembly
+   */
   setAssembly(assembly: Knitpaint) {
     this.editorStateService.setAssembly(assembly);
   }
 
+  /**
+   * Activates a list of tools
+   *
+   * @param tools
+   */
   activateTools(tools: Type<KnitpaintTool>[]) {
     this.activeTools = tools;
     this.knitpaintCanvas.activateTools(tools);
+  }
+
+  /**
+   * Returns the color number currently used by the draw tool
+   */
+  public get colorNumber(): number {
+    return this.knitpaintCanvas.getTool(DrawTool).colorNumber;
+  }
+
+  /**
+   * Sets the color number currently used by the draw tool
+   * @param colorNumber
+   */
+  public set colorNumber(colorNumber: number) {
+    this.knitpaintCanvas.getTool(DrawTool).colorNumber = colorNumber;
   }
 
 }
