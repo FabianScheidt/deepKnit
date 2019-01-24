@@ -14,11 +14,13 @@ export class ToolbarComponent {
   @Input() activeColorNumber = 0;
   @Output() activeColorNumberChange: EventEmitter<number> = new EventEmitter<number>();
 
-  emitActiveToolsChanged() {
+  emitActiveToolsChanged(activeTools) {
+    this.activeTools = activeTools;
     this.activeToolChange.emit(this.activeTools);
   }
 
-  emitActiveColorNumberChanged() {
+  emitActiveColorNumberChanged(colorNumber) {
+    this.activeColorNumber = colorNumber;
     this.activeColorNumberChange.emit(this.activeColorNumber);
   }
 

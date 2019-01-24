@@ -1,15 +1,15 @@
 <div class="tools">
   <app-toolbar-tools
     [activeTools]="activeTools"
-    (activeToolChanged)="emitActiveToolsChanged()"></app-toolbar-tools>
+    (activeToolChanged)="emitActiveToolsChanged($event)"></app-toolbar-tools>
 </div>
 <div class="color">
   <app-toolbar-color
     [activeColorNumber]="activeColorNumber"
-    (activeColorNumberChange)="emitActiveColorNumberChanged()"></app-toolbar-color>
+    (activeColorNumberChange)="emitActiveColorNumberChanged($event)"></app-toolbar-color>
 </div>
 <div class="view">
   <app-toolbar-view
     [activeTools]="activeTools"
-    (activeToolChanged)="emitActiveToolsChanged()"></app-toolbar-view>
+    (activeToolChanged)="emitActiveToolsChanged($event)"></app-toolbar-view>
 </div>
