@@ -1,13 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from '../environments/environment';
+import { environment } from '../../environments/environment';
 import { map } from 'rxjs/operators';
-import { Knitpaint } from './knitpaint';
+import { Knitpaint } from '../knitpaint';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class KnitpaintConversionService {
 
   constructor(private http: HttpClient) { }

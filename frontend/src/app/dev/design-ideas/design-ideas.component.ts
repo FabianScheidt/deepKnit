@@ -1,9 +1,9 @@
 import { AfterViewChecked, Component, OnInit, ViewChild } from '@angular/core';
 import { Knitpaint } from '../../knitpaint';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { KnitpaintSamplingOptions, KnitpaintSamplingService } from '../../knitpaint-sampling.service';
+import { KnitpaintSamplingOptions, KnitpaintSamplingService } from '../../api/knitpaint-sampling.service';
 import { debounceTime, map, skip } from 'rxjs/operators';
-import { KnitpaintConversionService } from '../../knitpaint-conversion.service';
+import { KnitpaintConversionService } from '../../api/knitpaint-conversion.service';
 import saveAs from 'file-saver';
 import { KnitpaintCanvasComponent } from '../../knitpaint-canvas/knitpaint-canvas.component';
 import { DrawTool } from '../../knitpaint-canvas/knitpaint-tools/draw-tool.service';

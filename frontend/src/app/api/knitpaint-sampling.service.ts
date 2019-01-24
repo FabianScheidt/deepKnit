@@ -2,7 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
 import fetchStream from 'fetch-readablestream';
 import { flatMap, takeUntil, tap, throttleTime } from 'rxjs/operators';
-import { environment } from '../environments/environment';
+import { environment } from '../../environments/environment';
 
 export interface KnitpaintSamplingOptions {
   start?: ArrayBuffer;
@@ -11,9 +11,7 @@ export interface KnitpaintSamplingOptions {
   numGenerate?: number;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class KnitpaintSamplingService {
 
   constructor(private ngZone: NgZone) { }

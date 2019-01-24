@@ -8,12 +8,14 @@ import { TooltipModule } from '../tooltip/tooltip.module';
 import { ColorListComponent } from './color-list/color-list.component';
 import { DesignIdeasComponent } from './design-ideas/design-ideas.component';
 import { ColorPickerComponent } from './design-ideas/color-picker/color-picker.component';
+import { ApiModule } from '../api/api.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     DevRoutingModule,
+    ApiModule,
     KnitpaintCanvasModule,
     TooltipModule
   ],
