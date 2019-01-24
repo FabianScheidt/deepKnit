@@ -28,13 +28,15 @@ export class DrawTool extends AbstractKnitpaintTool implements KnitpaintTool {
 
       // Mouse events
       fromEvent(canvas, 'mousedown').pipe(takeUntil(this.unloadSubject)).subscribe((event: MouseEvent) => {
-        isDown = true;
-        this.draw(event.offsetX, event.offsetY);
+        if (event.which === 1) {
+          isDown = true;
+          this.draw(event.offsetX, event.offsetY);
 
-        fromEvent(document, 'mouseup').pipe(takeUntil(this.unloadSubject), first()).subscribe(() => {
-          isDown = false;
-          this.setKnitpaint(this.knitpaint, true);
-        });
+          fromEvent(document, 'mouseup').pipe(takeUntil(this.unloadSubject), first()).subscribe(() => {
+            isDown = false;
+            this.setKnitpaint(this.knitpaint, true);
+          });
+        }
       });
       fromEvent(canvas, 'mousemove').pipe(takeUntil(this.unloadSubject)).subscribe((event: MouseEvent) => {
         if (isDown) {

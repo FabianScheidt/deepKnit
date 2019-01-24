@@ -8,6 +8,7 @@ import { DrawTool } from '../../knitpaint-canvas/knitpaint-tools/draw-tool.servi
 import { EditorStateService } from '../editor-state.service';
 import { KnitpaintTool } from '../../knitpaint-canvas/knitpaint-tool';
 import { ColorPickerTool } from '../../knitpaint-canvas/knitpaint-tools/color-picker-tool.service';
+import { MouseTransformTool } from '../../knitpaint-canvas/knitpaint-tools/mouse-transform-tool.service';
 
 @Component({
   selector: 'app-assembly',
@@ -18,7 +19,7 @@ export class AssemblyComponent implements OnInit {
 
   public knitpaint: Knitpaint;
   @ViewChild('knitpaintCanvas') knitpaintCanvas: KnitpaintCanvasComponent;
-  public activeTools: Type<KnitpaintTool>[] = [GridTool, MultitouchTransformTool, KeyboardTransformTool, DrawTool];
+  public activeTools: Type<KnitpaintTool>[] = [GridTool, MultitouchTransformTool, KeyboardTransformTool, MouseTransformTool, DrawTool];
 
   constructor(private editorStateService: EditorStateService) {}
 

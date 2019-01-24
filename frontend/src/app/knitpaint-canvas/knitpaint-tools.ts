@@ -7,6 +7,7 @@ import { KeyboardTransformTool } from './knitpaint-tools/keyboard-transform-tool
 import { MultitouchTransformTool } from './knitpaint-tools/multitouch-transform-tool.service';
 import { VerticalSelectionTool } from './knitpaint-tools/vertical-selection-tool.service';
 import { KnitpaintTool } from './knitpaint-tool';
+import { MouseTransformTool } from './knitpaint-tools/mouse-transform-tool.service';
 
 export const knitpaintTools: Type<KnitpaintTool>[] = [
   ColorInfoTool,
@@ -15,5 +16,6 @@ export const knitpaintTools: Type<KnitpaintTool>[] = [
   GridTool,
   KeyboardTransformTool,
   MultitouchTransformTool,
+  MouseTransformTool,
   VerticalSelectionTool
 ];

@@ -18,7 +18,9 @@ export class ColorPickerTool extends AbstractKnitpaintTool implements KnitpaintT
 
   private attachPickerEvents(canvas: HTMLCanvasElement) {
     fromEvent(canvas, 'click').pipe(takeUntil(this.unloadSubject)).subscribe((event: MouseEvent) => {
-      this.pickColorAt(event.offsetX, event.offsetY);
+      if (event.which === 1) {
+        this.pickColorAt(event.offsetX, event.offsetY);
+      }
     });
     fromEvent(canvas, 'touchstart').pipe(takeUntil(this.unloadSubject)).subscribe((event: TouchEvent) => {
       if (event.touches.length === 1) {
