@@ -21,28 +21,19 @@
     padding: 20px;
     font-size: 18px;
     font-weight: 600;
-    color: $inactive;
+    color: $active;
     text-align: center;
   }
 
   .options .option {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 12px;
-
-    label {
-      display: block;
-      width: 50px;
-    }
-
-    input {
-      width: 70px;
-      padding: 5px;
-    }
+    text-align: center;
   }
 
   .buttons {
     text-align: right;
+
+    button {
+      margin-left: 5px;
+    }
   }
 }

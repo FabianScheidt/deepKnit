@@ -11,8 +11,6 @@ import { EditorIoService } from '../editor-io.service';
 })
 export class NavigationComponent {
 
-  public moreOverlayVisible;
-
   constructor(private editorStateService: EditorStateService,
               private editorIoService: EditorIoService,
               private router: Router) {
@@ -40,38 +38,28 @@ export class NavigationComponent {
   public undoAvailable = () => this.editorStateService.undoAvailable();
   public redoAvailable = () => this.editorStateService.redoAvailable();
 
-  public toggleMoreOverlay(): void {
-    this.moreOverlayVisible = !this.moreOverlayVisible;
-  }
-
   public newProject(): void {
     this.editorStateService.init();
-    this.moreOverlayVisible = false;
   }
 
   public openProject(): void {
     this.editorIoService.initFromFile();
-    this.moreOverlayVisible = false;
   }
 
   public saveProject(): void {
     this.editorIoService.saveToFile();
-    this.moreOverlayVisible = false;
   }
 
   public exportDat(): void {
     this.editorIoService.exportToDatFile();
-    this.moreOverlayVisible = false;
   }
 
   public importDat(): void {
     this.editorIoService.importFromDatFile();
-    this.moreOverlayVisible = false;
   }
 
   public exportImage(): void {
     this.editorIoService.exportToImageFile();
-    this.moreOverlayVisible = false;
   }
 
   public importImage(): void {
@@ -80,11 +68,9 @@ export class NavigationComponent {
 
   public undo(): void {
     this.editorStateService.undo();
-    this.moreOverlayVisible = false;
   }
   public redo() {
     this.editorStateService.redo();
-    this.moreOverlayVisible = false;
   }
 
 

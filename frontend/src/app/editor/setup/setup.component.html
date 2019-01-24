@@ -5,17 +5,19 @@
     </div>
     <div class="options">
       <div class="option">
-        <label for="width">Width</label>
-        <input type="number" min="1" id="width" name="width" [(ngModel)]="width" autofocus>
+        <mat-form-field>
+          <input matInput type="number" min="1" id="width" name="width" placeholder="Width" [(ngModel)]="width" autofocus>
+        </mat-form-field>
       </div>
       <div class="option">
-        <label for="height">Height</label>
-        <input type="number" min="1" id="height" name="height" [(ngModel)]="height">
+        <mat-form-field>
+          <input matInput type="number" min="1" id="height" name="height" placeholder="Height" [(ngModel)]="height">
+        </mat-form-field>
       </div>
     </div>
     <div class="buttons">
-      <input type="submit" value="Apply" [disabled]="!isSizeDifferent()">
-      <button (click)="nextStage()">Continue</button>
+      <button type="submit" mat-raised-button color="accent" [disabled]="!isSizeDifferent()">Apply</button>
+      <button mat-raised-button (click)="nextStage()">Continue</button>
     </div>
   </div>
 </form>

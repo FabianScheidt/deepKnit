@@ -18,6 +18,7 @@ import { EditorStateService } from './editor-state.service';
 import { EditorIoService } from './editor-io.service';
 import { ProjectService } from './project.service';
 import { TapClickDirective } from './tap-click.directive';
+import { MatButtonModule, MatDividerModule, MatIconModule, MatInputModule, MatMenuModule } from '@angular/material';
 
 @NgModule({
   imports: [
@@ -26,7 +27,12 @@ import { TapClickDirective } from './tap-click.directive';
     EditorRoutingModule,
     ApiModule,
     KnitpaintCanvasModule,
-    TooltipModule
+    TooltipModule,
+    MatButtonModule,
+    MatInputModule,
+    MatIconModule,
+    MatMenuModule,
+    MatDividerModule
   ],
   declarations: [
     EditorComponent,

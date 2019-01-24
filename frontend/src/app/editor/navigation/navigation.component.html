@@ -1,24 +1,44 @@
 <div class="nav">
   <ul>
     <li class="step">
-      <a (click)="setup()" appTapClick [class.active]="isSetup()">
+      <button mat-button (click)="setup()" appTapClick [class.active]="isSetup()">
         1. Set up your project
-      </a>
+      </button>
     </li>
     <li class="step">
-      <a (click)="patterns()" appTapClick [class.active]="isPatterns()">
+      <button mat-button (click)="patterns()" appTapClick [class.active]="isPatterns()">
         2. Pick your patterns
-      </a>
+      </button>
     </li>
     <li class="step">
-      <a (click)="assembly()" appTapClick [class.active]="isAssembly()">
+      <button mat-button (click)="assembly()" appTapClick [class.active]="isAssembly()">
         3. Assemble your knitting
-      </a>
+      </button>
     </li>
-    <li class="options" (click)="toggleMoreOverlay()" appTapClick>
-      <i class="material-icons">more_horiz</i>
+    <li class="options" [matMenuTriggerFor]="menu">
+      <button mat-button appTapClick>
+        <mat-icon>more_horiz</mat-icon>
+      </button>
     </li>
   </ul>
+
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="newProject()" appTapClick>New project</button>
+    <button mat-menu-item (click)="openProject()" appTapClick>Open project</button>
+    <button mat-menu-item (click)="saveProject()" appTapClick>Save project</button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item [matMenuTriggerFor]="subMenu" appTapClick>Import and Export</button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item [disabled]="!undoAvailable()" (click)="undo()" appTapClick>Undo</button>
+    <button mat-menu-item [disabled]="!redoAvailable()" (click)="redo()" appTapClick>Redo</button>
+  </mat-menu>
+
+  <mat-menu #subMenu="matMenu">
+    <button mat-menu-item (click)="exportDat()" appTapClick>Export to APEX</button>
+    <button mat-menu-item (click)="importDat()" appTapClick>Import from APEX</button>
+    <button mat-menu-item (click)="exportImage()" appTapClick>Export as Image</button>
+    <button mat-menu-item (click)="importImage()" appTapClick>Import from Image</button>
+  </mat-menu>
 </div>
 
 <div class="more-overlay" [hidden]="!moreOverlayVisible">
