@@ -43,7 +43,7 @@ export class ToolbarViewComponent implements OnInit {
    *
    * @param inwards
    */
-  private zoom(inwards: boolean): void {
+  public zoom(inwards: boolean): void {
     if (this.activeTools.indexOf(KeyboardTransformTool) > -1) {
       const key = inwards ? '+' : '-';
       const e = new KeyboardEvent('keydown', {key, ctrlKey: true});

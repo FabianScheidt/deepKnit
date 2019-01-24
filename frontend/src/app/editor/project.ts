@@ -1,5 +1,11 @@
 import { Knitpaint } from '../knitpaint';
 
+export enum ProjectStage {
+  Setup = 0,
+  Patterns = 1,
+  Assembly = 2
+}
+
 /**
  * A project represents the current state of the editor. The class is designed to be immuatble. Therefore mutating methods return new
  * instances of Project.
@@ -44,10 +50,4 @@ export class Project {
   setAssembly(assembly: Knitpaint) {
     return new Project(this.stage, this.patterns, assembly);
   }
-}
-
-export enum ProjectStage {
-  Setup = 0,
-  Patterns = 1,
-  Assembly = 2
 }
