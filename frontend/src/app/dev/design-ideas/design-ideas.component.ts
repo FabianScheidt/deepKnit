@@ -3,7 +3,7 @@ import { Knitpaint } from '../../knitpaint';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { KnitpaintSamplingOptions, KnitpaintSamplingService } from '../../knitpaint-sampling.service';
 import { debounceTime, map, skip } from 'rxjs/operators';
-import { KnitpaintConversionInterface, KnitpaintConversionService } from '../../knitpaint-conversion.service';
+import { KnitpaintConversionService } from '../../knitpaint-conversion.service';
 import saveAs from 'file-saver';
 import { KnitpaintCanvasComponent } from '../../knitpaint-canvas/knitpaint-canvas.component';
 import { DrawTool } from '../../knitpaint-canvas/knitpaint-tools/draw-tool.service';
@@ -128,12 +128,12 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
       const reader = new FileReader();
       reader.addEventListener('load', () => {
         const buffer: ArrayBuffer = reader.result;
-        this.knitpaintConversionService.fromDat(buffer).subscribe((res: KnitpaintConversionInterface) => {
+        this.knitpaintConversionService.fromDat(buffer).subscribe((res: Knitpaint) => {
           if (res.width !== this.knitpaintWidth) {
             console.error('Width of imported dat does not match size of knitpaint viewer. Expected ' +
               this.knitpaintWidth + ' but got ' + res.width + '.');
           } else {
-            this.designKnitpaint.next(new Knitpaint(res.data, this.knitpaintWidth));
+            this.designKnitpaint.next(res);
           }
         });
       });
@@ -155,14 +155,10 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
 
   /**
    * Exports knitpaint as dat file and immediately starts the download
-   * @param knitpaintData
+   * @param knitpaint
    * @param filename
    */
-  exportAsDat(knitpaintData: Knitpaint, filename?: string) {
-    const knitpaint: KnitpaintConversionInterface = {
-      data: knitpaintData.data,
-      width: this.knitpaintWidth
-    };
+  exportAsDat(knitpaint: Knitpaint, filename?: string) {
     this.knitpaintConversionService.toDat(knitpaint).subscribe((dat: ArrayBuffer) => {
       const blob = new Blob([new Uint8Array(dat)]);
       saveAs(blob, filename);

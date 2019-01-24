@@ -3,11 +3,7 @@ import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../environments/environment';
 import { map } from 'rxjs/operators';
-
-export interface KnitpaintConversionInterface {
-  data: ArrayBufferLike;
-  width: number;
-}
+import { Knitpaint } from './knitpaint';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +12,7 @@ export class KnitpaintConversionService {
 
   constructor(private http: HttpClient) { }
 
-  public fromDat(dat: ArrayBuffer): Observable<KnitpaintConversionInterface> {
+  public fromDat(dat: ArrayBuffer): Observable<Knitpaint> {
     const options = {
       headers: new HttpHeaders({
         'Content-Type': 'application/octet-stream',
@@ -26,16 +22,10 @@ export class KnitpaintConversionService {
       responseType: <any>'json'
     };
     return this.http.post<{ data: number[], width: number}>(environment.backendUrl + 'from-dat', dat, options)
-      .pipe(map(res => {
-        const uint8 = new Uint8Array(res.data);
-        return {
-          data: uint8.buffer,
-          width: res.width
-        };
-    }));
+      .pipe(map(res => Knitpaint.fromJSON(res)));
   }
 
-  public toDat(knitpaint: KnitpaintConversionInterface): Observable<ArrayBuffer> {
+  public toDat(knitpaint: Knitpaint): Observable<ArrayBuffer> {
     const options = {
       headers: new HttpHeaders({
         'Content-Type': 'application/json',
@@ -44,10 +34,6 @@ export class KnitpaintConversionService {
       }),
       responseType: <any>'arraybuffer'
     };
-    const body = {
-      data: Array.from(new Uint8Array(knitpaint.data)),
-      width: knitpaint.width
-    };
-    return this.http.post(environment.backendUrl + 'to-dat', body, options);
+    return this.http.post(environment.backendUrl + 'to-dat', knitpaint, options);
   }
 }
