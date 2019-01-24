@@ -80,4 +80,20 @@ export class EditorIoService {
     });
     input.click();
   }
+
+  /**
+   * Converts the current assembly to png and starts a download
+   */
+  public exportToImageFile(): void {
+    const assembly = this.projectService.getProject().assembly;
+    const imageCanvas = document.createElement('canvas');
+    imageCanvas.width = assembly.width;
+    imageCanvas.height = assembly.height;
+    const imageContext = imageCanvas.getContext('2d');
+    imageContext.scale(1, -1);
+    imageContext.drawImage(assembly.getImage(), 0, 0, assembly.width , assembly.height * -1);
+    imageCanvas.toBlob((blob: Blob) => {
+      saveAs(blob, 'deepknit.png');
+    });
+  }
 }

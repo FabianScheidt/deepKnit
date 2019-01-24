@@ -70,7 +70,8 @@ export class NavigationComponent {
   }
 
   public exportImage(): void {
-    // Todo...
+    this.editorIoService.exportToImageFile();
+    this.moreOverlayVisible = false;
   }
 
   public importImage(): void {
