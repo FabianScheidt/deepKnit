@@ -1,6 +1,7 @@
 import { Directive, ElementRef, Input, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { fromEvent, Subject } from 'rxjs';
 import { TooltipService } from './tooltip.service';
+import { takeUntil } from 'rxjs/operators';
 
 @Directive({
   selector: '[appTooltip]'
@@ -15,11 +16,11 @@ export class TooltipDirective implements OnInit, OnDestroy {
   ngOnInit() {
     this.ngZone.runOutsideAngular(() => {
       const el = this.element.nativeElement;
-      fromEvent(el, 'mouseenter').subscribe(() => {
+      fromEvent(el, 'mouseenter').pipe(takeUntil(this.isDestroyed)).subscribe((e) => {
         this.tooltipService.visible.next(true);
         this.tooltipService.text.next(this.appTooltip);
       });
-      fromEvent(el, 'mouseout').subscribe(() => {
+      fromEvent(el, 'mouseout').pipe(takeUntil(this.isDestroyed)).subscribe(() => {
         this.tooltipService.visible.next(false);
       });
     });

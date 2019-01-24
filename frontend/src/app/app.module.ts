@@ -5,19 +5,9 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { HammerGestureConfig, HAMMER_GESTURE_CONFIG } from '@angular/platform-browser';
 import { TooltipModule } from './tooltip/tooltip.module';
 import { KnitpaintCanvasModule } from './knitpaint-canvas/knitpaint-canvas.module';
 
-declare var Hammer: any;
-
-export class CustomHammerConfig extends HammerGestureConfig {
-  buildHammer(element: HTMLElement) {
-    return new Hammer(element, {
-      touchAction: 'pan-x',
-    });
-  }
-}
 @NgModule({
   declarations: [
     AppComponent
@@ -29,9 +19,6 @@ export class CustomHammerConfig extends HammerGestureConfig {
     FormsModule,
     TooltipModule,
     KnitpaintCanvasModule
-  ],
-  providers: [
-    { provide: HAMMER_GESTURE_CONFIG, useClass: CustomHammerConfig }
   ],
   bootstrap: [AppComponent]
 })

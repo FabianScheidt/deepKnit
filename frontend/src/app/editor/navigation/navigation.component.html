@@ -1,9 +1,25 @@
 <div class="nav">
   <ul>
-    <li class="step"><a (click)="setup()" [class.active]="isSetup()">1. Set up your project</a></li>
-    <li class="step"><a (click)="patterns()" [class.active]="isPatterns()">2. Pick your patterns</a></li>
-    <li class="step"><a (click)="assembly()" [class.active]="isAssembly()">3. Assemble your knitting</a></li>
-    <li class="options" (click)="toggleMoreOverlay()"><i class="material-icons">more_horiz</i></li>
+    <li class="step">
+      <a (click)="setup()" [class.active]="isSetup()">
+        1. Set up your project
+      </a>
+    </li>
+    <li class="step">
+      <a (click)="patterns()" [class.active]="isPatterns()">
+        2. Pick your patterns
+      </a>
+    </li>
+    <li class="step">
+      <a (click)="assembly()" [class.active]="isAssembly()">
+        3. Assemble your knitting
+      </a>
+    </li>
+    <li class="options">
+      <a (click)="toggleMoreOverlay()">
+        <i class="material-icons">more_horiz</i>
+      </a>
+    </li>
   </ul>
 </div>
 

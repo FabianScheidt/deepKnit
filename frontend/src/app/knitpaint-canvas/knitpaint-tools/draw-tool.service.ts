@@ -26,6 +26,7 @@ export class DrawTool extends AbstractKnitpaintTool implements KnitpaintTool {
     this.ngZone.runOutsideAngular(() => {
       let isDown = false;
 
+      // Mouse events
       fromEvent(canvas, 'mousedown').pipe(takeUntil(this.unloadSubject)).subscribe((event: MouseEvent) => {
         isDown = true;
         this.draw(event.offsetX, event.offsetY);
@@ -40,6 +41,31 @@ export class DrawTool extends AbstractKnitpaintTool implements KnitpaintTool {
           this.draw(event.offsetX, event.offsetY);
         }
       });
+
+      // Touch events
+      fromEvent(canvas, 'touchstart').pipe(takeUntil(this.unloadSubject)).subscribe((event: TouchEvent) => {
+        if (event.touches.length === 1) {
+          isDown = true;
+          const rect = (<any>event.target).getBoundingClientRect();
+          const x = event.targetTouches[0].pageX - rect.left;
+          const y = event.targetTouches[0].pageY - rect.top;
+          this.draw(x, y);
+
+          fromEvent(document, 'touchend').pipe(takeUntil(this.unloadSubject), first()).subscribe(() => {
+            isDown = false;
+            this.setKnitpaint(this.knitpaint, true);
+          });
+        }
+
+      });
+      fromEvent(canvas, 'touchmove').pipe(takeUntil(this.unloadSubject)).subscribe((event: TouchEvent) => {
+        if (isDown) {
+          const rect = (<any>event.target).getBoundingClientRect();
+          const x = event.targetTouches[0].pageX - rect.left;
+          const y = event.targetTouches[0].pageY - rect.top;
+          this.draw(x, y);
+        }
+      });
     });
   }
 
@@ -52,7 +78,9 @@ export class DrawTool extends AbstractKnitpaintTool implements KnitpaintTool {
   private draw(x: number, y: number): void {
     const index = KnitpaintCanvasUtils.getIndexAtCoordinates(x, y, this.knitpaint.width, this.transform.inverse());
     const newKnitpaint = this.knitpaint.setColorNumber(index, this.colorNumber);
-    this.ngZone.run(() => this.setKnitpaint(newKnitpaint, false));
+    if (newKnitpaint) {
+      this.ngZone.run(() => this.setKnitpaint(newKnitpaint, false));
+    }
   }
 
 }

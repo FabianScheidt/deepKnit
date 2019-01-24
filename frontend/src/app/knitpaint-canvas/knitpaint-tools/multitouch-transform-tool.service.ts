@@ -34,8 +34,8 @@ export class MultitouchTransformTool extends AbstractKnitpaintTool implements Kn
       const doTranslate = (transform: SVGMatrix, x: number, y: number): SVGMatrix => {
         return transform.multiply(transform.inverse()).translate(x, y).multiply(transform);
       };
-      const doScale = (transform: SVGMatrix, scale: number): SVGMatrix => {
-        const scaleCenter = mousePoint.matrixTransform(transform.inverse());
+      const doScale = (center: SVGPoint, transform: SVGMatrix, scale: number): SVGMatrix => {
+        const scaleCenter = center.matrixTransform(transform.inverse());
         return KnitpaintCanvasUtils.scaleAroundPoint(transform, scale, scaleCenter);
       };
 
@@ -49,7 +49,7 @@ export class MultitouchTransformTool extends AbstractKnitpaintTool implements Kn
         e.preventDefault();
         if (e.ctrlKey) {
           const scale = Math.pow(1.015, -e.deltaY);
-          this.setTransform(doScale(this.transform, scale));
+          this.setTransform(doScale(mousePoint, this.transform, scale));
         } else {
           this.setTransform(doTranslate(this.transform, -e.deltaX * 2, -e.deltaY * 2));
         }
@@ -68,7 +68,7 @@ export class MultitouchTransformTool extends AbstractKnitpaintTool implements Kn
       fromEvent(canvas, 'gesturechange').pipe(takeUntil(this.unloadSubject)).subscribe((e: any) => {
         e.preventDefault();
         let transform = doTranslate(gestureStartTransform, e.pageX - gestureStartPoint.x, e.pageY - gestureStartPoint.y);
-        transform = doScale(transform, e.scale);
+        transform = doScale(gestureStartPoint, transform, e.scale);
         this.setTransform(transform);
       });
 
