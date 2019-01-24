@@ -45,6 +45,7 @@ export class DrawTool extends AbstractKnitpaintTool implements KnitpaintTool {
       // Touch events
       fromEvent(canvas, 'touchstart').pipe(takeUntil(this.unloadSubject)).subscribe((event: TouchEvent) => {
         if (event.touches.length === 1) {
+          event.preventDefault();
           isDown = true;
           const rect = (<any>event.target).getBoundingClientRect();
           const x = event.targetTouches[0].pageX - rect.left;
@@ -60,6 +61,7 @@ export class DrawTool extends AbstractKnitpaintTool implements KnitpaintTool {
       });
       fromEvent(canvas, 'touchmove').pipe(takeUntil(this.unloadSubject)).subscribe((event: TouchEvent) => {
         if (isDown) {
+          event.preventDefault();
           const rect = (<any>event.target).getBoundingClientRect();
           const x = event.targetTouches[0].pageX - rect.left;
           const y = event.targetTouches[0].pageY - rect.top;

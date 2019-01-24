@@ -32,6 +32,11 @@ export class EditorComponent implements OnInit, OnDestroy {
     fromEvent(document, 'gesturestart').pipe(takeUntil(this.onDestroy)).subscribe((e) => {
       e.preventDefault();
     });
+    fromEvent(document, 'touchend').pipe(takeUntil(this.onDestroy)).subscribe((e: TouchEvent) => {
+      if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLButtonElement)) {
+        e.preventDefault();
+      }
+    });
   }
 
   /**
@@ -70,13 +75,6 @@ export class EditorComponent implements OnInit, OnDestroy {
         e.preventDefault();
       }
     });
-  }
-
-  /**
-   * Returns if the current browser supports touch events
-   */
-  public isTouchDevice() {
-    return 'ontouchstart' in window;
   }
 
 }

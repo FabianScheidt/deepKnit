@@ -15,6 +15,7 @@ import { Knitpaint } from '../knitpaint';
 import { KnitpaintTool } from './knitpaint-tool';
 import { knitpaintTools } from './knitpaint-tools';
 import { KnitpaintCanvasUtils } from './knitpaint-canvas-utils';
+import { fromEvent } from 'rxjs';
 
 
 
@@ -55,6 +56,9 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
    * Prepares the canvas
    */
   ngAfterViewInit() {
+    // Prevent defaults for touch events
+    fromEvent(this.canvas.nativeElement, 'touchend').subscribe((e) => e.preventDefault);
+
     // Get a reference to the canvas context
     this.ctx = this.canvas.nativeElement.getContext('2d');
 

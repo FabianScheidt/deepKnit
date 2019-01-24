@@ -1,9 +1,11 @@
 <i class="material-icons"
    (click)="setDrawTool()"
+   (tap)="setDrawTool()"
    [class.selected]="isDrawTool()"
    appTooltip="Draw Tool">brush</i>
 <i class="material-icons"
    (click)="setColorPickerTool()"
+   (tap)="setColorPickerTool()"
    [class.selected]="isColorPickerTool()"
    appTooltip="Color Picker">colorize</i>
 <i class="material-icons" appTooltip="Texture Tool">texture</i>
