@@ -17,6 +17,7 @@ import { ApiModule } from '../api/api.module';
 import { EditorStateService } from './editor-state.service';
 import { EditorIoService } from './editor-io.service';
 import { ProjectService } from './project.service';
+import { TapClickDirective } from './tap-click.directive';
 
 @NgModule({
   imports: [
@@ -36,7 +37,8 @@ import { ProjectService } from './project.service';
     ToolbarComponent,
     ToolbarToolsComponent,
     ToolbarViewComponent,
-    ToolbarColorComponent
+    ToolbarColorComponent,
+    TapClickDirective
   ],
   providers: [
     ProjectService,

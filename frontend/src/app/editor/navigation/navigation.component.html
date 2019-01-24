@@ -1,21 +1,21 @@
 <div class="nav">
   <ul>
     <li class="step">
-      <a (click)="setup()" (tap)="setup()" [class.active]="isSetup()">
+      <a (click)="setup()" appTapClick [class.active]="isSetup()">
         1. Set up your project
       </a>
     </li>
     <li class="step">
-      <a (click)="patterns()" (tap)="patterns()" [class.active]="isPatterns()">
+      <a (click)="patterns()" appTapClick [class.active]="isPatterns()">
         2. Pick your patterns
       </a>
     </li>
     <li class="step">
-      <a (click)="assembly()" (tap)="assembly()" [class.active]="isAssembly()">
+      <a (click)="assembly()" appTapClick [class.active]="isAssembly()">
         3. Assemble your knitting
       </a>
     </li>
-    <li class="options" (click)="toggleMoreOverlay()" (tap)="toggleMoreOverlay()">
+    <li class="options" (click)="toggleMoreOverlay()" appTapClick>
       <i class="material-icons">more_horiz</i>
     </li>
   </ul>
@@ -23,16 +23,16 @@
 
 <div class="more-overlay" [hidden]="!moreOverlayVisible">
   <ul>
-    <li class="item" (click)="newProject()" (tap)="newProject()">New project</li>
-    <li class="item" (click)="openProject()" (tap)="openProject()">Open project</li>
-    <li class="item" (click)="saveProject()" (tap)="saveProject()">Save project</li>
+    <li class="item" (click)="newProject()" appTapClick>New project</li>
+    <li class="item" (click)="openProject()" appTapClick>Open project</li>
+    <li class="item" (click)="saveProject()" appTapClick>Save project</li>
     <li class="break"></li>
-    <li class="item" (click)="exportDat()" (tap)="exportDat()">Export to APEX</li>
-    <li class="item" (click)="importDat()" (tap)="importDat()">Import from APEX</li>
-    <li class="item disabled" (click)="exportImage()" (tap)="exportImage()">Export as Image</li>
-    <li class="item disabled" (click)="importImage()" (tap)="importImage()">Import from Image</li>
+    <li class="item" (click)="exportDat()" appTapClick>Export to APEX</li>
+    <li class="item" (click)="importDat()" appTapClick>Import from APEX</li>
+    <li class="item" (click)="exportImage()" appTapClick>Export as Image</li>
+    <li class="item" (click)="importImage()" appTapClick>Import from Image</li>
     <li class="break"></li>
-    <li class="item" [class.disabled]="!undoAvailable()" (click)="undo()" (tap)="undo()">Undo</li>
-    <li class="item" [class.disabled]="!redoAvailable()" (click)="redo()" (tap)="redo()">Redo</li>
+    <li class="item" [class.disabled]="!undoAvailable()" (click)="undo()" appTapClick>Undo</li>
+    <li class="item" [class.disabled]="!redoAvailable()" (click)="redo()" appTapClick>Redo</li>
   </ul>
 </div>
