@@ -127,7 +127,7 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
       const file = input.files[0];
       const reader = new FileReader();
       reader.addEventListener('load', () => {
-        const buffer: ArrayBuffer = reader.result;
+        const buffer: ArrayBuffer = <ArrayBuffer>reader.result;
         this.knitpaintConversionService.fromDat(buffer).subscribe((res: Knitpaint) => {
           if (res.width !== this.knitpaintWidth) {
             console.error('Width of imported dat does not match size of knitpaint viewer. Expected ' +

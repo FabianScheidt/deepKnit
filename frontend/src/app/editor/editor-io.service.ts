@@ -33,7 +33,7 @@ export class EditorIoService {
       const file = input.files[0];
       const reader = new FileReader();
       reader.addEventListener('load', () => {
-        const projectSerialized = JSON.parse(reader.result);
+        const projectSerialized = JSON.parse(<string>reader.result);
         const project = Project.fromJSON(projectSerialized);
         this.projectService.setProject(project, true);
       });
@@ -66,7 +66,7 @@ export class EditorIoService {
       const file = input.files[0];
       const reader = new FileReader();
       reader.addEventListener('load', () => {
-        const buffer: ArrayBuffer = reader.result;
+        const buffer: ArrayBuffer = <ArrayBuffer>reader.result;
         this.knitpaintConversionService.fromDat(buffer).subscribe((res: Knitpaint) => {
           const project = this.projectService.getProject();
           const newProject = project.setAssembly(res);
