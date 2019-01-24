@@ -27,6 +27,11 @@
     <li class="item" (click)="openProject()">Open project</li>
     <li class="item" (click)="saveProject()">Save project</li>
     <li class="break"></li>
+    <li class="item" (click)="exportDat()">Export to APEX</li>
+    <li class="item" (click)="importDat()">Import from APEX</li>
+    <li class="item disabled" (click)="exportImage()">Export as Image</li>
+    <li class="item disabled" (click)="importImage()">Import from Image</li>
+    <li class="break"></li>
     <li class="item" [class.disabled]="!undoAvailable()" (click)="undo()">Undo</li>
     <li class="item" [class.disabled]="!redoAvailable()" (click)="redo()">Redo</li>
   </ul>

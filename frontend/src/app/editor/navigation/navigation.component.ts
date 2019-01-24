@@ -56,6 +56,24 @@ export class NavigationComponent {
     this.moreOverlayVisible = false;
   }
 
+  public exportDat(): void {
+    this.editorStateService.exportToDatFile();
+    this.moreOverlayVisible = false;
+  }
+
+  public importDat(): void {
+    this.editorStateService.importFromDatFile();
+    this.moreOverlayVisible = false;
+  }
+
+  public exportImage(): void {
+    // Todo...
+  }
+
+  public importImage(): void {
+    // Todo...
+  }
+
   public undo(): void {
     this.editorStateService.undo();
     this.moreOverlayVisible = false;

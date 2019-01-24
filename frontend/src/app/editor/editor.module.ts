@@ -13,12 +13,14 @@ import { ToolbarToolsComponent } from './toolbar/toolbar-tools/toolbar-tools.com
 import { ToolbarViewComponent } from './toolbar/toolbar-view/toolbar-view.component';
 import { ToolbarColorComponent } from './toolbar/toolbar-color/toolbar-color.component';
 import { FormsModule } from '@angular/forms';
+import { ApiModule } from '../api/api.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     EditorRoutingModule,
+    ApiModule,
     KnitpaintCanvasModule,
     TooltipModule
   ],

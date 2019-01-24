@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ProjectService } from './project.service';
+import { KnitpaintConversionService } from '../api/knitpaint-conversion.service';
 import { Project, ProjectStage } from './project';
 import { Knitpaint } from '../knitpaint';
 import { Observable, Subject } from 'rxjs';
@@ -21,7 +22,8 @@ export class EditorStateService {
   private assemblyChangedSubject: Subject<void> = new Subject<void>();
   public assemblyChanged: Observable<void> = this.assemblyChangedSubject.asObservable();
 
-  constructor(private projectService: ProjectService) {
+  constructor(private projectService: ProjectService,
+              private knitpaintConversionService: KnitpaintConversionService) {
     // Get the current project
     this.project = projectService.getProject();
 
@@ -118,6 +120,40 @@ export class EditorStateService {
         this.projectService.setProject(project, true);
       }
     }
+  }
+
+  /**
+   * Converts the current assembly to dat and starts a download
+   */
+  public exportToDatFile(): void {
+    const assembly = this.getAssembly();
+    this.knitpaintConversionService.toDat(assembly).subscribe((dat: ArrayBuffer) => {
+      const blob = new Blob([new Uint8Array(dat)]);
+      saveAs(blob, 'deepknit.dat');
+    });
+  }
+
+  /**
+   * Opens a dialog to select a dat file, converts it and makes it the current assembly
+   */
+  public importFromDatFile(): void {
+    const input: HTMLInputElement = document.createElement('input');
+    input.type = 'file';
+    input.addEventListener('change', (e: Event) => {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        const buffer: ArrayBuffer = reader.result;
+        this.knitpaintConversionService.fromDat(buffer).subscribe((res: Knitpaint) => {
+          this.setAssembly(res);
+        });
+      });
+      reader.readAsArrayBuffer(file);
+    });
+    input.addEventListener('click', () => {
+      input.remove();
+    });
+    input.click();
   }
 
   public getStage(): ProjectStage {
