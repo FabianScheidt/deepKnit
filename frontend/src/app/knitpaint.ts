@@ -1,4 +1,5 @@
 import { COLOR_TABLE, COLOR_LABELS } from './knitpaint-constants';
+import * as _ from 'lodash';
 
 export type Color = [number, number, number];
 
@@ -80,6 +81,39 @@ export class Knitpaint {
       width: this.width,
       data: base64Data
     };
+  }
+
+  /**
+   * Returns a resized knitpaint
+   *
+   * @param width
+   * @param height
+   */
+  public resize(width: number, height: number): Knitpaint {
+    const uint8Array = new Uint8Array(this.data);
+    const array = Array.from(uint8Array);
+    let lines = _.chunk(array, this.width);
+
+    // Remove excess lines
+    if (height < this.height) {
+      lines = lines.slice(0, height);
+    }
+    // Remove excess columns
+    if (width < this.width) {
+      lines = lines.map((line) => line.slice(0, width));
+    }
+    // Pad columns
+    if (width > this.width) {
+      lines = lines.map((line) => line.concat(Array(width - this.width).fill(0)));
+    }
+    // Pad lines
+    if (height > this.height) {
+      lines = lines.concat(Array(height - this.height).fill(Array(width).fill(0)));
+    }
+
+    const newArray = _.flatten(lines);
+    const newUint8Array = Uint8Array.from(newArray);
+    return new Knitpaint(newUint8Array.buffer, width);
   }
 
   /**

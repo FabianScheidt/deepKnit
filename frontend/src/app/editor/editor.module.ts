@@ -12,10 +12,12 @@ import { TooltipModule } from '../tooltip/tooltip.module';
 import { ToolbarToolsComponent } from './toolbar/toolbar-tools/toolbar-tools.component';
 import { ToolbarViewComponent } from './toolbar/toolbar-view/toolbar-view.component';
 import { ToolbarColorComponent } from './toolbar/toolbar-color/toolbar-color.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   imports: [
     CommonModule,
+    FormsModule,
     EditorRoutingModule,
     KnitpaintCanvasModule,
     TooltipModule

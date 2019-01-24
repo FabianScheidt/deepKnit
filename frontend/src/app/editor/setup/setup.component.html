@@ -1,3 +1,21 @@
-<div class="setup-container">
-  setup works!
-</div>
+<form (submit)="isSizeDifferent() && resize()">
+  <div class="setup-container">
+    <div class="text">
+      Set the dimensions of your knitting.
+    </div>
+    <div class="options">
+      <div class="option">
+        <label for="width">Width</label>
+        <input type="number" min="1" id="width" name="width" [(ngModel)]="width" autofocus>
+      </div>
+      <div class="option">
+        <label for="height">Height</label>
+        <input type="number" min="1" id="height" name="height" [(ngModel)]="height">
+      </div>
+    </div>
+    <div class="buttons">
+      <input type="submit" value="Apply" [disabled]="!isSizeDifferent()">
+      <button (click)="nextStage()">Continue</button>
+    </div>
+  </div>
+</form>
