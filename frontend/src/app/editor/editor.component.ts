@@ -33,14 +33,36 @@ export class EditorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Registers shortcuts for undo and redo
+   * Registers shortcuts for new project, save project, open project, undo and redo.
+   * Some browsers might block these shortcuts as they heavily override the default behaviour.
    */
   private registerShortcuts() {
     fromEvent(window, 'keydown').pipe(takeUntil(this.onDestroy)).subscribe((e: KeyboardEvent) => {
+      // New project
+      if (e.key === 'n' && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+        this.editorStateService.init();
+        e.preventDefault();
+      }
+
+      // Open project
+      if (e.key === 'o' && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+        this.editorStateService.initFromFile();
+        e.preventDefault();
+      }
+
+      // Save project
+      if (e.key === 's' && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+        this.editorStateService.saveToFile();
+        e.preventDefault();
+      }
+
+      // Undo
       if (e.key === 'z' && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
         this.editorStateService.undo();
         e.preventDefault();
       }
+
+      // Redo
       if (e.key === 'z' && (e.metaKey || e.ctrlKey) && e.shiftKey) {
         this.editorStateService.redo();
         e.preventDefault();

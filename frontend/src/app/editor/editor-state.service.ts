@@ -3,6 +3,7 @@ import { ProjectService } from './project.service';
 import { Project, ProjectStage } from './project';
 import { Knitpaint } from '../knitpaint';
 import { Observable, Subject } from 'rxjs';
+import saveAs from 'file-saver';
 
 @Injectable({
   providedIn: 'root'
@@ -61,6 +62,39 @@ export class EditorStateService {
   public init(): void {
     const project = new Project();
     this.projectService.setProject(project, true);
+  }
+
+  /**
+   * Starts a download containing the current project
+   */
+  public saveToFile(): void {
+    const file = new Blob([JSON.stringify(this.project)], {type: 'text/plain;charset=utf-8'});
+    const now = new Date();
+    const datStr = now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate() + '-' + now.getHours() + '-' + now.getMinutes();
+    const filename = datStr + '.deepknitproject';
+    saveAs(file, filename);
+  }
+
+  /**
+   * Opens a dialog to load a project from disk
+   */
+  public initFromFile(): void {
+    const input: HTMLInputElement = document.createElement('input');
+    input.type = 'file';
+    input.addEventListener('change', (e: Event) => {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        const projectSerialized = JSON.parse(reader.result);
+        const project = Project.fromJSON(projectSerialized);
+        this.projectService.setProject(project, true);
+      });
+      reader.readAsText(file);
+    });
+    input.addEventListener('click', () => {
+      input.remove();
+    });
+    input.click();
   }
 
   /**

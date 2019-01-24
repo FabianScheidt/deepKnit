@@ -15,17 +15,17 @@
         3. Assemble your knitting
       </a>
     </li>
-    <li class="options">
-      <a (click)="toggleMoreOverlay()">
-        <i class="material-icons">more_horiz</i>
-      </a>
+    <li class="options" (click)="toggleMoreOverlay()">
+      <i class="material-icons">more_horiz</i>
     </li>
   </ul>
 </div>
 
 <div class="more-overlay" [hidden]="!moreOverlayVisible">
   <ul>
-    <li class="item" (click)="clearProject()">Clear project</li>
+    <li class="item" (click)="newProject()">New project</li>
+    <li class="item" (click)="openProject()">Open project</li>
+    <li class="item" (click)="saveProject()">Save project</li>
     <li class="break"></li>
     <li class="item" [class.disabled]="!undoAvailable()" (click)="undo()">Undo</li>
     <li class="item" [class.disabled]="!redoAvailable()" (click)="redo()">Redo</li>

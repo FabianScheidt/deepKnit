@@ -41,8 +41,18 @@ export class NavigationComponent {
     this.moreOverlayVisible = !this.moreOverlayVisible;
   }
 
-  public clearProject(): void {
+  public newProject(): void {
     this.editorStateService.init();
+    this.moreOverlayVisible = false;
+  }
+
+  public openProject(): void {
+    this.editorStateService.initFromFile();
+    this.moreOverlayVisible = false;
+  }
+
+  public saveProject(): void {
+    this.editorStateService.saveToFile();
     this.moreOverlayVisible = false;
   }
 
