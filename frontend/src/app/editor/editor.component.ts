@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { EditorStateService } from './editor-state.service';
+import { EditorIoService } from './editor-io.service';
 
 @Component({
   selector: 'app-editor',
@@ -12,7 +13,8 @@ export class EditorComponent implements OnInit, OnDestroy {
 
   private onDestroy: Subject<void> = new Subject<void>();
 
-  constructor(private editorStateService: EditorStateService) { }
+  constructor(private editorStateService: EditorStateService,
+              private editorIoService: EditorIoService) { }
 
   ngOnInit() {
     this.preventGestures();
@@ -46,13 +48,13 @@ export class EditorComponent implements OnInit, OnDestroy {
 
       // Open project
       if (e.key === 'o' && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
-        this.editorStateService.initFromFile();
+        this.editorIoService.initFromFile();
         e.preventDefault();
       }
 
       // Save project
       if (e.key === 's' && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
-        this.editorStateService.saveToFile();
+        this.editorIoService.saveToFile();
         e.preventDefault();
       }
 

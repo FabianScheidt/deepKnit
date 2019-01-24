@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { EditorStateService } from '../editor-state.service';
 import { Router } from '@angular/router';
 import { ProjectStage } from '../project';
+import { EditorIoService } from '../editor-io.service';
 
 @Component({
   selector: 'app-navigation',
@@ -12,7 +13,9 @@ export class NavigationComponent {
 
   public moreOverlayVisible;
 
-  constructor(private editorStateService: EditorStateService, private router: Router) {
+  constructor(private editorStateService: EditorStateService,
+              private editorIoService: EditorIoService,
+              private router: Router) {
     editorStateService.stageChanged.subscribe(() => {
       switch (editorStateService.getStage()) {
         case ProjectStage.Setup:
@@ -47,22 +50,22 @@ export class NavigationComponent {
   }
 
   public openProject(): void {
-    this.editorStateService.initFromFile();
+    this.editorIoService.initFromFile();
     this.moreOverlayVisible = false;
   }
 
   public saveProject(): void {
-    this.editorStateService.saveToFile();
+    this.editorIoService.saveToFile();
     this.moreOverlayVisible = false;
   }
 
   public exportDat(): void {
-    this.editorStateService.exportToDatFile();
+    this.editorIoService.exportToDatFile();
     this.moreOverlayVisible = false;
   }
 
   public importDat(): void {
-    this.editorStateService.importFromDatFile();
+    this.editorIoService.importFromDatFile();
     this.moreOverlayVisible = false;
   }
 

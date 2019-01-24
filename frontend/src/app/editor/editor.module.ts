@@ -14,6 +14,9 @@ import { ToolbarViewComponent } from './toolbar/toolbar-view/toolbar-view.compon
 import { ToolbarColorComponent } from './toolbar/toolbar-color/toolbar-color.component';
 import { FormsModule } from '@angular/forms';
 import { ApiModule } from '../api/api.module';
+import { EditorStateService } from './editor-state.service';
+import { EditorIoService } from './editor-io.service';
+import { ProjectService } from './project.service';
 
 @NgModule({
   imports: [
@@ -34,6 +37,11 @@ import { ApiModule } from '../api/api.module';
     ToolbarToolsComponent,
     ToolbarViewComponent,
     ToolbarColorComponent
+  ],
+  providers: [
+    ProjectService,
+    EditorStateService,
+    EditorIoService
   ]
 })
 export class EditorModule { }

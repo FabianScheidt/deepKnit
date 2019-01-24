@@ -2,9 +2,7 @@ import { Injectable } from '@angular/core';
 import { Project } from './project';
 import { Observable, Subject } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class ProjectService {
 
   // Defines the maximum number of undoable steps

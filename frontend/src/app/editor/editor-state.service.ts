@@ -1,14 +1,10 @@
 import { Injectable } from '@angular/core';
 import { ProjectService } from './project.service';
-import { KnitpaintConversionService } from '../api/knitpaint-conversion.service';
 import { Project, ProjectStage } from './project';
 import { Knitpaint } from '../knitpaint';
 import { Observable, Subject } from 'rxjs';
-import saveAs from 'file-saver';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class EditorStateService {
 
   // Keep a reference of the current project
@@ -22,8 +18,7 @@ export class EditorStateService {
   private assemblyChangedSubject: Subject<void> = new Subject<void>();
   public assemblyChanged: Observable<void> = this.assemblyChangedSubject.asObservable();
 
-  constructor(private projectService: ProjectService,
-              private knitpaintConversionService: KnitpaintConversionService) {
+  constructor(private projectService: ProjectService) {
     // Get the current project
     this.project = projectService.getProject();
 
@@ -67,39 +62,6 @@ export class EditorStateService {
   }
 
   /**
-   * Starts a download containing the current project
-   */
-  public saveToFile(): void {
-    const file = new Blob([JSON.stringify(this.project)], {type: 'text/plain;charset=utf-8'});
-    const now = new Date();
-    const datStr = now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate() + '-' + now.getHours() + '-' + now.getMinutes();
-    const filename = datStr + '.deepknitproject';
-    saveAs(file, filename);
-  }
-
-  /**
-   * Opens a dialog to load a project from disk
-   */
-  public initFromFile(): void {
-    const input: HTMLInputElement = document.createElement('input');
-    input.type = 'file';
-    input.addEventListener('change', (e: Event) => {
-      const file = input.files[0];
-      const reader = new FileReader();
-      reader.addEventListener('load', () => {
-        const projectSerialized = JSON.parse(reader.result);
-        const project = Project.fromJSON(projectSerialized);
-        this.projectService.setProject(project, true);
-      });
-      reader.readAsText(file);
-    });
-    input.addEventListener('click', () => {
-      input.remove();
-    });
-    input.click();
-  }
-
-  /**
    * Saves the current project to local storage
    */
   private saveToLocalStorage(): void {
@@ -120,40 +82,6 @@ export class EditorStateService {
         this.projectService.setProject(project, true);
       }
     }
-  }
-
-  /**
-   * Converts the current assembly to dat and starts a download
-   */
-  public exportToDatFile(): void {
-    const assembly = this.getAssembly();
-    this.knitpaintConversionService.toDat(assembly).subscribe((dat: ArrayBuffer) => {
-      const blob = new Blob([new Uint8Array(dat)]);
-      saveAs(blob, 'deepknit.dat');
-    });
-  }
-
-  /**
-   * Opens a dialog to select a dat file, converts it and makes it the current assembly
-   */
-  public importFromDatFile(): void {
-    const input: HTMLInputElement = document.createElement('input');
-    input.type = 'file';
-    input.addEventListener('change', (e: Event) => {
-      const file = input.files[0];
-      const reader = new FileReader();
-      reader.addEventListener('load', () => {
-        const buffer: ArrayBuffer = reader.result;
-        this.knitpaintConversionService.fromDat(buffer).subscribe((res: Knitpaint) => {
-          this.setAssembly(res);
-        });
-      });
-      reader.readAsArrayBuffer(file);
-    });
-    input.addEventListener('click', () => {
-      input.remove();
-    });
-    input.click();
   }
 
   public getStage(): ProjectStage {
