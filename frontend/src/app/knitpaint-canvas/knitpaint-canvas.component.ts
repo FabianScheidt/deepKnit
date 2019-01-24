@@ -148,8 +148,8 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
    *
    * @param toolClass
    */
-  public getTool<T>(toolClass: Type<T>): T {
-    return <any>this.availableTools.find((tool) => tool instanceof toolClass);
+  public getTool<T extends KnitpaintTool>(toolClass: Type<T>): T {
+    return <T>this.availableTools.find((tool) => tool instanceof toolClass);
   }
 
   /**
@@ -157,9 +157,10 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
    *
    * @param tools
    */
-  public activateTools(tools?: KnitpaintTool[]) {
-    const prevTools = this.activeTools || [];
-    const currTools = tools || [];
+  public activateTools(tools?: (KnitpaintTool | Type<KnitpaintTool>)[]) {
+    tools = tools || [];
+    const prevTools: KnitpaintTool[] = this.activeTools || [];
+    const currTools: KnitpaintTool[] = tools.map((tool) => typeof tool === 'object' ? tool : this.getTool(tool));
     let needsRender = false;
 
     // Unload old tools

@@ -7,19 +7,27 @@ import { AssemblyComponent } from './assembly/assembly.component';
 import { NavigationComponent } from './navigation/navigation.component';
 import { EditorRoutingModule } from './editor-routing.module';
 import { KnitpaintCanvasModule } from '../knitpaint-canvas/knitpaint-canvas.module';
+import { ToolbarComponent } from './toolbar/toolbar.component';
+import { TooltipModule } from '../tooltip/tooltip.module';
+import { ToolbarToolsComponent } from './toolbar/toolbar-tools/toolbar-tools.component';
+import { ToolbarViewComponent } from './toolbar/toolbar-view/toolbar-view.component';
 
 @NgModule({
   imports: [
     CommonModule,
     EditorRoutingModule,
-    KnitpaintCanvasModule
+    KnitpaintCanvasModule,
+    TooltipModule
   ],
   declarations: [
     EditorComponent,
     SetupComponent,
     PatternsComponent,
     AssemblyComponent,
-    NavigationComponent
+    NavigationComponent,
+    ToolbarComponent,
+    ToolbarToolsComponent,
+    ToolbarViewComponent
   ]
 })
 export class EditorModule { }

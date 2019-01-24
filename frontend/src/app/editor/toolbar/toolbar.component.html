@@ -1,0 +1,9 @@
+<div class="tools">
+  <app-toolbar-tools [activeTools]="activeTools" (activeToolChanged)="emitActiveToolsChanged()"></app-toolbar-tools>
+</div>
+<div class="color">
+  <div class="active-color">&nbsp;</div>
+</div>
+<div class="view">
+  <app-toolbar-view [activeTools]="activeTools" (activeToolChanged)="emitActiveToolsChanged()"></app-toolbar-view>
+</div>

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, Type, ViewChild } from '@angular/core';
 import { Knitpaint } from '../../knitpaint';
 import { KnitpaintCanvasComponent } from '../../knitpaint-canvas/knitpaint-canvas.component';
 import { GridTool } from '../../knitpaint-canvas/knitpaint-tools/grid-tool.service';
@@ -6,6 +6,7 @@ import { MultitouchTransformTool } from '../../knitpaint-canvas/knitpaint-tools/
 import { KeyboardTransformTool } from '../../knitpaint-canvas/knitpaint-tools/keyboard-transform-tool.service';
 import { DrawTool } from '../../knitpaint-canvas/knitpaint-tools/draw-tool.service';
 import { EditorStateService } from '../editor-state.service';
+import { KnitpaintTool } from '../../knitpaint-canvas/knitpaint-tool';
 
 @Component({
   selector: 'app-assembly',
@@ -16,6 +17,7 @@ export class AssemblyComponent implements OnInit {
 
   public knitpaint: Knitpaint;
   @ViewChild('knitpaintCanvas') knitpaintCanvas: KnitpaintCanvasComponent;
+  public activeTools: Type<KnitpaintTool>[] = [GridTool, MultitouchTransformTool, KeyboardTransformTool, DrawTool];
 
   constructor(private editorStateService: EditorStateService) {
     this.knitpaint = editorStateService.getAssembly();
@@ -26,18 +28,17 @@ export class AssemblyComponent implements OnInit {
   }
 
   ngOnInit() {
-    const activeTools = [
-      this.knitpaintCanvas.getTool(GridTool),
-      this.knitpaintCanvas.getTool(MultitouchTransformTool),
-      this.knitpaintCanvas.getTool(KeyboardTransformTool),
-      this.knitpaintCanvas.getTool(DrawTool)
-    ];
-    this.knitpaintCanvas.activateTools(activeTools);
     this.knitpaintCanvas.getTool(DrawTool).colorNumber = 1;
+    this.activateTools(this.activeTools);
   }
 
   setAssembly(assembly: Knitpaint) {
     this.editorStateService.setAssembly(assembly);
+  }
+
+  activateTools(tools: Type<KnitpaintTool>[]) {
+    this.activeTools = tools;
+    this.knitpaintCanvas.activateTools(tools);
   }
 
 }

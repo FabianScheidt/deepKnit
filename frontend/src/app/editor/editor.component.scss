@@ -13,7 +13,8 @@
   }
 
   app-navigation,
-  router-outlet {
+  router-outlet,
+  app-tooltip-outlet {
     flex-grow: 0;
     flex-shrink: 0;
   }

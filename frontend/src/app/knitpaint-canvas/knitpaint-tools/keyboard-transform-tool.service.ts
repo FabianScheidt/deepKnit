@@ -35,17 +35,17 @@ export class KeyboardTransformTool extends AbstractKnitpaintTool implements Knit
     this.ngZone.runOutsideAngular(() => {
       fromEvent(window, 'keydown').pipe(takeUntil(this.unloadSubject)).subscribe((e: KeyboardEvent) => {
         // ctrl + or ⌘ +
-        if (e.keyCode === 187 && (e.metaKey || e.ctrlKey)) {
+        if (e.key === '+' && (e.metaKey || e.ctrlKey)) {
           e.preventDefault();
           this.scaleAroundCenter(2);
         }
         // ctrl - or ⌘ -
-        if (e.keyCode === 189 && (e.metaKey || e.ctrlKey)) {
+        if (e.key === '-' && (e.metaKey || e.ctrlKey)) {
           e.preventDefault();
           this.scaleAroundCenter(0.5);
         }
         // ctr 0 or ⌘ 0
-        if (e.keyCode === 48 && (e.metaKey || e.ctrlKey)) {
+        if (e.key === '0' && (e.metaKey || e.ctrlKey)) {
           e.preventDefault();
           const canvasWidth = this.canvas.offsetWidth;
           const canvasHeight = this.canvas.offsetHeight;

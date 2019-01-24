@@ -2,14 +2,19 @@
 
 :host {
   display: flex;
+  position: relative;
 }
 
 .tools {
+  display: flex;
   flex-grow: 0;
   flex-shrink: 0;
-  width: 40px;
   margin: 0 4px 0 0;
-  background-color: $panel-background;
+
+  app-toolbar {
+    flex-grow: 1;
+    flex-shrink: 1;
+  }
 }
 
 .knitpaint {
