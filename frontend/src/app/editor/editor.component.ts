@@ -33,7 +33,16 @@ export class EditorComponent implements OnInit, OnDestroy {
       e.preventDefault();
     });
     fromEvent(document, 'touchend').pipe(takeUntil(this.onDestroy)).subscribe((e: TouchEvent) => {
-      if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLButtonElement)) {
+      const allowedChild = (el) => {
+        if (el instanceof HTMLInputElement || el instanceof HTMLButtonElement || el.className === 'cdk-overlay-container') {
+          return true;
+        }
+        if (!el.parentElement) {
+          return false;
+        }
+        return allowedChild(el.parentElement);
+      };
+      if (!allowedChild(e.target)) {
         e.preventDefault();
       }
     });
