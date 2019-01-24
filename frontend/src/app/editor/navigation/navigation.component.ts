@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { EditorStateService } from '../editor-state.service';
 import { Router } from '@angular/router';
 import { ProjectStage } from '../project';
@@ -6,8 +6,7 @@ import { ProjectStage } from '../project';
 @Component({
   selector: 'app-navigation',
   templateUrl: './navigation.component.html',
-  styleUrls: ['./navigation.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./navigation.component.scss']
 })
 export class NavigationComponent {
 

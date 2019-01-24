@@ -27,11 +27,13 @@ export class EditorStateService {
     // Register local observables for project changes
     this.registerProjectChanges();
 
-    // Try to load a project from local storage
-    this.initFromLocalStorage();
-
     // Save whenever the project changes
     this.projectService.projectChanged.subscribe(() => this.saveToLocalStorage());
+
+    // Try to load a project from local storage, use a timeout to give other components a chance to register for changes
+    setTimeout(() => {
+      this.initFromLocalStorage();
+    });
   }
 
   /**
