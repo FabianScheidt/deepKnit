@@ -47,7 +47,7 @@ export class MultitouchTransformTool extends AbstractKnitpaintTool implements Kn
       // Track wheel events for translating and zooming
       fromEvent(canvas, 'wheel').pipe(takeUntil(this.unloadSubject)).subscribe((e: MouseWheelEvent) => {
         e.preventDefault();
-        if (e.ctrlKey) {
+        if (e.ctrlKey || e.metaKey) {
           const scale = Math.pow(1.015, -e.deltaY);
           this.setTransform(doScale(mousePoint, this.transform, scale));
         } else {
