@@ -1,4 +1,4 @@
-import os, logging
+import os, logging, base64
 from flask import Flask, Response, request, json
 from flask_cors import CORS
 from lstm import LSTMModel
@@ -124,7 +124,7 @@ def from_dat():
     dat_bytes = request.stream.read()
     handler = KnitPaint(dat_bytes)
     res = json.dumps({
-        'data': handler.bitmap_data,
+        'data': base64.b64encode(bytes(handler.bitmap_data)).decode(),
         'width': handler.get_width()
     })
     resp = Response(res, mimetype='application/json')
@@ -144,7 +144,7 @@ def to_dat():
     # Try to read options from JSON
     options = request.get_json()
     if 'data' in options:
-        data = options['data']
+        data = base64.b64decode(options['data'])
     if 'width' in options:
         width = options['width']
 
