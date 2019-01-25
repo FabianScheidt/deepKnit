@@ -33,6 +33,9 @@ export class AssemblyComponent implements OnInit {
     // Activate the default tools
     this.activateTools(this.activeTools);
 
+    // The router might mess with the initial transform of the canvas so better set it again
+    setTimeout(() => this.knitpaintCanvas.resetTransform());
+
     // The picker tool should be able to update the color number
     this.knitpaintCanvas.getTool(ColorPickerTool).colorPicked.subscribe((colorNumber: number) => {
       this.colorNumber = colorNumber;
