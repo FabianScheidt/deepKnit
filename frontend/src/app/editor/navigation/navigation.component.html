@@ -40,19 +40,3 @@
     <button mat-menu-item (click)="importImage()" appTapClick>Import from Image</button>
   </mat-menu>
 </div>
-
-<div class="more-overlay" [hidden]="!moreOverlayVisible">
-  <ul>
-    <li class="item" (click)="newProject()" appTapClick>New project</li>
-    <li class="item" (click)="openProject()" appTapClick>Open project</li>
-    <li class="item" (click)="saveProject()" appTapClick>Save project</li>
-    <li class="break"></li>
-    <li class="item" (click)="exportDat()" appTapClick>Export to APEX</li>
-    <li class="item" (click)="importDat()" appTapClick>Import from APEX</li>
-    <li class="item" (click)="exportImage()" appTapClick>Export as Image</li>
-    <li class="item" (click)="importImage()" appTapClick>Import from Image</li>
-    <li class="break"></li>
-    <li class="item" [class.disabled]="!undoAvailable()" (click)="undo()" appTapClick>Undo</li>
-    <li class="item" [class.disabled]="!redoAvailable()" (click)="redo()" appTapClick>Redo</li>
-  </ul>
-</div>
