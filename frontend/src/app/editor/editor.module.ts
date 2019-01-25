@@ -16,6 +16,7 @@ import { ProjectService } from './project.service';
 import { MatButtonModule, MatDividerModule, MatIconModule, MatInputModule, MatMenuModule } from '@angular/material';
 import { ToolbarModule } from './toolbar/toolbar.module';
 import { UtilsModule } from './utils/utils.module';
+import { PatternComponent } from './patterns/pattern/pattern.component';
 
 @NgModule({
   imports: [
@@ -38,7 +39,8 @@ import { UtilsModule } from './utils/utils.module';
     SetupComponent,
     PatternsComponent,
     AssemblyComponent,
-    NavigationComponent
+    NavigationComponent,
+    PatternComponent
   ],
   providers: [
     ProjectService,

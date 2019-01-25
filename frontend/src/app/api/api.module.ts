@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { KnitpaintConversionService } from './knitpaint-conversion.service';
 import { KnitpaintSamplingService } from './knitpaint-sampling.service';
+import { PatternSamplingService } from './pattern-sampling.service';
 
 @NgModule({
   imports: [
@@ -12,7 +13,8 @@ import { KnitpaintSamplingService } from './knitpaint-sampling.service';
   declarations: [],
   providers: [
     KnitpaintConversionService,
-    KnitpaintSamplingService
+    KnitpaintSamplingService,
+    PatternSamplingService
   ]
 })
 export class ApiModule { }

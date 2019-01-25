@@ -1,0 +1,23 @@
+@import "../../editor-constants";
+
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+
+  app-knitpaint-canvas {
+    width: 100%;
+    height: 100%;
+  }
+}

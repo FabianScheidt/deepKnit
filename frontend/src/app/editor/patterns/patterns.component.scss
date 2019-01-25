@@ -18,6 +18,8 @@
   padding: 60px;
   line-height: 0;
   text-align: center;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
 
   .pattern {
     display: inline-block;
@@ -25,6 +27,29 @@
     height: 160px;
     margin: 2px;
     background-color: $panel-background;
+
+    &.loading {
+      animation-name: pulsating-background;
+      animation-duration: 3s;
+      animation-iteration-count: infinite;
+      animation-timing-function: ease-in-out;
+
+      &:nth-child(6n - 1) {
+        animation-delay: 0.5s;
+      }
+      &:nth-child(6n - 2) {
+        animation-delay: 1.5s;
+      }
+      &:nth-child(6n - 3) {
+        animation-delay: 2s;
+      }
+      &:nth-child(6n - 4) {
+        animation-delay: 1s;
+      }
+      &:nth-child(6n - 0) {
+        animation-delay: 2.5s;
+      }
+    }
   }
 
   .fill {
@@ -40,4 +65,17 @@
   width: 300px;
   margin: 0 0 0 4px;
   background-color: $panel-background;
+}
+
+
+@keyframes pulsating-background {
+  0% {
+    background-color: transparentize($panel-background, 0.3);
+  }
+  50% {
+    background-color: transparentize($panel-background, 0.8);
+  }
+  100% {
+    background-color: transparentize($panel-background, 0.3);
+  }
 }
