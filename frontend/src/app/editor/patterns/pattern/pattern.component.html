@@ -1,3 +1,7 @@
 <div class="canvas" [class.loading]="!knitpaint">
   <app-knitpaint-canvas *ngIf="knitpaint" [knitpaint]="knitpaint"></app-knitpaint-canvas>
 </div>
+<div class="save" *ngIf="knitpaint">
+  <mat-icon *ngIf="!saved" (click)="toggleSave()" appTapClick>favorite_border</mat-icon>
+  <mat-icon *ngIf="saved" (click)="toggleSave()" appTapClick>favorite</mat-icon>
+</div>

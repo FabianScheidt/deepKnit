@@ -21,3 +21,20 @@
     height: 100%;
   }
 }
+
+.save {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+
+  /deep/ mat-icon {
+    font-size: 20px;
+    cursor: pointer;
+    color: $inactive;
+    transition: 0.2s color;
+
+    &:hover {
+      color: $active;
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { PatternSamplingService } from '../../api/pattern-sampling.service';
 import { Knitpaint } from '../../knitpaint';
 import { take } from 'rxjs/operators';
 import * as _ from 'lodash';
+import { EditorStateService } from '../editor-state.service';
 
 @Component({
   selector: 'app-patterns',
@@ -15,7 +16,8 @@ export class PatternsComponent implements OnInit {
   patternIndices = [];
   sampledPatterns: Knitpaint[] = [];
 
-  constructor(private patternSamplingService: PatternSamplingService) { }
+  constructor(private editorStateService: EditorStateService,
+              private patternSamplingService: PatternSamplingService) { }
 
   ngOnInit() {
     this.loadMorePatterns();
@@ -49,6 +51,38 @@ export class PatternsComponent implements OnInit {
    */
   public isMoreAvailable() {
     return this.sampledPatterns.length === this.patternIndices.length;
+  }
+
+  /**
+   * Returns a list of saved patterns
+   */
+  public getSavedPatterns(): Knitpaint[] {
+    return this.editorStateService.getPatterns();
+  }
+
+  /**
+   * Saves a pattern, if it is not yet saved and removes it, if it is
+   *
+   * @param pattern
+   */
+  public toggleSavePattern(pattern: Knitpaint): void {
+    const patterns = this.editorStateService.getPatterns().slice();
+    const index = patterns.indexOf(pattern);
+    if (index > -1) {
+      patterns.splice(index, 1);
+    } else {
+      patterns.push(pattern);
+    }
+    this.editorStateService.setPatterns(patterns);
+  }
+
+  /**
+   * Returns if the pattern is saved
+   *
+   * @param pattern
+   */
+  public isPatternSaved(pattern: Knitpaint): boolean {
+    return this.editorStateService.getPatterns().indexOf(pattern) > -1;
   }
 
 }

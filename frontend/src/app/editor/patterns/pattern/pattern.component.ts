@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Knitpaint } from '../../../knitpaint';
 
 @Component({
@@ -6,13 +6,17 @@ import { Knitpaint } from '../../../knitpaint';
   templateUrl: './pattern.component.html',
   styleUrls: ['./pattern.component.scss']
 })
-export class PatternComponent implements OnInit {
+export class PatternComponent {
 
   @Input() knitpaint: Knitpaint;
+  @Input() saved = false;
+  @Output() savedChange: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   constructor() { }
 
-  ngOnInit() {
+  public toggleSave(): void {
+    this.saved = !this.saved;
+    this.savedChange.next(this.saved);
   }
 
 }

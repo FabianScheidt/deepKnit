@@ -3,7 +3,9 @@
 </div>
 <div class="patterns">
   <div class="pattern" *ngFor="let index of patternIndices" [class.loading]="!getPattern(index)">
-    <app-pattern [knitpaint]="getPattern(index)"></app-pattern>
+    <app-pattern [knitpaint]="getPattern(index)"
+                 [saved]="isPatternSaved(getPattern(index))"
+                 (savedChange)="toggleSavePattern(getPattern(index))"></app-pattern>
   </div>
 
   <!-- Fill divs are required to fix the centered layout -->
@@ -14,5 +16,6 @@
   </div>
 </div>
 <div class="sidebar">
-  &nbsp;
+  Saved:
+  <p *ngFor="let pattern of getSavedPatterns()">{{ pattern.width }}</p>
 </div>
