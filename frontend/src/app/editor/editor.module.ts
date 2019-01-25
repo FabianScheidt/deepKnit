@@ -17,6 +17,7 @@ import { MatButtonModule, MatDividerModule, MatIconModule, MatInputModule, MatMe
 import { ToolbarModule } from './toolbar/toolbar.module';
 import { UtilsModule } from './utils/utils.module';
 import { PatternComponent } from './patterns/pattern/pattern.component';
+import { PatternsBarComponent } from './patterns-bar/patterns-bar.component';
 
 @NgModule({
   imports: [
@@ -40,7 +41,8 @@ import { PatternComponent } from './patterns/pattern/pattern.component';
     PatternsComponent,
     AssemblyComponent,
     NavigationComponent,
-    PatternComponent
+    PatternComponent,
+    PatternsBarComponent
   ],
   providers: [
     ProjectService,

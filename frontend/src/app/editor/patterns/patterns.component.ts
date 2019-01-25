@@ -54,13 +54,6 @@ export class PatternsComponent implements OnInit {
   }
 
   /**
-   * Returns a list of saved patterns
-   */
-  public getSavedPatterns(): Knitpaint[] {
-    return this.editorStateService.getPatterns();
-  }
-
-  /**
    * Saves a pattern, if it is not yet saved and removes it, if it is
    *
    * @param pattern

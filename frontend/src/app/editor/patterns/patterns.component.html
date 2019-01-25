@@ -16,6 +16,8 @@
   </div>
 </div>
 <div class="sidebar">
-  Saved:
-  <p *ngFor="let pattern of getSavedPatterns()">{{ pattern.width }}</p>
+  <div class="ai-parameters">
+    <div class="title">AI-Parameters</div>
+  </div>
+  <app-patterns-bar [allowRemoval]="true"></app-patterns-bar>
 </div>
