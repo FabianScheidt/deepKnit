@@ -63,7 +63,7 @@ export class NavigationComponent {
   }
 
   public importImage(): void {
-    // Todo...
+    this.editorIoService.importFromImageFile();
   }
 
   public undo(): void {
