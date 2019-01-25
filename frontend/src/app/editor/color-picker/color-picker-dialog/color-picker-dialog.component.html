@@ -1,0 +1,6 @@
+<div mat-dialog-content>
+  <app-color-picker (colorPicked)="pickColor($event)"></app-color-picker>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button color="warn" (click)="pickColor(null)" appTapClick>Cancel</button>
+</div>

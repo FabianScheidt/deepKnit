@@ -1,4 +1,5 @@
 <div class="active-color"
+     (click)="openColorPicker()" appTapClick
      [style.backgroundColor]="getColorString()"
      [style.color]="getContrastColorString()">
   {{ activeColorNumber }}
