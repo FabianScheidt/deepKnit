@@ -35,7 +35,7 @@ export class ToolbarColorComponent {
   public openColorPicker() {
     const dialogRef = this.dialog.open(ColorPickerDialogComponent, { width: '500px' });
     dialogRef.afterClosed().subscribe(result => {
-      if (result !== null) {
+      if (result || result === 0) {
         this.activeColorNumber = result;
         this.activeColorNumberChange.next(this.activeColorNumber);
       }
