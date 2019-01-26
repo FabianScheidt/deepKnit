@@ -1,41 +1,44 @@
-def read_linebreak(input_file, linebreak_char, target_width=None, target_height=None, dst=None):
+def read_linebreak(input_file, linebreak_char, padding_char=0, target_width=None, target_height=None, dst=None):
     """
     Creates new bitmap data by separating lines from the input using the provided linebreak character
     :param input_file:
     :param linebreak_char:
+    :param padding_char:
     :param target_width:
     :param target_height:
     :param dst:
     :return:
     """
     if isinstance(input_file, str):
-        return read_linebreak_file(input_file, linebreak_char=linebreak_char, target_width=target_width,
-                                   target_height=target_height, dst=dst)
+        return read_linebreak_file(input_file, linebreak_char=linebreak_char, padding_char=padding_char,
+                                   target_width=target_width, target_height=target_height, dst=dst)
     else:
-        return read_linebreak_bytes(input_file, linebreak_char=linebreak_char, target_width=target_width,
-                                    target_height=target_height, dst=dst)
+        return read_linebreak_bytes(input_file, linebreak_char=linebreak_char, padding_char=padding_char,
+                                    target_width=target_width, target_height=target_height, dst=dst)
 
 
-def read_linebreak_file(input_filename, linebreak_char, target_width=None, target_height=None, dst=None):
+def read_linebreak_file(input_filename, linebreak_char, padding_char=0, target_width=None, target_height=None, dst=None):
     """
     Creates new bitmap data by separating lines from the input file using the provided linebreak character
     :param input_filename:
     :param linebreak_char:
+    :param padding_char:
     :param target_width:
     :param target_height:
     :param dst:
     :return:
     """
     linebreak_bytes = open(input_filename, "rb").read()
-    return read_linebreak_bytes(linebreak_bytes, linebreak_char=linebreak_char, target_width=target_width,
-                                target_height=target_height, dst=dst)
+    return read_linebreak_bytes(linebreak_bytes, linebreak_char=linebreak_char, padding_char=padding_char,
+                                target_width=target_width, target_height=target_height, dst=dst)
 
 
-def read_linebreak_bytes(input_bytes, linebreak_char, target_width=None, target_height=None, dst=None):
+def read_linebreak_bytes(input_bytes, linebreak_char, padding_char=0, target_width=None, target_height=None, dst=None):
     """
     Creates new bitmap data by separating lines using the provided linebreak character
     :param input_bytes:
     :param linebreak_char:
+    :param padding_char:
     :param target_width:
     :param target_height:
     :param dst: Destination KnitPaint class
@@ -72,8 +75,9 @@ def read_linebreak_bytes(input_bytes, linebreak_char, target_width=None, target_
     new_bitmap_data = []
     for current_line in lines:
         current_line = current_line[:width]
-        current_line += [0] * (width - len(current_line))
+        current_line += [padding_char] * (width - len(current_line))
         new_bitmap_data += current_line
 
     # Set the new bitmap data
     dst.set_bitmap_data(new_bitmap_data, width, len(lines))
+    return dst

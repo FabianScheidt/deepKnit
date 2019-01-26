@@ -4,12 +4,14 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
 import tensorflow.keras.backend as K
+from tensorflow.keras.layers import Input, Embedding, Lambda, concatenate, LSTM, CuDNNLSTM, Dense
 from knitpaint import KnitPaint
 from lstm import LSTMModel
 
 PADDING_CHAR = 0
 END_OF_LINE_CHAR = 151
 END_OF_FILE_CHAR = 152
+CATEGORIES = ['Cable/Aran', 'Stitch move', 'Links', 'Miss', 'Tuck']
 
 
 class LSTMModelStaf(LSTMModel):
@@ -48,6 +50,10 @@ class LSTMModelStaf(LSTMModel):
         # pattern a special character will be placed as well
         sequences = np.ones((df.shape[0], max_sequence_length), dtype=int) * PADDING_CHAR
 
+        # Categories will be 0 if a category is not present and greater than that if it is.
+        # The sum of each row will be 1
+        categories = np.zeros((df.shape[0], len(CATEGORIES)), dtype=float)
+
         print('\n\nReading Input Files...')
         for i, (_, row) in enumerate(df.iterrows()):
             apex_file = self.data_dir + row['apex_file']
@@ -56,6 +62,12 @@ class LSTMModelStaf(LSTMModel):
             sequence = np.array(knitpaint.bitmap_data)
             sequence[-1] = END_OF_FILE_CHAR
             sequences[i, :sequence.size] = sequence
+            for j, category in enumerate(CATEGORIES):
+                categories[i, j] = 1.0 if category in row['category'] else 0.0
+
+        # Normalize rows of categories so they sum up to 1.0
+        categories_row_sums = categories.sum(axis=1)
+        categories = categories / categories_row_sums[:, np.newaxis]
 
         # Weights will be 1 for values and 0 for padding. End of line and end of file should have weight 10 and 100.
         weights = np.ones_like(sequences, dtype=int)
@@ -73,28 +85,44 @@ class LSTMModelStaf(LSTMModel):
         training_filename = self.get_training_filename()
         pathlib.Path(self.training_dir).mkdir(parents=True, exist_ok=True)
         np.save(self.training_dir + training_filename + '.npy', sequences)
+        np.save(self.training_dir + training_filename + '-categories.npy', categories)
         np.save(self.training_dir + training_filename + '-weights.npy', weights)
         np.save(self.training_dir + training_filename + '-vocab.npy', vocab)
 
+    def read_training_dataset(self):
+        categories = np.load(self.training_dir + self.get_training_filename() + '-categories.npy')
+        res = super().read_training_dataset()
+        res[0].append(categories)
+        return res
+
     def get_model(self, vocab_size, batch_shape, stateful=False, softmax=True):
-        # Build the model. Start with Input and Embedding
-        inputs_layer = keras.layers.Input(batch_shape=batch_shape, name='inputs_layer')
-        embedded_inputs = keras.layers.Embedding(vocab_size, 30, name='embedded_inputs')(inputs_layer)
+        # Use embedding layer on sequences
+        sequence_inputs_layer = Input(batch_shape=batch_shape[0], name='sequence_inputs_layer')
+        embedded_inputs = Embedding(vocab_size, 30, name='embedded_inputs')(sequence_inputs_layer)
+
+        # Add a second input for the categories and repeat it across the sequence length dimension
+        category_inputs_layer = Input(batch_shape=batch_shape[1], name='category_inputs_layer')
+        category_repeat_layer = Lambda(lambda args: keras.layers.RepeatVector(K.shape(args[1])[1])(args[0]),
+                                       output_shape=(batch_shape[0][1], batch_shape[1][1]),
+                                       name='category_repeat_layer')([category_inputs_layer, embedded_inputs])
+
+        # Concatenate both inputs
+        concatenate_layer = concatenate([embedded_inputs, category_repeat_layer])
 
         if tf.test.is_gpu_available():
-            lstm_layer = tf.keras.layers.CuDNNLSTM
+            lstm_layer = CuDNNLSTM
         else:
-            lstm_layer = functools.partial(tf.keras.layers.LSTM, activation='tanh', recurrent_activation='sigmoid')
+            lstm_layer = functools.partial(LSTM, activation='tanh', recurrent_activation='sigmoid')
 
         lstm_1 = lstm_layer(200, return_sequences=True, recurrent_initializer='glorot_uniform',
-                            stateful=stateful, name='lstm_1')(embedded_inputs)
+                            stateful=stateful, name='lstm_1')(concatenate_layer)
         lstm_2 = lstm_layer(200, return_sequences=True, recurrent_initializer='glorot_uniform',
                             stateful=stateful, name='lstm_2')(lstm_1)
 
         # Dense output: One element for each color number in the vocabulary
         activation = 'softmax' if softmax else None
-        dense_output = keras.layers.Dense(vocab_size, name='dense_output', activation=activation)(lstm_2)
-        model = keras.Model(inputs=inputs_layer, outputs=dense_output)
+        dense_output = Dense(vocab_size, name='dense_output', activation=activation)(lstm_2)
+        model = keras.Model(inputs=[sequence_inputs_layer, category_inputs_layer], outputs=dense_output)
         return model
 
     def train(self, metrics=None, **kwargs):
@@ -120,18 +148,20 @@ class LSTMModelStaf(LSTMModel):
 
         super().train(metrics=metrics, **kwargs)
 
-    def sample(self):
+    def sample(self, additional_batch_shape=None):
         """
         Samples using the inherited sampling function but stops when a end of file character is generated
-        :param start_string:
-        :param temperature:
-        :param max_generate:
         :return:
         """
-        super_do_sample = super().sample()
+        category_shape = (1, len(CATEGORIES))
+        additional_batch_shape = [category_shape] if additional_batch_shape is None else additional_batch_shape
+        super_do_sample = super().sample(additional_batch_shape=additional_batch_shape)
 
-        def do_sample(start_string, temperature, max_generate):
-            for predicted in super_do_sample(start_string, temperature, max_generate):
+        def do_sample(start_string, category_weights, temperature=1.0, max_generate=100):
+            additional_inputs = [np.array(category_weights).reshape(category_shape)]
+            samples = super_do_sample(start_string, temperature=temperature,
+                                      num_generate=max_generate, additional_inputs=additional_inputs)
+            for predicted in samples:
                 yield predicted
                 predicted_int = int(predicted[0])
                 if predicted_int == END_OF_FILE_CHAR:
@@ -152,7 +182,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'sample':
         print('Sampling...')
         start = [1]*8 + [END_OF_LINE_CHAR] + [1]*2
-        for test in lstm_model.sample()(start, 0.01, 400):
+        for test in lstm_model.sample()(start, temperature=0.01, max_generate=400):
             print('Sampled: ' + str(test))
 
     print('Done!')

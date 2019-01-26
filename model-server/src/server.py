@@ -1,4 +1,4 @@
-import os, logging, base64, random, time
+import os, logging, base64
 from flask import Flask, Response, request, json
 from flask_cors import CORS
 from lstm import LSTMModel
@@ -6,6 +6,8 @@ import lstm_staf
 from lstm_staf import LSTMModelStaf
 from sliding_window import SlidingWindowModel
 from knitpaint import KnitPaint
+import knitpaint
+import numpy as np
 
 # Create flask app that allows to sample from previously trained models
 app = Flask(__name__, static_url_path='', static_folder='../static')
@@ -90,13 +92,16 @@ def sample_model():
 
     # Return respective response
     if model == 'lstm':
-        resp = Response(sample_lstm(start, temperature, num_generate), mimetype='application/octet-stream')
+        resp = Response(sample_lstm(start, temperature=temperature, num_generate=num_generate),
+                        mimetype='application/octet-stream')
     elif model == 'lstm-staf':
         start = [s for s in start if s != 0]
+        category_weights = [0, 0, 1, 0, 0]
 
         def lstm_staf_generator():
             i = 0
-            for generated in sample_lstm_staf(start, temperature, num_generate):
+            sample = sample_lstm_staf(start, category_weights, temperature=temperature, max_generate=num_generate)
+            for generated in sample:
                 yield generated
                 i += 1
                 if int(generated[0]) == lstm_staf.END_OF_LINE_CHAR:
@@ -108,7 +113,8 @@ def sample_model():
 
         resp = Response(lstm_staf_generator(), mimetype='application/octet-stream')
     elif model == 'sliding-window':
-        resp = Response(sample_sliding_window(width, start, temperature, num_generate), mimetype='application/octet-stream')
+        resp = Response(sample_sliding_window(width, start, temperature, num_generate),
+                        mimetype='application/octet-stream')
     else:
         resp = Response('Unknown model', status=400)
     set_cache_headers(resp)
@@ -123,11 +129,7 @@ def from_dat():
     """
     dat_bytes = request.stream.read()
     handler = KnitPaint(dat_bytes)
-    res = json.dumps({
-        'data': base64.b64encode(bytes(handler.bitmap_data)).decode(),
-        'width': handler.get_width()
-    })
-    resp = Response(res, mimetype='application/json')
+    resp = Response(knitpaint_to_json(handler), mimetype='application/json')
     set_cache_headers(resp)
     return resp
 
@@ -164,28 +166,35 @@ def to_dat():
 
 @app.route('/api/pattern', methods=['GET'])
 def get_pattern():
-    """
-    Todo...
-    :return:
-    """
-    pattern_folder = '../data/raw/staf/staf-downloads/knitpattern'
-    folders = os.listdir(pattern_folder)
-    random_folder = pattern_folder + '/' + folders[random.randint(0, len(folders) - 1)]
-    random_folder_files = [random_folder + '/' + f for f in os.listdir(random_folder)]
-    random_file = [f for f in random_folder_files if f.endswith('.lep')][0]
+    # Read URL parameters
+    args = request.args
+    temperature = 0.7 if args.get('temperature') is None else args.get('temperature')
+    cable = 0.2 if args.get('cable') is None else args.get('cable')
+    stich_move = 0.2 if args.get('stich-move') is None else args.get('stich-move')
+    links = 0.2 if args.get('links') is None else args.get('links')
+    miss = 0.2 if args.get('miss') is None else args.get('miss')
+    tuck = 0.2 if args.get('tuck') is None else args.get('tuck')
 
-    handler = KnitPaint(random_file)
-    res = json.dumps({
+    # Sample from lstm staf model
+    start = [1, 1, 1, 1, 1]
+    category_weights = [cable, stich_move, links, miss, tuck]
+    sample = sample_lstm_staf(start, category_weights, temperature=temperature)
+    generated_res = bytes()
+    for generated in sample:
+        generated_res = generated_res + generated
+
+    # Read result as knitpaint
+    handler = knitpaint.read_linebreak(generated_res[:-1], 151, padding_char=1)
+    resp = Response(knitpaint_to_json(handler), mimetype='application/json')
+    set_cache_headers(resp)
+    return resp
+
+
+def knitpaint_to_json(handler):
+    return json.dumps({
         'data': base64.b64encode(bytes(handler.bitmap_data)).decode(),
         'width': handler.get_width()
     })
-    resp = Response(res, mimetype='application/json')
-    set_cache_headers(resp)
-
-    # Delay response of mock
-    time.sleep(0.5 + random.random() * 2)
-
-    return resp
 
 
 # Run flask app to make it available for development

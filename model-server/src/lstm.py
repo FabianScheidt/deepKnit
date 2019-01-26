@@ -17,9 +17,17 @@ class LSTMModel:
         self.model_dir = '../output/models/lstm/'
 
     def get_training_filename(self):
+        """
+        Returns the filename of the training file with the current configuration
+        :return:
+        """
         return 'training-sequences-' + str(self.trained_width) + '-' + str(self.lines_per_sequence)
 
     def generate_training_file(self):
+        """
+        Generates the training data files for the current configuration
+        :return:
+        """
         # Find all training files
         print('\n\nReading Input Files...')
         input_dir = '../data/raw/dat-files/' + str(self.trained_width) + '/'
@@ -73,6 +81,10 @@ class LSTMModel:
         np.save(self.training_dir + training_filename + '-vocab.npy', vocab)
 
     def read_vocab(self):
+        """
+        Reads the vocabulary from previously generated training files
+        :return:
+        """
         # Read vocabulary
         training_filename = self.get_training_filename()
         vocab = np.load(self.training_dir + training_filename + '-vocab.npy')
@@ -87,6 +99,10 @@ class LSTMModel:
         return vocab, from_idx, to_idx
 
     def read_training_dataset(self):
+        """
+        Reads and returns the previously generated training data files
+        :return:
+        """
         # Read sequences
         training_filename = self.get_training_filename()
         sequences = np.load(self.training_dir + training_filename + '.npy')
@@ -100,14 +116,32 @@ class LSTMModel:
         sequences = to_idx[sequences]
 
         # Split into inputs and outputs
-        input_data = sequences[:, :-1]
-        output_data = sequences[:, 1:]
+        input_data = [sequences[:, :-1]]
+        output_data = [sequences[:, 1:]]
 
         return input_data, output_data, weights, vocab_size, from_idx, to_idx
 
     def get_model(self, vocab_size, batch_shape, stateful=False, softmax=True):
+        """
+        Returns the model used for training and sampling
+
+        :param vocab_size:
+        Size of the vocabulary. This determines the dimensions of the embedding layer
+
+        :param batch_shape:
+        Array of batch input shapes. This implementation only uses only the first dimension for the embedding and should
+        be (batch_size, max_sequence_length). Subclasses could have additional shapes.
+
+        :param stateful:
+        Set to true to make recurrent cells stateful
+
+        :param softmax:
+        Set to true to apply the softmax funtion to the output
+
+        :return:
+        """
         # Build the model. Start with Input and Embedding
-        inputs_layer = keras.layers.Input(batch_shape=batch_shape, name='inputs_layer')
+        inputs_layer = keras.layers.Input(batch_shape=batch_shape[0], name='inputs_layer')
         embedded_inputs = keras.layers.Embedding(vocab_size, 30, name='embedded_inputs')(inputs_layer)
 
         # Add 3 lstm-layers with dropout in between
@@ -133,6 +167,20 @@ class LSTMModel:
         return model
 
     def train(self, val_split=0.05, use_weights=False, metrics=None):
+        """
+        Trains a model by reading the previously generated training data files
+
+        :param val_split:
+        Fraction of data to use as validation set
+
+        :param use_weights:
+        Set to true to use weight data in the loss function
+
+        :param metrics:
+        List of metrics to use. The default is accuracy.
+
+        :return:
+        """
         metrics = ['accuracy'] if metrics is None else metrics
 
         # Read input and output data
@@ -143,27 +191,28 @@ class LSTMModel:
         if not use_weights:
             weights = np.ones_like(weights)
         if len(weights.shape) == 2:
-            weights = weights[:, -output_data.shape[1]:]
+            weights = weights[:, -output_data[0].shape[1]:]
 
-        # Shuffle and split data manually into train to make sure that the batch size is correct
-        p = np.random.permutation(input_data.shape[0])
-        input_data = input_data[p]
-        output_data = output_data[p]
+        # Shuffle and split data manually into train and test to make sure that the batch size is correct
+        num_rows = input_data[0].shape[0]
+        p = np.random.permutation(num_rows)
+        input_data = [i[p] for i in input_data]
+        output_data = [o[p] for o in output_data]
         weights = weights[p]
-        batch_count = input_data.shape[0] // self.batch_size
+        batch_count = num_rows // self.batch_size
         train_batch_count = int(batch_count * (1.0 - val_split))
         val_batch_count = batch_count - train_batch_count
         train_count = train_batch_count * self.batch_size
         val_count = val_batch_count * self.batch_size
-        train_input_data = input_data[:train_count]
-        val_input_data = input_data[train_count:train_count + val_count]
-        train_output_data = output_data[:train_count]
-        val_output_data = output_data[train_count:train_count + val_count]
+        train_input_data = [i[:train_count] for i in input_data]
+        val_input_data = [i[train_count:train_count + val_count] for i in input_data]
+        train_output_data = [o[:train_count] for o in output_data]
+        val_output_data = [o[train_count:train_count + val_count] for o in output_data]
         train_weights = weights[:train_count]
         val_weights = weights[train_count:train_count + val_count]
 
         # Get the model
-        model = self.get_model(vocab_size, (self.batch_size, *input_data.shape[1:]))
+        model = self.get_model(vocab_size, [(self.batch_size, *i.shape[1:]) for i in input_data])
 
         # Compile the model
         model.compile(optimizer=tf.train.AdamOptimizer(),
@@ -189,6 +238,10 @@ class LSTMModel:
         model.save(self.model_dir + 'lstm-model.h5')
 
     def get_static_knitting_pattern_rules(self):
+        """
+        Builds a numpy array of static column wise knitting rules to be applied during the sampling
+        :return:
+        """
         # Load vocabulary
         vocab, from_idx, to_idx = self.read_vocab()
 
@@ -239,7 +292,9 @@ class LSTMModel:
         rules = np.array(rules)
         return rules_modulo, rules
 
-    def sample(self):
+    def sample(self, additional_batch_shape=None):
+        additional_batch_shape = [] if additional_batch_shape is None else additional_batch_shape
+
         # Get a reference to the default tensorflow graph
         graph = tf.get_default_graph()
 
@@ -250,7 +305,7 @@ class LSTMModel:
         # training without softmax output. This allows the prediction of sequences of any size. Additionally no CUDA
         # is needed for the sampling. Note that the RNN layers need to be stateful so Keras does not reset the state
         # after every batch.
-        model = self.get_model(vocab.size, (1, None), stateful=True, softmax=False)
+        model = self.get_model(vocab.size, [(1, None)] + additional_batch_shape, stateful=True, softmax=False)
         model.load_weights(self.model_dir + 'lstm-model.h5')
         model.summary()
 
@@ -275,7 +330,9 @@ class LSTMModel:
             prediction = tf.multinomial(logits_scaled, num_samples=1)[-1, 0]
 
         # Define and return a method that performs the sampling on the loaded model and graph
-        def do_sampling(start_string, temperature, num_generate):
+        def do_sampling(start_string, temperature=1.0, num_generate=100, additional_inputs=None):
+            additional_inputs = [] if additional_inputs is None else additional_inputs
+
             # Immediately return the start string
             for char in start_string:
                 yield bytes([char])
@@ -290,7 +347,7 @@ class LSTMModel:
 
                 # Feed the start string
                 model.reset_states()
-                input = np.array([generated[:-1]])
+                input = [np.array([generated[:-1]])] + additional_inputs
                 model.predict(input)
 
                 # Now generate by constantly feeding the last generated index and predicting the next
@@ -298,7 +355,7 @@ class LSTMModel:
                 for i in range(len(start_string), num_generate):
                     try:
                         input_idx = generated[-1]
-                        input = np.array([[input_idx]])
+                        input = [np.array([[input_idx]])] + additional_inputs
                         output = model.predict(input)
 
                         # Pick with multinomial distribution to get a single prediction
@@ -308,7 +365,6 @@ class LSTMModel:
                         generated.append(predicted_idx)
                         yield bytes([from_idx[predicted_idx]])
                     except GeneratorExit:
-                        print("Need to do some clean up.")
                         return
 
         return do_sampling
@@ -327,7 +383,7 @@ if __name__ == '__main__':
         print('Sampling...')
         line = [0]*3 + [13] + [1, 2]*24 + [13] + [0]*3 + [51]
         start = line*4
-        for test in lstm_model.sample()(start, 0.01, 400):
+        for test in lstm_model.sample()(start, temperature=0.01, num_generate=400):
             print('Sampled: ' + str(test))
 
     print('Done!')
