@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 import { KnitpaintTool } from '../knitpaint-tool';
 import { Knitpaint } from '../../knitpaint';
-import { fromEvent } from 'rxjs';
+import { fromEvent, merge } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { KnitpaintCanvasUtils } from '../knitpaint-canvas-utils';
 
@@ -82,6 +82,19 @@ export class TextureTool extends AbstractKnitpaintTool implements KnitpaintTool 
       this.mousePosition = null;
       requestRender();
     });
+    merge(fromEvent(canvas, 'touchstart'), fromEvent(canvas, 'touchmove'))
+      .pipe(takeUntil(this.unloadSubject))
+      .subscribe((e: TouchEvent) => {
+        if (e.touches.length === 1) {
+          e.preventDefault();
+          const boundary = canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          this.mousePosition = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
+          requestRender();
+        } else {
+          this.mousePosition = null;
+        }
+      });
   }
 
   /**
@@ -94,6 +107,10 @@ export class TextureTool extends AbstractKnitpaintTool implements KnitpaintTool 
     fromEvent(canvas, 'click').pipe(takeUntil(this.unloadSubject)).subscribe((event: MouseEvent) => {
       this.mousePosition = KnitpaintCanvasUtils.createSVGPoint(event.offsetX, event.offsetY);
       this.applyTexture(setKnitpaint);
+    });
+    fromEvent(canvas, 'touchend').pipe(takeUntil(this.unloadSubject)).subscribe((e: TouchEvent) => {
+      this.applyTexture(setKnitpaint);
+      this.mousePosition = null;
     });
   }
 
