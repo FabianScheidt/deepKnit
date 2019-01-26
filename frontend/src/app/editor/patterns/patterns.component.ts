@@ -1,20 +1,22 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PatternSamplingService } from '../../api/pattern-sampling.service';
 import { Knitpaint } from '../../knitpaint';
-import { take } from 'rxjs/operators';
+import { take, takeUntil } from 'rxjs/operators';
 import * as _ from 'lodash';
 import { EditorStateService } from '../editor-state.service';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-patterns',
   templateUrl: './patterns.component.html',
   styleUrls: ['./patterns.component.scss']
 })
-export class PatternsComponent implements OnInit {
+export class PatternsComponent implements OnInit, OnDestroy {
 
   private numLoad = 20;
   patternIndices = [];
   sampledPatterns: Knitpaint[] = [];
+  private isDestroyed: Subject<void> = new Subject<void>();
 
   constructor(private editorStateService: EditorStateService,
               private patternSamplingService: PatternSamplingService) { }
@@ -23,12 +25,16 @@ export class PatternsComponent implements OnInit {
     this.loadMorePatterns();
   }
 
+  ngOnDestroy(): void {
+    this.isDestroyed.next();
+  }
+
   /**
    * Loads numLoad more patterns
    */
   public loadMorePatterns() {
     this.patternIndices = this.patternIndices.concat(_.range(this.patternIndices.length, this.patternIndices.length + this.numLoad));
-    this.patternSamplingService.samplePatterns().pipe(take(this.numLoad)).subscribe((pattern: Knitpaint) => {
+    this.patternSamplingService.samplePatterns().pipe(take(this.numLoad), takeUntil(this.isDestroyed)).subscribe((pattern: Knitpaint) => {
       this.sampledPatterns.push(pattern);
       console.log('Received pattern', pattern);
     });

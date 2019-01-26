@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { EditorStateService } from '../editor-state.service';
 import { Knitpaint } from '../../knitpaint';
 
@@ -12,7 +12,7 @@ export class PatternsBarComponent implements OnChanges {
   @Input() allowRemoval = false;
   @Input() allowSelection = false;
   @Input() selection: Knitpaint;
-  @Input() selectionChange: EventEmitter<Knitpaint> = new EventEmitter<Knitpaint>();
+  @Output() selectionChange: EventEmitter<Knitpaint> = new EventEmitter<Knitpaint>();
 
   constructor(private editorStateService: EditorStateService) { }
 

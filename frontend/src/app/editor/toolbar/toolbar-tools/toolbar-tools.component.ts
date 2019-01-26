@@ -3,6 +3,7 @@ import { KnitpaintTool } from '../../../knitpaint-canvas/knitpaint-tool';
 import { DrawTool } from '../../../knitpaint-canvas/knitpaint-tools/draw-tool.service';
 import { ColorPickerTool } from '../../../knitpaint-canvas/knitpaint-tools/color-picker-tool.service';
 import { ColorInfoTool } from '../../../knitpaint-canvas/knitpaint-tools/color-info-tool.service';
+import { TextureTool } from '../../../knitpaint-canvas/knitpaint-tools/texture-tool.service';
 import * as _ from 'lodash';
 
 @Component({
@@ -27,6 +28,9 @@ export class ToolbarToolsComponent {
     if (this.activeTools.indexOf(ColorPickerTool) > -1) {
       return ColorPickerTool;
     }
+    if (this.activeTools.indexOf(TextureTool) > -1) {
+      return TextureTool;
+    }
     return null;
   }
 
@@ -45,6 +49,9 @@ export class ToolbarToolsComponent {
       case ColorPickerTool:
         _.pull(this.activeTools, ColorPickerTool, ColorInfoTool);
         break;
+      case TextureTool:
+        _.pull(this.activeTools, TextureTool);
+        break;
     }
 
     // Activate new tools
@@ -54,6 +61,9 @@ export class ToolbarToolsComponent {
         break;
       case ColorPickerTool:
         this.activeTools.push(ColorPickerTool, ColorInfoTool);
+        break;
+      case TextureTool:
+        this.activeTools.push(TextureTool);
         break;
     }
 
@@ -65,5 +75,7 @@ export class ToolbarToolsComponent {
   public setDrawTool = () => this.setTool(DrawTool);
   public isColorPickerTool = () => this.getTool() === ColorPickerTool;
   public setColorPickerTool = () => this.setTool(ColorPickerTool);
+  public isTextureTool = () => this.getTool() === TextureTool;
+  public setTextureTool = () => this.setTool(TextureTool);
 
 }

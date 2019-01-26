@@ -9,6 +9,7 @@ import { EditorStateService } from '../editor-state.service';
 import { KnitpaintTool } from '../../knitpaint-canvas/knitpaint-tool';
 import { ColorPickerTool } from '../../knitpaint-canvas/knitpaint-tools/color-picker-tool.service';
 import { MouseTransformTool } from '../../knitpaint-canvas/knitpaint-tools/mouse-transform-tool.service';
+import { TextureTool } from '../../knitpaint-canvas/knitpaint-tools/texture-tool.service';
 
 @Component({
   selector: 'app-assembly',
@@ -39,6 +40,13 @@ export class AssemblyComponent implements OnInit {
     // The picker tool should be able to update the color number
     this.knitpaintCanvas.getTool(ColorPickerTool).colorPicked.subscribe((colorNumber: number) => {
       this.colorNumber = colorNumber;
+    });
+
+    // The texture tool should have a default texture selected (if available)
+    setTimeout(() => {
+      if (!this.selectedPattern && this.editorStateService.getPatterns().length > 0) {
+        this.selectedPattern = this.editorStateService.getPatterns()[0];
+      }
     });
   }
 
@@ -74,6 +82,21 @@ export class AssemblyComponent implements OnInit {
    */
   public set colorNumber(colorNumber: number) {
     this.knitpaintCanvas.getTool(DrawTool).colorNumber = colorNumber;
+  }
+
+  /**
+   * Returns the patterns currently used by the texture tool
+   */
+  public get selectedPattern(): Knitpaint {
+    return this.knitpaintCanvas.getTool(TextureTool).texture;
+  }
+
+  /**
+   * Sets the pattern currently used by the texture tool
+   * @param selectedPattern
+   */
+  public set selectedPattern(selectedPattern: Knitpaint) {
+    this.knitpaintCanvas.getTool(TextureTool).texture = selectedPattern;
   }
 
 }

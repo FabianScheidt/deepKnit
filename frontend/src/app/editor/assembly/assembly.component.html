@@ -10,5 +10,5 @@
                         (knitpaintChanged)="setAssembly($event)"></app-knitpaint-canvas>
 </div>
 <div class="sidebar">
-  <app-patterns-bar [allowSelection]="true"></app-patterns-bar>
+  <app-patterns-bar [allowSelection]="true" [(selection)]="selectedPattern"></app-patterns-bar>
 </div>
