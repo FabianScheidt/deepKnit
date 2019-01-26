@@ -5,6 +5,7 @@ import { ColorPickerTool } from '../../../knitpaint-canvas/knitpaint-tools/color
 import { ColorInfoTool } from '../../../knitpaint-canvas/knitpaint-tools/color-info-tool.service';
 import { TextureTool } from '../../../knitpaint-canvas/knitpaint-tools/texture-tool.service';
 import * as _ from 'lodash';
+import { RectangleTool } from '../../../knitpaint-canvas/knitpaint-tools/rectangle-tool.service';
 
 @Component({
   selector: 'app-toolbar-tools',
@@ -25,6 +26,9 @@ export class ToolbarToolsComponent {
     if (this.activeTools.indexOf(DrawTool) > -1) {
       return DrawTool;
     }
+    if (this.activeTools.indexOf(RectangleTool) > -1) {
+      return RectangleTool;
+    }
     if (this.activeTools.indexOf(ColorPickerTool) > -1) {
       return ColorPickerTool;
     }
@@ -42,29 +46,15 @@ export class ToolbarToolsComponent {
   private setTool(tool: Type<KnitpaintTool>) {
 
     // Deactivate previous tools
-    switch (this.getTool()) {
-      case DrawTool:
-        _.pull(this.activeTools, DrawTool);
-        break;
-      case ColorPickerTool:
-        _.pull(this.activeTools, ColorPickerTool, ColorInfoTool);
-        break;
-      case TextureTool:
-        _.pull(this.activeTools, TextureTool);
-        break;
+    if (this.getTool() === ColorPickerTool) {
+      _.pull(this.activeTools, ColorInfoTool);
     }
+    _.pull(this.activeTools, this.getTool());
 
     // Activate new tools
-    switch (tool) {
-      case DrawTool:
-        this.activeTools.push(DrawTool);
-        break;
-      case ColorPickerTool:
-        this.activeTools.push(ColorPickerTool, ColorInfoTool);
-        break;
-      case TextureTool:
-        this.activeTools.push(TextureTool);
-        break;
+    this.activeTools.push(tool);
+    if (tool === ColorPickerTool) {
+      this.activeTools.push(ColorInfoTool);
     }
 
     // Emit change event
@@ -73,6 +63,8 @@ export class ToolbarToolsComponent {
 
   public isDrawTool = () => this.getTool() === DrawTool;
   public setDrawTool = () => this.setTool(DrawTool);
+  public isRectangleTool = () => this.getTool() === RectangleTool;
+  public setRectangleTool = () => this.setTool(RectangleTool);
   public isColorPickerTool = () => this.getTool() === ColorPickerTool;
   public setColorPickerTool = () => this.setTool(ColorPickerTool);
   public isTextureTool = () => this.getTool() === TextureTool;

@@ -10,6 +10,7 @@ import { KnitpaintTool } from '../../knitpaint-canvas/knitpaint-tool';
 import { ColorPickerTool } from '../../knitpaint-canvas/knitpaint-tools/color-picker-tool.service';
 import { MouseTransformTool } from '../../knitpaint-canvas/knitpaint-tools/mouse-transform-tool.service';
 import { TextureTool } from '../../knitpaint-canvas/knitpaint-tools/texture-tool.service';
+import { RectangleTool } from '../../knitpaint-canvas/knitpaint-tools/rectangle-tool.service';
 
 @Component({
   selector: 'app-assembly',
@@ -77,11 +78,12 @@ export class AssemblyComponent implements OnInit {
   }
 
   /**
-   * Sets the color number currently used by the draw tool
+   * Sets the color number currently used by the draw and rectangle tool
    * @param colorNumber
    */
   public set colorNumber(colorNumber: number) {
     this.knitpaintCanvas.getTool(DrawTool).colorNumber = colorNumber;
+    this.knitpaintCanvas.getTool(RectangleTool).colorNumber = colorNumber;
   }
 
   /**

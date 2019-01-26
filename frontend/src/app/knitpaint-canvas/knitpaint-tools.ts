@@ -8,6 +8,7 @@ import { MultitouchTransformTool } from './knitpaint-tools/multitouch-transform-
 import { VerticalSelectionTool } from './knitpaint-tools/vertical-selection-tool.service';
 import { KnitpaintTool } from './knitpaint-tool';
 import { MouseTransformTool } from './knitpaint-tools/mouse-transform-tool.service';
+import { RectangleTool } from './knitpaint-tools/rectangle-tool.service';
 import { TextureTool } from './knitpaint-tools/texture-tool.service';
 
 export const knitpaintTools: Type<KnitpaintTool>[] = [
@@ -19,5 +20,6 @@ export const knitpaintTools: Type<KnitpaintTool>[] = [
   MultitouchTransformTool,
   MouseTransformTool,
   VerticalSelectionTool,
+  RectangleTool,
   TextureTool
 ];

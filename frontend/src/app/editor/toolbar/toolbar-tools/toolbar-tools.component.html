@@ -3,6 +3,10 @@
    [class.selected]="isDrawTool()"
    appTooltip="Draw Tool">brush</i>
 <i class="material-icons"
+   (click)="setRectangleTool()" appTapClick
+   [class.selected]="isRectangleTool()"
+   appTooltip="Rectangle Tool">crop_din</i>
+<i class="material-icons"
    (click)="setColorPickerTool()" appTapClick
    [class.selected]="isColorPickerTool()"
    appTooltip="Color Picker">colorize</i>
