@@ -1,4 +1,4 @@
-import os, logging, base64
+import os, logging, base64, random, time
 from flask import Flask, Response, request, json
 from flask_cors import CORS
 from lstm import LSTMModel
@@ -159,6 +159,32 @@ def to_dat():
     dat_bytes = handler.write_dat()
     resp = Response(dat_bytes, mimetype='application/octet-stream')
     set_cache_headers(resp)
+    return resp
+
+
+@app.route('/api/pattern', methods=['GET'])
+def get_pattern():
+    """
+    Todo...
+    :return:
+    """
+    pattern_folder = '../data/raw/staf/staf-downloads/knitpattern'
+    folders = os.listdir(pattern_folder)
+    random_folder = pattern_folder + '/' + folders[random.randint(0, len(folders) - 1)]
+    random_folder_files = [random_folder + '/' + f for f in os.listdir(random_folder)]
+    random_file = [f for f in random_folder_files if f.endswith('.lep')][0]
+
+    handler = KnitPaint(random_file)
+    res = json.dumps({
+        'data': base64.b64encode(bytes(handler.bitmap_data)).decode(),
+        'width': handler.get_width()
+    })
+    resp = Response(res, mimetype='application/json')
+    set_cache_headers(resp)
+
+    # Delay response of mock
+    time.sleep(0.5 + random.random() * 2)
+
     return resp
 
 
