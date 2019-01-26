@@ -23,6 +23,7 @@ export class RectangleTool extends AbstractKnitpaintTool implements KnitpaintToo
        setKnitpaint: (knitpaint: Knitpaint, triggerChange?: boolean) => void, _): void {
     this.setKnitpaint = setKnitpaint;
     this.attachMouseEvents(canvas, requestRender);
+    this.attachTouchEvents(canvas, requestRender);
   }
 
   render(ctx: CanvasRenderingContext2D, transform: SVGMatrix): void {
@@ -69,6 +70,39 @@ export class RectangleTool extends AbstractKnitpaintTool implements KnitpaintToo
     fromEvent(document, 'mouseup')
       .pipe(takeUntil(this.unloadSubject), filter(() => !!this.rectStart))
       .subscribe((e: MouseEvent) => {
+        this.applyRectangle();
+        requestRender();
+        delete this.rectStart;
+        delete this.rectEnd;
+      });
+  }
+
+  private attachTouchEvents(canvas: HTMLCanvasElement, requestRender: () => void): void {
+    fromEvent(canvas, 'touchstart')
+      .pipe(takeUntil(this.unloadSubject), filter((e: TouchEvent) => e.touches.length === 1))
+      .subscribe((e: TouchEvent) => {
+        e.preventDefault();
+        const boundary = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        this.rectStart = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
+        this.rectEnd = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
+        requestRender();
+      });
+
+    fromEvent(canvas, 'touchmove')
+      .pipe(takeUntil(this.unloadSubject), filter(() => !!this.rectStart))
+      .subscribe((e: TouchEvent) => {
+        e.preventDefault();
+        const boundary = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        this.rectEnd = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
+        requestRender();
+      });
+
+    fromEvent(document, 'touchend')
+      .pipe(takeUntil(this.unloadSubject), filter(() => !!this.rectStart))
+      .subscribe((e: TouchEvent) => {
+        e.preventDefault();
         this.applyRectangle();
         requestRender();
         delete this.rectStart;
