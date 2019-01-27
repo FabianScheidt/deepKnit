@@ -6,6 +6,7 @@ import { ColorInfoTool } from '../../../knitpaint-canvas/knitpaint-tools/color-i
 import { TextureTool } from '../../../knitpaint-canvas/knitpaint-tools/texture-tool.service';
 import * as _ from 'lodash';
 import { RectangleTool } from '../../../knitpaint-canvas/knitpaint-tools/rectangle-tool.service';
+import { SelectionTool } from '../../../knitpaint-canvas/knitpaint-tools/selection-tool.service';
 
 @Component({
   selector: 'app-toolbar-tools',
@@ -31,6 +32,9 @@ export class ToolbarToolsComponent {
     }
     if (this.activeTools.indexOf(ColorPickerTool) > -1) {
       return ColorPickerTool;
+    }
+    if (this.activeTools.indexOf(SelectionTool) > -1) {
+      return SelectionTool;
     }
     if (this.activeTools.indexOf(TextureTool) > -1) {
       return TextureTool;
@@ -67,6 +71,8 @@ export class ToolbarToolsComponent {
   public setRectangleTool = () => this.setTool(RectangleTool);
   public isColorPickerTool = () => this.getTool() === ColorPickerTool;
   public setColorPickerTool = () => this.setTool(ColorPickerTool);
+  public isSelectionTool = () => this.getTool() === SelectionTool;
+  public setSelectionTool = () => this.setTool(SelectionTool);
   public isTextureTool = () => this.getTool() === TextureTool;
   public setTextureTool = () => this.setTool(TextureTool);
 

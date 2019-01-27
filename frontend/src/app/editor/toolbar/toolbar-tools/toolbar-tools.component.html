@@ -11,6 +11,10 @@
    [class.selected]="isColorPickerTool()"
    appTooltip="Color Picker">colorize</i>
 <i class="material-icons"
+   (click)="setSelectionTool()" appTapClick
+   [class.selected]="isSelectionTool()"
+   appTooltip="Selection Tool">crop_free</i>
+<i class="material-icons"
    (click)="setTextureTool()" appTapClick
    [class.selected]="isTextureTool()"
    appTooltip="Texture Tool">texture</i>

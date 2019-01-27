@@ -7,6 +7,8 @@ export abstract class AbstractStartEndTool extends AbstractKnitpaintTool {
 
   protected startPoint: SVGPoint;
   protected endPoint: SVGPoint;
+  private down = false;
+  private moved = false;
 
   protected constructor() {
     super();
@@ -27,25 +29,30 @@ export abstract class AbstractStartEndTool extends AbstractKnitpaintTool {
     fromEvent(canvas, 'mousedown')
       .pipe(takeUntil(this.unloadSubject), filter((e: MouseEvent) => e.button === 0))
       .subscribe((e: MouseEvent) => {
-        this.startPoint = KnitpaintCanvasUtils.createSVGPoint(e.offsetX, e.offsetY);
-        this.endPoint = KnitpaintCanvasUtils.createSVGPoint(e.offsetX, e.offsetY);
-        requestRender();
+        this.startPoint = KnitpaintCanvasUtils.createTransformedSVGPoint(e.offsetX, e.offsetY, this.transform.inverse());
+        this.endPoint = KnitpaintCanvasUtils.createTransformedSVGPoint(e.offsetX, e.offsetY, this.transform.inverse());
+        this.down = true;
       });
 
     fromEvent(canvas, 'mousemove')
-      .pipe(takeUntil(this.unloadSubject), filter(() => !!this.startPoint))
+      .pipe(takeUntil(this.unloadSubject), filter(() => this.down))
       .subscribe((e: MouseEvent) => {
-        this.endPoint = KnitpaintCanvasUtils.createSVGPoint(e.offsetX, e.offsetY);
+        this.endPoint = KnitpaintCanvasUtils.createTransformedSVGPoint(e.offsetX, e.offsetY, this.transform.inverse());
+        this.moved = true;
         requestRender();
       });
 
     fromEvent(document, 'mouseup')
-      .pipe(takeUntil(this.unloadSubject), filter(() => !!this.startPoint))
+      .pipe(takeUntil(this.unloadSubject), filter(() => this.down))
       .subscribe(() => {
-        this.apply();
+        this.down = false;
+        if (!this.moved) {
+          delete this.startPoint;
+          delete this.endPoint;
+        }
+        this.apply(requestRender);
+        this.moved = false;
         requestRender();
-        delete this.startPoint;
-        delete this.endPoint;
       });
   }
 
@@ -56,40 +63,51 @@ export abstract class AbstractStartEndTool extends AbstractKnitpaintTool {
         e.preventDefault();
         const boundary = canvas.getBoundingClientRect();
         const touch = e.touches[0];
-        this.startPoint = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
-        this.endPoint = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
-        requestRender();
+        this.startPoint =
+          KnitpaintCanvasUtils.createTransformedSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top, this.transform.inverse());
+        this.endPoint =
+          KnitpaintCanvasUtils.createTransformedSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top, this.transform.inverse());
+        this.down = true;
       });
 
     fromEvent(canvas, 'touchmove')
-      .pipe(takeUntil(this.unloadSubject), filter(() => !!this.startPoint))
+      .pipe(takeUntil(this.unloadSubject), filter(() => this.down))
       .subscribe((e: TouchEvent) => {
         e.preventDefault();
         const boundary = canvas.getBoundingClientRect();
         const touch = e.touches[0];
-        this.endPoint = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
+        this.endPoint =
+          KnitpaintCanvasUtils.createTransformedSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top, this.transform.inverse());
+        this.moved = true;
         requestRender();
       });
 
     fromEvent(document, 'touchend')
-      .pipe(takeUntil(this.unloadSubject), filter(() => !!this.startPoint))
+      .pipe(takeUntil(this.unloadSubject), filter(() => this.down))
       .subscribe((e: TouchEvent) => {
         e.preventDefault();
-        this.apply();
+        this.down = false;
+        if (!this.moved) {
+          delete this.startPoint;
+          delete this.endPoint;
+        }
+        this.apply(requestRender);
+        this.moved = false;
         requestRender();
-        delete this.startPoint;
-        delete this.endPoint;
       });
   }
 
-  protected apply() {}
+  protected apply(requestRender: () => void) {
+    delete this.startPoint;
+    delete this.endPoint;
+  }
 
   protected getKnitpaintRect(): [SVGPoint, SVGPoint] {
     if (!this.startPoint || !this.endPoint) {
       return null;
     }
-    const start = this.startPoint.matrixTransform(this.transform.inverse());
-    const end = this.endPoint.matrixTransform(this.transform.inverse());
+    const start = this.startPoint;
+    const end = this.endPoint;
     const startX = Math.floor(Math.max(0, Math.min(start.x, end.x)));
     const startY = Math.floor(Math.max(0, Math.min(start.y, end.y)));
     const endX = Math.ceil(Math.min(this.knitpaint.width, Math.max(start.x, end.x)));

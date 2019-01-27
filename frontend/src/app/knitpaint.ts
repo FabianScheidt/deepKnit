@@ -117,6 +117,25 @@ export class Knitpaint {
   }
 
   /**
+   * Creates new knitpaint sliced from the current one
+   *
+   * @param x
+   * @param y
+   * @param width
+   * @param height
+   */
+  public slice(x: number, y: number, width: number, height: number): Knitpaint {
+    const data = new Uint8Array(this.data);
+    const res = new Uint8Array(width * height);
+    for (let row = 0; row < height; row++) {
+      const srcStartIndex = (row + y) * this.width + x;
+      const dstStartIndex = row * width;
+      res.set(data.slice(srcStartIndex, srcStartIndex + width), dstStartIndex);
+    }
+    return new Knitpaint(res.buffer, width);
+  }
+
+  /**
    * Creates new knitpaint that is repeated in x and y direction
    *
    * @param numX

@@ -35,6 +35,11 @@
       </div>
     </div>
   </div>
+  <div class="select-options" *ngIf="getSelectionTool()">
+    <button mat-flat-button color="accent"
+            (click)="makePatternFromSelection()" appTapClick
+            [disabled]="!getSelectionTool().selection">Add selection to pattern library</button>
+  </div>
   <div class="no-options" [hidden]="optionsAvailable()">
     No options for this tool
   </div>

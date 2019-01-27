@@ -40,7 +40,7 @@ export class RectangleTool extends AbstractStartEndTool implements KnitpaintTool
     super.unload();
   }
 
-  protected apply() {
+  protected apply(requestRender: () => void) {
     const knitpaintRect = this.getKnitpaintRect();
     if (!knitpaintRect) {
       return;
@@ -55,6 +55,8 @@ export class RectangleTool extends AbstractStartEndTool implements KnitpaintTool
         knitpaint = knitpaint.setColorNumber(knitpaintIndex, this.colorNumber);
       }
     }
+
     this.setKnitpaint(knitpaint);
+    super.apply(requestRender);
   }
 }

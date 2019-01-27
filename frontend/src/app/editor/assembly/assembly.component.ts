@@ -1,4 +1,4 @@
-import { Component, OnInit, Type, ViewChild } from '@angular/core';
+import { AfterViewChecked, Component, OnInit, Type, ViewChild } from '@angular/core';
 import { Knitpaint } from '../../knitpaint';
 import { KnitpaintCanvasComponent } from '../../knitpaint-canvas/knitpaint-canvas.component';
 import { GridTool } from '../../knitpaint-canvas/knitpaint-tools/grid-tool.service';
@@ -17,7 +17,7 @@ import { RectangleTool } from '../../knitpaint-canvas/knitpaint-tools/rectangle-
   templateUrl: './assembly.component.html',
   styleUrls: ['./assembly.component.scss']
 })
-export class AssemblyComponent implements OnInit {
+export class AssemblyComponent implements OnInit, AfterViewChecked {
 
   public knitpaint: Knitpaint;
   @ViewChild('knitpaintCanvas') knitpaintCanvas: KnitpaintCanvasComponent;
@@ -50,6 +50,10 @@ export class AssemblyComponent implements OnInit {
         this.selectedPattern = this.editorStateService.getPatterns()[0];
       }
     });
+  }
+
+  ngAfterViewChecked(): void {
+    console.log('View Checked');
   }
 
   /**

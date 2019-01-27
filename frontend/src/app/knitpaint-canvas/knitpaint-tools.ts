@@ -10,6 +10,7 @@ import { KnitpaintTool } from './knitpaint-tool';
 import { MouseTransformTool } from './knitpaint-tools/mouse-transform-tool.service';
 import { RectangleTool } from './knitpaint-tools/rectangle-tool.service';
 import { TextureTool } from './knitpaint-tools/texture-tool.service';
+import { SelectionTool } from './knitpaint-tools/selection-tool.service';
 
 export const knitpaintTools: Type<KnitpaintTool>[] = [
   ColorInfoTool,
@@ -21,5 +22,6 @@ export const knitpaintTools: Type<KnitpaintTool>[] = [
   MouseTransformTool,
   VerticalSelectionTool,
   RectangleTool,
-  TextureTool
+  TextureTool,
+  SelectionTool
 ];
