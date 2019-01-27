@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 import { KnitpaintTool } from '../knitpaint-tool';
 import { Knitpaint } from '../../knitpaint';
@@ -57,7 +57,7 @@ export class TextureTool extends AbstractKnitpaintTool implements KnitpaintTool 
   private transformedTexture: Knitpaint;
   private transformedTextureImage: HTMLCanvasElement;
 
-  constructor() {
+  constructor(private ngZone: NgZone) {
     super();
   }
 
@@ -109,27 +109,29 @@ export class TextureTool extends AbstractKnitpaintTool implements KnitpaintTool 
    * @param requestRender
    */
   private attachMoveEvents(canvas: HTMLCanvasElement, requestRender: () => void) {
-    fromEvent(canvas, 'mousemove').pipe(takeUntil(this.unloadSubject)).subscribe((event: MouseEvent) => {
-      this.mousePosition = KnitpaintCanvasUtils.createSVGPoint(event.offsetX, event.offsetY);
-      requestRender();
-    });
-    fromEvent(canvas, 'mouseout').pipe(takeUntil(this.unloadSubject)).subscribe(() => {
-      this.mousePosition = null;
-      requestRender();
-    });
-    merge(fromEvent(canvas, 'touchstart'), fromEvent(canvas, 'touchmove'))
-      .pipe(takeUntil(this.unloadSubject))
-      .subscribe((e: TouchEvent) => {
-        if (e.touches.length === 1) {
-          e.preventDefault();
-          const boundary = canvas.getBoundingClientRect();
-          const touch = e.touches[0];
-          this.mousePosition = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
-          requestRender();
-        } else {
-          this.mousePosition = null;
-        }
+    this.ngZone.runOutsideAngular(() => {
+      fromEvent(canvas, 'mousemove').pipe(takeUntil(this.unloadSubject)).subscribe((event: MouseEvent) => {
+        this.mousePosition = KnitpaintCanvasUtils.createSVGPoint(event.offsetX, event.offsetY);
+        requestRender();
       });
+      fromEvent(canvas, 'mouseout').pipe(takeUntil(this.unloadSubject)).subscribe(() => {
+        this.mousePosition = null;
+        requestRender();
+      });
+      merge(fromEvent(canvas, 'touchstart'), fromEvent(canvas, 'touchmove'))
+        .pipe(takeUntil(this.unloadSubject))
+        .subscribe((e: TouchEvent) => {
+          if (e.touches.length === 1) {
+            e.preventDefault();
+            const boundary = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            this.mousePosition = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
+            requestRender();
+          } else {
+            this.mousePosition = null;
+          }
+        });
+    });
   }
 
   /**
