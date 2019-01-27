@@ -168,16 +168,16 @@ def to_dat():
 def get_pattern():
     # Read URL parameters
     args = request.args
-    temperature = 0.7 if args.get('temperature') is None else args.get('temperature')
-    cable = 0.2 if args.get('cable') is None else args.get('cable')
-    stich_move = 0.2 if args.get('stich-move') is None else args.get('stich-move')
-    links = 0.2 if args.get('links') is None else args.get('links')
-    miss = 0.2 if args.get('miss') is None else args.get('miss')
-    tuck = 0.2 if args.get('tuck') is None else args.get('tuck')
+    temperature = 0.7 if args.get('temperature') is None else float(args.get('temperature'))
+    cable = 0.2 if args.get('cable') is None else float(args.get('cable'))
+    stitch_move = 0.2 if args.get('stitchMove') is None else float(args.get('stitchMove'))
+    links = 0.2 if args.get('links') is None else float(args.get('links'))
+    miss = 0.2 if args.get('miss') is None else float(args.get('miss'))
+    tuck = 0.2 if args.get('tuck') is None else float(args.get('tuck'))
 
     # Sample from lstm staf model
     start = [1, 1, 1, 1, 1]
-    category_weights = [cable, stich_move, links, miss, tuck]
+    category_weights = [cable, stitch_move, links, miss, tuck]
     sample = sample_lstm_staf(start, category_weights, temperature=temperature)
     generated_res = bytes()
     for generated in sample:
