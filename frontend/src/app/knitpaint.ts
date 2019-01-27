@@ -117,6 +117,94 @@ export class Knitpaint {
   }
 
   /**
+   * Creates new knitpaint that is repeated in x and y direction
+   *
+   * @param numX
+   * @param numY
+   */
+  public repeat(numX: number, numY: number): Knitpaint {
+    let repeated: Knitpaint = this;
+    if (numX > 1) {
+      const data = new Uint8Array(repeated.data);
+      const res = new Uint8Array(data.byteLength * numX);
+      for (let y = 0; y < repeated.height; y++) {
+        const row = data.subarray(y * repeated.width, (y + 1) * repeated.width);
+        for (let i = 0; i < numX; i++) {
+          res.set(row, (y * numX + i) * repeated.width);
+        }
+      }
+      repeated = new Knitpaint(res.buffer, repeated.width * numX);
+    }
+    if (numY > 1) {
+      const data = new Uint8Array(repeated.data);
+      const res = new Uint8Array(data.byteLength * numY);
+      for (let i = 0; i < numY; i++) {
+        res.set(data, i * data.byteLength);
+      }
+      repeated = new Knitpaint(res.buffer, repeated.width);
+    }
+    return repeated;
+  }
+
+  /**
+   * Creates a new knitpaint that can be flipped in x or y direction
+   *
+   * @param flipX
+   * @param flipY
+   */
+  public flip(flipX: boolean, flipY: boolean): Knitpaint {
+    const data = new Uint8Array(this.data);
+    if (flipX && flipY) {
+      return new Knitpaint(data.slice(0, this.data.byteLength).reverse().buffer, this.width);
+    }
+    if (flipX) {
+      const res = new Uint8Array(data.byteLength);
+      for (let y = 0; y < this.height; y++) {
+        const startIndex = y * this.width;
+        res.set(data.slice(startIndex, startIndex + this.width).reverse(), startIndex);
+      }
+      return new Knitpaint(res, this.width);
+    }
+    if (flipY) {
+      const res = new Uint8Array(data.byteLength);
+      for (let y = 0; y < this.height; y++) {
+        const srcStartIndex = y * this.width;
+        const dstStartIndex = (this.height - y - 1) * this.width;
+        res.set(data.slice(srcStartIndex, srcStartIndex + this.width), dstStartIndex);
+      }
+      return new Knitpaint(res, this.width);
+    }
+    return this;
+  }
+
+  /**
+   * Creates a new knitpaint whose front- and back stitches are inverted
+   */
+  public invert(): Knitpaint {
+    const lut = _.range(0, 256);
+    lut[1] = 2; lut[2] = 1;
+    lut[7] = 9; lut[9] = 7;
+    lut[6] = 8; lut[8] = 6;
+    lut[11] = 12; lut[12] = 11;
+    lut[40] = 50; lut[50] = 40;
+    lut[106] = 108; lut[108] = 106;
+    lut[107] = 109; lut[109] = 107;
+    lut[116] = 117; lut[117] = 116;
+    return this.applyLut(lut);
+  }
+
+  /**
+   * Creates a new knitpaint by applying a lookup table to each color number
+   *
+   * @param lut
+   */
+  public applyLut(lut: number[]): Knitpaint {
+    const data = new Uint8Array(this.data);
+    const newData = data.map((colorNumber) => lut[colorNumber]);
+    return new Knitpaint(newData, this.width);
+  }
+
+  /**
    * Changes the color number at an index and returns a copy of the knitpaint
    *
    * @param index

@@ -11,16 +11,51 @@ export class TextureTool extends AbstractKnitpaintTool implements KnitpaintTool 
 
   public readonly name = 'Texture Tool';
   private canvas: HTMLCanvasElement;
+  private mousePosition: SVGPoint = null;
+
+  // Options for the texture itself and possible transformations
   private _texture: Knitpaint;
-  public get texture(): Knitpaint {
-    return this._texture;
-  }
+  private _flipX = false;
+  private _flipY = false;
+  private _invert = false;
+  private _repeatX = 1;
+  private _repeatY = 1;
+
+  // Use getters and setters to make sure that the transformations are applied
+  public get texture(): Knitpaint { return this._texture; }
   public set texture(texture: Knitpaint) {
     this._texture = texture;
-    this.textureImage = texture.getImage();
+    this.applyTextureTransformations();
   }
-  private textureImage: HTMLCanvasElement;
-  private mousePosition: SVGPoint = null;
+  public get flipX(): boolean { return this._flipX; }
+  public set flipX(flipX: boolean) {
+    this._flipX = flipX;
+    this.applyTextureTransformations();
+  }
+  public get flipY(): boolean { return this._flipY; }
+  public set flipY(flipY: boolean) {
+    this._flipY = flipY;
+    this.applyTextureTransformations();
+  }
+  public get invert(): boolean { return this._invert; }
+  public set invert(invert: boolean) {
+    this._invert = invert;
+    this.applyTextureTransformations();
+  }
+  public get repeatX(): number { return this._repeatX; }
+  public set repeatX(repeatX: number) {
+    this._repeatX = repeatX;
+    this.applyTextureTransformations();
+  }
+  public get repeatY(): number { return this._repeatY; }
+  public set repeatY(repeatY: number) {
+    this._repeatY = repeatY;
+    this.applyTextureTransformations();
+  }
+
+  // Store results of transformations here
+  private transformedTexture: Knitpaint;
+  private transformedTextureImage: HTMLCanvasElement;
 
   constructor() {
     super();
@@ -40,7 +75,7 @@ export class TextureTool extends AbstractKnitpaintTool implements KnitpaintTool 
     this.canvas.style.cursor = 'default';
 
     // Only draw if texture and mouse position is available
-    if (!this.texture || !this.textureImage || !this.mousePosition) {
+    if (!this.transformedTexture || !this.transformedTexture || !this.mousePosition) {
       return;
     }
 
@@ -57,7 +92,7 @@ export class TextureTool extends AbstractKnitpaintTool implements KnitpaintTool 
     ctx.save();
     ctx.setTransform(transform);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(this.textureImage, canvasCoordinates.x, canvasCoordinates.y);
+    ctx.drawImage(this.transformedTextureImage, canvasCoordinates.x, canvasCoordinates.y);
     ctx.restore();
   }
 
@@ -125,7 +160,7 @@ export class TextureTool extends AbstractKnitpaintTool implements KnitpaintTool 
     const startIndex = KnitpaintCanvasUtils.getIndexAtCoordinates(canvasCoordinates.x, canvasCoordinates.y, this.knitpaint.width);
 
     // Only continue if index and current texture is valid
-    const texture = this.texture;
+    const texture = this.transformedTexture;
     if ((!startIndex && startIndex !== 0) || !texture) {
       return;
     }
@@ -153,14 +188,28 @@ export class TextureTool extends AbstractKnitpaintTool implements KnitpaintTool 
     const mouseTransformed = this.mousePosition.matrixTransform(this.transform.inverse());
 
     // The actual position should be in the center
-    const x = Math.floor(mouseTransformed.x - this.texture.width / 2);
-    const y = Math.floor(mouseTransformed.y - this.texture.height / 2);
+    const x = Math.floor(mouseTransformed.x - this.transformedTexture.width / 2);
+    const y = Math.floor(mouseTransformed.y - this.transformedTexture.height / 2);
 
     // Only continue if texture is on the canvas
-    if (x < 0 || x  > this.knitpaint.width - this.texture.width
-      || y < 0 || y > this.knitpaint.height - this.texture.height) {
+    if (x < 0 || x  > this.knitpaint.width - this.transformedTexture.width
+      || y < 0 || y > this.knitpaint.height - this.transformedTexture.height) {
       return null;
     }
     return KnitpaintCanvasUtils.createSVGPoint(x, y);
+  }
+
+  /**
+   * Applies transformations the the texture and creates an image of the result
+   */
+  private applyTextureTransformations(): void {
+    let transformedTexture = this.texture;
+    transformedTexture = transformedTexture.flip(this.flipX, this.flipY);
+    if (this.invert) {
+      transformedTexture = transformedTexture.invert();
+    }
+    transformedTexture = transformedTexture.repeat(this.repeatX, this.repeatY);
+    this.transformedTexture = transformedTexture;
+    this.transformedTextureImage = this.transformedTexture.getImage();
   }
 }

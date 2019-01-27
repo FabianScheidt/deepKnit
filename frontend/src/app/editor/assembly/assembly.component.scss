@@ -35,4 +35,8 @@
   width: 300px;
   margin: 0 0 0 4px;
   background-color: $panel-background;
+
+  app-patterns-bar {
+    border-top: 4px solid $main-background;
+  }
 }

@@ -21,7 +21,8 @@ export class AssemblyComponent implements OnInit {
 
   public knitpaint: Knitpaint;
   @ViewChild('knitpaintCanvas') knitpaintCanvas: KnitpaintCanvasComponent;
-  public activeTools: Type<KnitpaintTool>[] = [GridTool, MultitouchTransformTool, KeyboardTransformTool, MouseTransformTool, DrawTool];
+  public activeToolClasses: Type<KnitpaintTool>[] =
+    [GridTool, MultitouchTransformTool, KeyboardTransformTool, MouseTransformTool, DrawTool];
 
   constructor(private editorStateService: EditorStateService) {}
 
@@ -33,7 +34,7 @@ export class AssemblyComponent implements OnInit {
     });
 
     // Activate the default tools
-    this.activateTools(this.activeTools);
+    this.activateToolClasses(this.activeToolClasses);
 
     // The router might mess with the initial transform of the canvas so better set it again
     setTimeout(() => this.knitpaintCanvas.resetTransform());
@@ -56,7 +57,7 @@ export class AssemblyComponent implements OnInit {
    *
    * @param assembly
    */
-  setAssembly(assembly: Knitpaint) {
+  public setAssembly(assembly: Knitpaint) {
     this.editorStateService.setAssembly(assembly);
   }
 
@@ -65,9 +66,16 @@ export class AssemblyComponent implements OnInit {
    *
    * @param tools
    */
-  activateTools(tools: Type<KnitpaintTool>[]) {
-    this.activeTools = tools;
+  public activateToolClasses(tools: Type<KnitpaintTool>[]) {
+    this.activeToolClasses = tools;
     this.knitpaintCanvas.activateTools(tools);
+  }
+
+  /**
+   * Returns the list of active tools
+   */
+  public getActiveTools(): KnitpaintTool[] {
+    return this.knitpaintCanvas.getActiveTools();
   }
 
   /**

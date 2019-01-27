@@ -13,11 +13,20 @@ import { ApiModule } from '../api/api.module';
 import { EditorStateService } from './editor-state.service';
 import { EditorIoService } from './editor-io.service';
 import { ProjectService } from './project.service';
-import { MatButtonModule, MatDividerModule, MatIconModule, MatInputModule, MatMenuModule, MatSliderModule } from '@angular/material';
+import {
+  MatButtonModule,
+  MatDividerModule,
+  MatIconModule,
+  MatInputModule,
+  MatMenuModule,
+  MatSliderModule,
+  MatSlideToggleModule
+} from '@angular/material';
 import { ToolbarModule } from './toolbar/toolbar.module';
 import { UtilsModule } from './utils/utils.module';
 import { PatternComponent } from './patterns/pattern/pattern.component';
 import { PatternsBarComponent } from './patterns-bar/patterns-bar.component';
+import { ToolOptionsComponent } from './assembly/tool-options/tool-options.component';
 
 @NgModule({
   imports: [
@@ -34,7 +43,8 @@ import { PatternsBarComponent } from './patterns-bar/patterns-bar.component';
     MatIconModule,
     MatMenuModule,
     MatDividerModule,
-    MatSliderModule
+    MatSliderModule,
+    MatSlideToggleModule
   ],
   declarations: [
     EditorComponent,
@@ -43,7 +53,8 @@ import { PatternsBarComponent } from './patterns-bar/patterns-bar.component';
     AssemblyComponent,
     NavigationComponent,
     PatternComponent,
-    PatternsBarComponent
+    PatternsBarComponent,
+    ToolOptionsComponent
   ],
   providers: [
     ProjectService,

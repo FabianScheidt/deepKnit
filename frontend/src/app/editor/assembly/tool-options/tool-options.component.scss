@@ -1,0 +1,46 @@
+@import "../../editor-constants";
+
+:host {
+  display: block;
+  padding: 20px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: $active;
+  margin-bottom: 20px;
+}
+
+.options {
+  font-size: 12px;
+
+  .option {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: $active;
+
+    .label {
+      width: 70px;
+    }
+
+    .slider {
+      flex-grow: 1;
+      margin: -10px 0;
+
+      mat-slider {
+        width: 100%;
+      }
+    }
+
+    .value {
+      width: 40px;
+      text-align: right;
+    }
+  }
+
+  .no-options {
+    color: $inactive;
+  }
+}

@@ -1,0 +1,41 @@
+<div class="title">Tool Options</div>
+
+<div class="options">
+  <div class="texture-options" *ngIf="getTextureTool()">
+    <div class="option">
+      <div class="label">Repeat X</div>
+      <div class="slider">
+        <mat-slider min="1" max="20" step="1" [value]="getTextureTool().repeatX" (input)="getTextureTool().repeatX = $event.value"></mat-slider>
+      </div>
+      <div class="value">{{ getTextureTool().repeatX }}</div>
+    </div>
+    <div class="option">
+      <div class="label">Repeat Y</div>
+      <div class="slider">
+        <mat-slider min="1" max="20" step="1" [value]="getTextureTool().repeatY" (input)="getTextureTool().repeatY = $event.value"></mat-slider>
+      </div>
+      <div class="value">{{ getTextureTool().repeatY }}</div>
+    </div>
+    <div class="option">
+      <div class="label">Flip X</div>
+      <div class="toggle">
+        <mat-slide-toggle [checked]="getTextureTool().flipX" (change)="getTextureTool().flipX = $event.checked"></mat-slide-toggle>
+      </div>
+    </div>
+    <div class="option">
+      <div class="label">Flip Y</div>
+      <div class="toggle">
+        <mat-slide-toggle [checked]="getTextureTool().flipY" (change)="getTextureTool().flipY = $event.checked"></mat-slide-toggle>
+      </div>
+    </div>
+    <div class="option">
+      <div class="label">Invert</div>
+      <div class="toggle">
+        <mat-slide-toggle [checked]="getTextureTool().invert" (change)="getTextureTool().invert = $event.checked"></mat-slide-toggle>
+      </div>
+    </div>
+  </div>
+  <div class="no-options" [hidden]="optionsAvailable()">
+    No options for this tool
+  </div>
+</div>

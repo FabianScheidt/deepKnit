@@ -1,7 +1,7 @@
 <div class="tools">
   <app-toolbar
-    [activeTools]="activeTools"
-    (activeToolChange)="activateTools($event)"
+    [activeTools]="activeToolClasses"
+    (activeToolChange)="activateToolClasses($event)"
     [(activeColorNumber)]="colorNumber"></app-toolbar>
 </div>
 <div class="knitpaint">
@@ -10,5 +10,6 @@
                         (knitpaintChanged)="setAssembly($event)"></app-knitpaint-canvas>
 </div>
 <div class="sidebar">
+  <app-tool-options [activeTools]="getActiveTools()"></app-tool-options>
   <app-patterns-bar [allowSelection]="true" [(selection)]="selectedPattern"></app-patterns-bar>
 </div>
