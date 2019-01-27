@@ -18,6 +18,13 @@ export class EditorStateService {
   private assemblyChangedSubject: Subject<void> = new Subject<void>();
   public assemblyChanged: Observable<void> = this.assemblyChangedSubject.asObservable();
 
+  // Remember view state
+  private selectedPattern: Knitpaint;
+
+  // Provide observables as well
+  private selectedPatternChangedSubject: Subject<void> = new Subject<void>();
+  public selectedPatternsChanged: Observable<void> = this.selectedPatternChangedSubject.asObservable();
+
   constructor(private projectService: ProjectService) {
     // Get the current project
     this.project = projectService.getProject();
@@ -125,5 +132,14 @@ export class EditorStateService {
 
   public redo(): void {
     this.projectService.redo();
+  }
+
+  public getSelectedPattern(): Knitpaint {
+    return this.selectedPattern;
+  }
+
+  public setSelectedPattern(pattern: Knitpaint) {
+    this.selectedPattern = pattern;
+    this.selectedPatternChangedSubject.next();
   }
 }

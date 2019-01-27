@@ -44,7 +44,12 @@ export class AssemblyComponent implements OnInit, AfterViewChecked {
       this.colorNumber = colorNumber;
     });
 
-    // The texture tool should have a default texture selected (if available)
+    // Set the selected texture whenever it changes
+    this.editorStateService.selectedPatternsChanged.subscribe(() => {
+      this.knitpaintCanvas.getTool(TextureTool).texture = this.selectedPattern;
+    });
+
+    // A default texture should be selected (if available)
     setTimeout(() => {
       if (!this.selectedPattern && this.editorStateService.getPatterns().length > 0) {
         this.selectedPattern = this.editorStateService.getPatterns()[0];
@@ -99,10 +104,10 @@ export class AssemblyComponent implements OnInit, AfterViewChecked {
   }
 
   /**
-   * Returns the patterns currently used by the texture tool
+   * Returns the currently selected pattern
    */
   public get selectedPattern(): Knitpaint {
-    return this.knitpaintCanvas.getTool(TextureTool).texture;
+    return this.editorStateService.getSelectedPattern();
   }
 
   /**
@@ -110,7 +115,7 @@ export class AssemblyComponent implements OnInit, AfterViewChecked {
    * @param selectedPattern
    */
   public set selectedPattern(selectedPattern: Knitpaint) {
-    this.knitpaintCanvas.getTool(TextureTool).texture = selectedPattern;
+    this.editorStateService.setSelectedPattern(selectedPattern);
   }
 
 }
