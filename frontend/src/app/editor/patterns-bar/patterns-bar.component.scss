@@ -18,6 +18,7 @@
   height: 100%;
   margin: -2px;
   overflow: scroll;
+  -webkit-overflow-scrolling: touch;
 
   .pattern {
     display: inline-block;
