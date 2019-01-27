@@ -28,6 +28,7 @@
     "hammerjs": "^2.0.8",
     "lodash": "^4.17.11",
     "rxjs": "^6.0.0",
+    "uuid": "^3.3.2",
     "zone.js": "^0.8.29"
   },
   "devDependencies": {
