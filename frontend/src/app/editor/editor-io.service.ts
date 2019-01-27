@@ -5,6 +5,7 @@ import { Project } from './project';
 import { Knitpaint } from '../knitpaint';
 import { KnitpaintConversionService } from '../api/knitpaint-conversion.service';
 import saveAs from 'file-saver';
+import { flatMap } from 'rxjs/operators';
 
 @Injectable()
 export class EditorIoService {
@@ -38,84 +39,120 @@ export class EditorIoService {
   /**
    * Converts the current assembly to dat and starts a download
    */
-  public exportToDatFile(): void {
+  public exportAssemblyToDatFile(): void {
     const assembly = this.projectService.getProject().assembly;
-    this.knitpaintConversionService.toDat(assembly).subscribe((dat: ArrayBuffer) => {
-      const blob = new Blob([new Uint8Array(dat)]);
-      saveAs(blob, 'deepknit.dat');
-    });
+    this.exportToDatFile(assembly);
   }
 
   /**
    * Opens a dialog to select a dat file, converts it and makes it the current assembly
    */
-  public importFromDatFile(): void {
-    this.loadFile('array-buffer', ['dat']).subscribe(buffer => {
-      this.knitpaintConversionService.fromDat(buffer).subscribe((res: Knitpaint) => {
-        const project = this.projectService.getProject();
-        const newProject = project.setAssembly(res);
-        this.projectService.setProject(newProject);
-      });
+  public importAssemblyFromDatFile(): void {
+    this.importFromDatFile().subscribe((res: Knitpaint) => {
+      const project = this.projectService.getProject();
+      const newProject = project.setAssembly(res);
+      this.projectService.setProject(newProject);
     });
   }
 
   /**
    * Converts the current assembly to png and starts a download
    */
-  public exportToImageFile(): void {
+  public exportAssemblyToImageFile(): void {
     const assembly = this.projectService.getProject().assembly;
+    this.exportToImageFile(assembly);
+  }
+
+  /**
+   * Opens a dialog to select an image file, converts it and makes it the current assembly
+   */
+  public importAssemblyFromImageFile(): void {
+    this.importFromImageFile().subscribe((knitpaint: Knitpaint) => {
+      const newProject = this.projectService.getProject().setAssembly(knitpaint);
+      this.projectService.setProject(newProject);
+    });
+  }
+
+  /**
+   * Converts the knitpaint to dat and starts a download
+   *
+   * @param knitpaint
+   */
+  public exportToDatFile(knitpaint: Knitpaint) {
+    this.knitpaintConversionService.toDat(knitpaint).subscribe((dat: ArrayBuffer) => {
+      const blob = new Blob([new Uint8Array(dat)]);
+      saveAs(blob, 'deepknit.dat');
+    });
+  }
+
+  /**
+   * Opens a dialog to select a dat file and converts it
+   */
+  public importFromDatFile(): Observable<Knitpaint> {
+    return this.loadFile('array-buffer', ['dat'])
+      .pipe(flatMap(buffer => this.knitpaintConversionService.fromDat(buffer)));
+  }
+
+  /**
+   * Converts some knitpaint to png and starts a download
+   *
+   * @param knitpaint
+   */
+  public exportToImageFile(knitpaint: Knitpaint) {
     const imageCanvas = document.createElement('canvas');
-    imageCanvas.width = assembly.width;
-    imageCanvas.height = assembly.height;
+    imageCanvas.width = knitpaint.width;
+    imageCanvas.height = knitpaint.height;
     const imageContext = imageCanvas.getContext('2d');
     imageContext.scale(1, -1);
-    imageContext.drawImage(assembly.getImage(), 0, 0, assembly.width , assembly.height * -1);
+    imageContext.drawImage(knitpaint.getImage(), 0, 0, knitpaint.width , knitpaint.height * -1);
     imageCanvas.toBlob((blob: Blob) => {
       saveAs(blob, 'deepknit.png');
     });
   }
 
   /**
-   * Opens a dialog to select an image file, converts it and makes it the current assembly
+   * Opens a dialog to select an image file and converts it
    */
-  public importFromImageFile(): void {
-    this.loadFile('data-url', ['png', 'bmp', 'jpg', 'jpeg', 'gif', 'webp']).subscribe(res => {
-      const image = new Image();
-      image.addEventListener('load', () => {
-        // Read image data
-        const canvas = document.createElement('canvas');
-        canvas.width = image.width;
-        canvas.height = image.height;
-        const context = canvas.getContext('2d');
-        context.scale(1, -1);
-        context.drawImage(image, 0, 0, image.width, image.height * -1);
-        const imageData = context.getImageData(0, 0, image.width, image.height);
+  public importFromImageFile(): Observable<Knitpaint> {
+    return new Observable<Knitpaint>((observer: Observer<Knitpaint>) => {
+      this.loadFile('data-url', ['png', 'bmp', 'jpg', 'jpeg', 'gif', 'webp']).subscribe(res => {
+        const image = new Image();
+        image.addEventListener('load', () => {
+          // Read image data
+          const canvas = document.createElement('canvas');
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const context = canvas.getContext('2d');
+          context.scale(1, -1);
+          context.drawImage(image, 0, 0, image.width, image.height * -1);
+          const imageData = context.getImageData(0, 0, image.width, image.height);
 
-        // Do nearest neighbor search to get color numbers
-        const colorNumbersCount = imageData.data.byteLength / 4;
-        const colorNumbers = new Uint8Array(colorNumbersCount);
-        for (let i = 0; i < colorNumbersCount; i++) {
-          const color = [imageData.data[i * 4], imageData.data[i * 4 + 1], imageData[i * 4 + 2]];
-          let nearest_index = null;
-          let nearest_distance = null;
-          Knitpaint.COLOR_TABLE.forEach((table_color, j) => {
-            const distance = Math.pow(color[0] - table_color[0], 2)
-              + Math.pow(color[1] - table_color[1], 2)
-              + Math.pow(color[1] - table_color[1], 2);
-            if (nearest_distance === null || distance < nearest_distance) {
-              nearest_distance = distance;
-              nearest_index = j;
-            }
-          });
-          colorNumbers.fill(nearest_index, i, i + 1);
-        }
+          // Do nearest neighbor search to get color numbers
+          const colorNumbersCount = imageData.data.byteLength / 4;
+          const colorNumbers = new Uint8Array(colorNumbersCount);
+          for (let i = 0; i < colorNumbersCount; i++) {
+            const color = [imageData.data[i * 4], imageData.data[i * 4 + 1], imageData.data[i * 4 + 2]];
+            let nearest_index = null;
+            let nearest_distance = null;
+            Knitpaint.COLOR_TABLE.forEach((table_color, j) => {
+              const distance = Math.pow(color[0] - table_color[0], 2)
+                + Math.pow(color[1] - table_color[1], 2)
+                + Math.pow(color[2] - table_color[2], 2);
+              if (nearest_distance === null || distance < nearest_distance) {
+                nearest_distance = distance;
+                nearest_index = j;
+              }
+            });
+            colorNumbers.fill(nearest_index, i, i + 1);
+          }
 
-        // Create knitpaint and set it as assembly
-        const knitpaint = new Knitpaint(colorNumbers, imageData.width);
-        const newProject = this.projectService.getProject().setAssembly(knitpaint);
-        this.projectService.setProject(newProject);
-      });
-      image.src = res;
+          // Create knitpaint and set it as assembly
+          const knitpaint = new Knitpaint(colorNumbers, imageData.width);
+          observer.next(knitpaint);
+          observer.complete();
+        });
+        image.src = res;
+      }, (err) => observer.error(err));
     });
   }
 

@@ -27,16 +27,24 @@
     <button mat-menu-item (click)="openProject()" appTapClick>Open project</button>
     <button mat-menu-item (click)="saveProject()" appTapClick>Save project</button>
     <mat-divider></mat-divider>
-    <button mat-menu-item [matMenuTriggerFor]="subMenu" appTapClick>Import and Export</button>
+    <button mat-menu-item [matMenuTriggerFor]="assemblyMenu" appTapClick>Assembly Import / Export</button>
+    <button mat-menu-item [matMenuTriggerFor]="patternMenu" appTapClick [disabled]="!patternSelected()">Pattern Import / Export</button>
     <mat-divider></mat-divider>
     <button mat-menu-item [disabled]="!undoAvailable()" (click)="undo()" appTapClick>Undo</button>
     <button mat-menu-item [disabled]="!redoAvailable()" (click)="redo()" appTapClick>Redo</button>
   </mat-menu>
 
-  <mat-menu #subMenu="matMenu">
-    <button mat-menu-item (click)="exportDat()" appTapClick>Export to APEX</button>
-    <button mat-menu-item (click)="importDat()" appTapClick>Import from APEX</button>
-    <button mat-menu-item (click)="exportImage()" appTapClick>Export as Image</button>
-    <button mat-menu-item (click)="importImage()" appTapClick>Import from Image</button>
+  <mat-menu #assemblyMenu="matMenu">
+    <button mat-menu-item (click)="importAssemblyFromDat()" appTapClick>Import from APEX</button>
+    <button mat-menu-item (click)="exportAssemblyToDat()" appTapClick>Export to APEX</button>
+    <button mat-menu-item (click)="importAssemblyFromImage()" appTapClick>Import from Image</button>
+    <button mat-menu-item (click)="exportAssemblyToImage()" appTapClick>Export as Image</button>
+  </mat-menu>
+
+  <mat-menu #patternMenu="matMenu">
+    <button mat-menu-item (click)="importPatternFromDat()" appTapClick>Import from APEX</button>
+    <button mat-menu-item (click)="exportPatternToDat()" appTapClick>Export to APEX</button>
+    <button mat-menu-item (click)="importPatternFromImage()" appTapClick>Import from Image</button>
+    <button mat-menu-item (click)="exportPatternToImage()" appTapClick>Export as Image</button>
   </mat-menu>
 </div>

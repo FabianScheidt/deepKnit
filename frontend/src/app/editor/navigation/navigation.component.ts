@@ -3,6 +3,7 @@ import { EditorStateService } from '../editor-state.service';
 import { Router } from '@angular/router';
 import { ProjectStage } from '../project';
 import { EditorIoService } from '../editor-io.service';
+import { Knitpaint } from '../../knitpaint';
 
 @Component({
   selector: 'app-navigation',
@@ -37,41 +38,28 @@ export class NavigationComponent {
   public assembly = () => this.editorStateService.setStage(ProjectStage.Assembly);
   public undoAvailable = () => this.editorStateService.undoAvailable();
   public redoAvailable = () => this.editorStateService.redoAvailable();
+  public patternSelected = () => !!this.editorStateService.getSelectedPattern();
 
-  public newProject(): void {
-    this.editorStateService.init();
+  public newProject = () => this.editorStateService.init();
+  public openProject = () => this.editorIoService.initFromFile();
+  public saveProject = () => this.editorIoService.saveToFile();
+
+  public exportAssemblyToDat = () => this.editorIoService.exportAssemblyToDatFile();
+  public importAssemblyFromDat = () => this.editorIoService.importAssemblyFromDatFile();
+  public exportAssemblyToImage = () => this.editorIoService.exportAssemblyToImageFile();
+  public importAssemblyFromImage = () => this.editorIoService.importAssemblyFromImageFile();
+
+  public exportPatternToDat = () => this.editorIoService.exportToDatFile(this.editorStateService.getSelectedPattern());
+  public importPatternFromDat = () => this.editorIoService.importFromDatFile().subscribe(res => this.addPattern(res));
+  public exportPatternToImage = () => this.editorIoService.exportToImageFile(this.editorStateService.getSelectedPattern());
+  public importPatternFromImage = () => this.editorIoService.importFromImageFile().subscribe(res => this.addPattern(res));
+
+  public undo = () => this.editorStateService.undo();
+  public redo = () => this.editorStateService.redo();
+
+  private addPattern(pattern: Knitpaint) {
+    const patterns = this.editorStateService.getPatterns().slice();
+    patterns.push(pattern);
+    this.editorStateService.setPatterns(patterns);
   }
-
-  public openProject(): void {
-    this.editorIoService.initFromFile();
-  }
-
-  public saveProject(): void {
-    this.editorIoService.saveToFile();
-  }
-
-  public exportDat(): void {
-    this.editorIoService.exportToDatFile();
-  }
-
-  public importDat(): void {
-    this.editorIoService.importFromDatFile();
-  }
-
-  public exportImage(): void {
-    this.editorIoService.exportToImageFile();
-  }
-
-  public importImage(): void {
-    this.editorIoService.importFromImageFile();
-  }
-
-  public undo(): void {
-    this.editorStateService.undo();
-  }
-  public redo() {
-    this.editorStateService.redo();
-  }
-
-
 }
