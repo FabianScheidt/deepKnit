@@ -1,18 +1,13 @@
 import { Injectable } from '@angular/core';
-import { AbstractKnitpaintTool } from './abstract-knitpaint-tool';
 import { KnitpaintTool } from '../knitpaint-tool';
 import { Knitpaint } from '../../knitpaint';
-import { fromEvent } from 'rxjs';
-import { filter, takeUntil } from 'rxjs/operators';
-import { KnitpaintCanvasUtils } from '../knitpaint-canvas-utils';
+import { AbstractStartEndTool } from './abstract-start-end-tool';
 
 @Injectable()
-export class RectangleTool extends AbstractKnitpaintTool implements KnitpaintTool {
+export class RectangleTool extends AbstractStartEndTool implements KnitpaintTool {
 
   public readonly name = 'Rectangle Tool';
   public colorNumber = 0;
-  private rectStart: SVGPoint;
-  private rectEnd: SVGPoint;
   private setKnitpaint: (knitpaint: Knitpaint, triggerChange?: boolean) => void;
 
   constructor() {
@@ -22,102 +17,35 @@ export class RectangleTool extends AbstractKnitpaintTool implements KnitpaintToo
   load(canvas: HTMLCanvasElement, requestRender: () => void,
        setKnitpaint: (knitpaint: Knitpaint, triggerChange?: boolean) => void, _): void {
     this.setKnitpaint = setKnitpaint;
-    this.attachMouseEvents(canvas, requestRender);
-    this.attachTouchEvents(canvas, requestRender);
+    super.load(canvas, requestRender);
   }
 
   render(ctx: CanvasRenderingContext2D, transform: SVGMatrix): void {
-    if (!this.rectStart || !this.rectEnd) {
+    const knitpaintRect = this.getKnitpaintRect();
+    if (!knitpaintRect) {
       return;
     }
-
-    // Snap the coordinates to the grid
-    let start, end;
-    [start, end] = this.getKnitpaintRect();
-    start = start.matrixTransform(this.transform);
-    end = end.matrixTransform(this.transform);
+    const [start, end] = knitpaintRect;
 
     // Draw the rectangle
     ctx.save();
+    ctx.transform(this.transform.a, this.transform.b, this.transform.c, this.transform.d, this.transform.e, this.transform.f);
     ctx.fillStyle = Knitpaint.getColorString(this.colorNumber);
     ctx.fillRect(start.x, start.y, end.x - start.x, end.y - start.y);
     ctx.restore();
   }
 
   unload(): void {
-    delete this.rectStart;
-    delete this.rectEnd;
     delete this.setKnitpaint;
     super.unload();
   }
 
-  private attachMouseEvents(canvas: HTMLCanvasElement, requestRender: () => void): void {
-    fromEvent(canvas, 'mousedown')
-      .pipe(takeUntil(this.unloadSubject), filter((e: MouseEvent) => e.button === 0))
-      .subscribe((e: MouseEvent) => {
-        this.rectStart = KnitpaintCanvasUtils.createSVGPoint(e.offsetX, e.offsetY);
-        this.rectEnd = KnitpaintCanvasUtils.createSVGPoint(e.offsetX, e.offsetY);
-        requestRender();
-      });
-
-    fromEvent(canvas, 'mousemove')
-      .pipe(takeUntil(this.unloadSubject), filter(() => !!this.rectStart))
-      .subscribe((e: MouseEvent) => {
-        this.rectEnd = KnitpaintCanvasUtils.createSVGPoint(e.offsetX, e.offsetY);
-        requestRender();
-      });
-
-    fromEvent(document, 'mouseup')
-      .pipe(takeUntil(this.unloadSubject), filter(() => !!this.rectStart))
-      .subscribe((e: MouseEvent) => {
-        this.applyRectangle();
-        requestRender();
-        delete this.rectStart;
-        delete this.rectEnd;
-      });
-  }
-
-  private attachTouchEvents(canvas: HTMLCanvasElement, requestRender: () => void): void {
-    fromEvent(canvas, 'touchstart')
-      .pipe(takeUntil(this.unloadSubject), filter((e: TouchEvent) => e.touches.length === 1))
-      .subscribe((e: TouchEvent) => {
-        e.preventDefault();
-        const boundary = canvas.getBoundingClientRect();
-        const touch = e.touches[0];
-        this.rectStart = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
-        this.rectEnd = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
-        requestRender();
-      });
-
-    fromEvent(canvas, 'touchmove')
-      .pipe(takeUntil(this.unloadSubject), filter(() => !!this.rectStart))
-      .subscribe((e: TouchEvent) => {
-        e.preventDefault();
-        const boundary = canvas.getBoundingClientRect();
-        const touch = e.touches[0];
-        this.rectEnd = KnitpaintCanvasUtils.createSVGPoint(touch.pageX - boundary.left, touch.pageY - boundary.top);
-        requestRender();
-      });
-
-    fromEvent(document, 'touchend')
-      .pipe(takeUntil(this.unloadSubject), filter(() => !!this.rectStart))
-      .subscribe((e: TouchEvent) => {
-        e.preventDefault();
-        this.applyRectangle();
-        requestRender();
-        delete this.rectStart;
-        delete this.rectEnd;
-      });
-  }
-
-  private applyRectangle() {
-    if (!this.rectStart || !this.rectEnd) {
+  protected apply() {
+    const knitpaintRect = this.getKnitpaintRect();
+    if (!knitpaintRect) {
       return;
     }
-
-    // Find the knitpaint coordinates
-    let start, end;
-    [start, end] = this.getKnitpaintRect();
+    const [start, end] = knitpaintRect;
 
     // Apply pixel by pixel
     let knitpaint = this.knitpaint;
@@ -128,15 +56,5 @@ export class RectangleTool extends AbstractKnitpaintTool implements KnitpaintToo
       }
     }
     this.setKnitpaint(knitpaint);
-  }
-
-  private getKnitpaintRect(): [SVGPoint, SVGPoint] {
-    const start = this.rectStart.matrixTransform(this.transform.inverse());
-    const end = this.rectEnd.matrixTransform(this.transform.inverse());
-    const startX = Math.floor(Math.max(0, Math.min(start.x, end.x)));
-    const startY = Math.floor(Math.max(0, Math.min(start.y, end.y)));
-    const endX = Math.ceil(Math.min(this.knitpaint.width, Math.max(start.x, end.x)));
-    const endY = Math.ceil(Math.min(this.knitpaint.height, Math.max(start.y, end.y)));
-    return [KnitpaintCanvasUtils.createSVGPoint(startX, startY), KnitpaintCanvasUtils.createSVGPoint(endX, endY)];
   }
 }
