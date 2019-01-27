@@ -2,7 +2,7 @@
 
 <div class="patterns">
   <div class="pattern" *ngFor="let pattern of getSavedPatterns()"
-       [class.selectable]="allowSelection" [class.selected]="selection === pattern" (click)="select(pattern)">
+       [class.selectable]="allowSelection" [class.selected]="selection === pattern" (click)="select(pattern)" appTapClick>
     <div class="canvas">
       <app-knitpaint-canvas [knitpaint]="pattern"></app-knitpaint-canvas>
     </div>

@@ -18,6 +18,56 @@
 <div class="sidebar">
   <div class="ai-parameters">
     <div class="title">AI-Parameters</div>
+    <div class="category">Style</div>
+    <div class="parameter">
+      <div class="label">Links</div>
+      <div class="slider">
+        <mat-slider min="0" max="1" step="0.01" [value]="samplingOptions.links"
+                    (input)="this.setSamplingOptions('links', $event.value)"></mat-slider>
+      </div>
+      <div class="value">{{ samplingOptions.links | percent }}</div>
+    </div>
+    <div class="parameter">
+      <div class="label">Miss</div>
+      <div class="slider">
+        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="samplingOptions.miss"
+                    (input)="this.setSamplingOptions('miss', $event.value)"></mat-slider>
+      </div>
+      <div class="value">{{ samplingOptions.miss | percent }}</div>
+    </div>
+    <div class="parameter">
+      <div class="label">Tuck</div>
+      <div class="slider">
+        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="samplingOptions.tuck"
+                    (input)="this.setSamplingOptions('tuck', $event.value)"></mat-slider>
+      </div>
+      <div class="value">{{ samplingOptions.tuck | percent }}</div>
+    </div>
+    <div class="parameter">
+      <div class="label">Stitch Move</div>
+      <div class="slider">
+        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="samplingOptions.stitchMove"
+                    (input)="this.setSamplingOptions('stitchMove', $event.value)"></mat-slider>
+      </div>
+      <div class="value">{{ samplingOptions.stitchMove | percent }}</div>
+    </div>
+    <div class="parameter">
+      <div class="label">Cable</div>
+      <div class="slider">
+        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="samplingOptions.cable"
+                    (input)="this.setSamplingOptions('cable', $event.value)"></mat-slider>
+      </div>
+      <div class="value">{{ samplingOptions.cable | percent }}</div>
+    </div>
+    <div class="category">Options</div>
+    <div class="parameter temperature">
+      <div class="label">Randomness</div>
+      <div class="slider">
+        <mat-slider min="0.01" max="2" step="0.01" value="0.5" [value]="samplingOptions.temperature"
+                    (input)="this.setSamplingOptions('temperature', $event.value)"></mat-slider>
+      </div>
+      <div class="value">{{ samplingOptions.temperature }}</div>
+    </div>
   </div>
   <app-patterns-bar [allowRemoval]="true"></app-patterns-bar>
 </div>
