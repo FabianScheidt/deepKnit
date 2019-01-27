@@ -133,14 +133,10 @@ export class RectangleTool extends AbstractKnitpaintTool implements KnitpaintToo
   private getKnitpaintRect(): [SVGPoint, SVGPoint] {
     const start = this.rectStart.matrixTransform(this.transform.inverse());
     const end = this.rectEnd.matrixTransform(this.transform.inverse());
-    start.x = Math.round(start.x);
-    start.y = Math.round(start.y);
-    end.x = Math.round(end.x);
-    end.y = Math.round(end.y);
-    const startX = Math.max(0, Math.min(start.x, end.x));
-    const startY = Math.max(0, Math.min(start.y, end.y));
-    const endX = Math.min(this.knitpaint.width, Math.max(start.x, end.x));
-    const endY = Math.min(this.knitpaint.height, Math.max(start.y, end.y));
+    const startX = Math.floor(Math.max(0, Math.min(start.x, end.x)));
+    const startY = Math.floor(Math.max(0, Math.min(start.y, end.y)));
+    const endX = Math.ceil(Math.min(this.knitpaint.width, Math.max(start.x, end.x)));
+    const endY = Math.ceil(Math.min(this.knitpaint.height, Math.max(start.y, end.y)));
     return [KnitpaintCanvasUtils.createSVGPoint(startX, startY), KnitpaintCanvasUtils.createSVGPoint(endX, endY)];
   }
 }
