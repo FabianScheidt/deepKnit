@@ -6,7 +6,7 @@ import { Observable, Subject } from 'rxjs';
 export class ProjectService {
 
   // Defines the maximum number of undoable steps
-  static readonly MAX_UNDO = 20;
+  static readonly MAX_UNDO = 100;
 
   // Store the project and provide a way to notify about project changes
   private project: Project = new Project();
