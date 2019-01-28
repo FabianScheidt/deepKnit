@@ -1,4 +1,5 @@
-import os, logging, base64
+import os, logging, base64, datetime, pathlib
+from uuid import UUID
 from flask import Flask, Response, request, json
 from flask_cors import CORS
 from lstm import LSTMModel
@@ -188,6 +189,28 @@ def get_pattern():
     resp = Response(knitpaint_to_json(handler), mimetype='application/json')
     set_cache_headers(resp)
     return resp
+
+
+@app.route('/api/log-project', methods=['POST'])
+def log_project():
+    # Read project
+    body = request.get_json()
+    project = body['project']
+
+    # Sanitize uuids
+    client_uuid = str(UUID(body['clientUuid']))
+    project_uuid = str(UUID(project['uuid']))
+
+    # Make sure the proper folder is there
+    project_folder = '../log/' + 'client-' + client_uuid + '/project-' + project_uuid + '/'
+    pathlib.Path(project_folder).mkdir(parents=True, exist_ok=True)
+
+    # Save the file
+    filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f') + '.deepknitproject'
+    with open(project_folder + filename, 'w') as outfile:
+        json.dump(project, outfile)
+
+    return ''
 
 
 def knitpaint_to_json(handler):
