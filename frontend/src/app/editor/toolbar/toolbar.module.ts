@@ -7,6 +7,7 @@ import { ToolbarColorComponent } from './toolbar-color/toolbar-color.component';
 import { UtilsModule } from '../utils/utils.module';
 import { MatDialogModule } from '@angular/material';
 import { ColorPickerModule } from '../color-picker/color-picker.module';
+import { TooltipModule } from '../../tooltip/tooltip.module';
 
 @NgModule({
   declarations: [
@@ -18,6 +19,7 @@ import { ColorPickerModule } from '../color-picker/color-picker.module';
   imports: [
     CommonModule,
     UtilsModule,
+    TooltipModule,
     ColorPickerModule,
     MatDialogModule
   ],
