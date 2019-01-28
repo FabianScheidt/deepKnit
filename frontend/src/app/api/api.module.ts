@@ -4,6 +4,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { KnitpaintConversionService } from './knitpaint-conversion.service';
 import { KnitpaintSamplingService } from './knitpaint-sampling.service';
 import { PatternSamplingService } from './pattern-sampling.service';
+import { ProjectLoggingService } from './project-logging.service';
 
 @NgModule({
   imports: [
@@ -14,7 +15,8 @@ import { PatternSamplingService } from './pattern-sampling.service';
   providers: [
     KnitpaintConversionService,
     KnitpaintSamplingService,
-    PatternSamplingService
+    PatternSamplingService,
+    ProjectLoggingService
   ]
 })
 export class ApiModule { }

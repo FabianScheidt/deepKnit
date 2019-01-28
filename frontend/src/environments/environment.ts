@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  backendUrl: 'https://deepknit.media.mit.edu/api/'
+  backendUrl: 'http://deepknit.media.mit.edu:5000/api/'
 };
 
 /*

@@ -3,6 +3,7 @@ import { ProjectService } from './project.service';
 import { Project, ProjectStage } from './project';
 import { Knitpaint } from '../knitpaint';
 import { Observable, Subject } from 'rxjs';
+import { ProjectLoggingService } from '../api/project-logging.service';
 
 @Injectable()
 export class EditorStateService {
@@ -25,11 +26,12 @@ export class EditorStateService {
   private selectedPatternChangedSubject: Subject<void> = new Subject<void>();
   public selectedPatternsChanged: Observable<void> = this.selectedPatternChangedSubject.asObservable();
 
-  constructor(private projectService: ProjectService) {
+  constructor(private projectService: ProjectService,
+              private projectLoggingService: ProjectLoggingService) {
     // Get the current project
     this.project = projectService.getProject();
 
-    // Register local observables for project changes
+    // Register local observables and project logger for project changes
     this.registerProjectChanges();
 
     // Save whenever the project changes
@@ -57,6 +59,7 @@ export class EditorStateService {
       if (this.project.assembly !== lastProject.assembly) {
         this.assemblyChangedSubject.next();
       }
+      this.projectLoggingService.logProject(this.project);
     });
   }
 
