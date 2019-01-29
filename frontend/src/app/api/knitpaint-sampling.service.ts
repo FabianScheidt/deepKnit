@@ -26,7 +26,7 @@ export class KnitpaintSamplingService {
       flatMap((currentOptions: KnitpaintSamplingOptions) =>
         this.fetchSamples(currentOptions).pipe(
           takeUntil(options),
-          throttleTime(40),
+          throttleTime(40, undefined, { leading: true, trailing: true }),
           tap(() => this.ngZone.run(() => {})))
       )
     );
