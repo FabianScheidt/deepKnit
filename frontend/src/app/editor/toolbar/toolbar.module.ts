@@ -8,6 +8,7 @@ import { UtilsModule } from '../utils/utils.module';
 import { MatDialogModule } from '@angular/material';
 import { ColorPickerModule } from '../color-picker/color-picker.module';
 import { TooltipModule } from '../../tooltip/tooltip.module';
+import { MatomoModule } from 'ngx-matomo';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { TooltipModule } from '../../tooltip/tooltip.module';
     UtilsModule,
     TooltipModule,
     ColorPickerModule,
-    MatDialogModule
+    MatDialogModule,
+    MatomoModule
   ],
   exports: [
     ToolbarComponent

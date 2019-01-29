@@ -7,6 +7,7 @@ import { TextureTool } from '../../../knitpaint-canvas/knitpaint-tools/texture-t
 import * as _ from 'lodash';
 import { RectangleTool } from '../../../knitpaint-canvas/knitpaint-tools/rectangle-tool.service';
 import { SelectionTool } from '../../../knitpaint-canvas/knitpaint-tools/selection-tool.service';
+import { MatomoTracker } from 'ngx-matomo';
 
 @Component({
   selector: 'app-toolbar-tools',
@@ -18,7 +19,7 @@ export class ToolbarToolsComponent {
   @Input() activeTools: Type<KnitpaintTool>[] = [];
   @Output() activeToolChanged: EventEmitter<Type<KnitpaintTool>[]> = new EventEmitter<Type<KnitpaintTool>[]>();
 
-  constructor() { }
+  constructor(private matomoTracker: MatomoTracker) { }
 
   /**
    * Returns the currently active tool
@@ -48,6 +49,24 @@ export class ToolbarToolsComponent {
    * @param tool
    */
   private setTool(tool: Type<KnitpaintTool>) {
+
+    switch (tool) {
+      case DrawTool:
+        this.matomoTracker.trackEvent('tool-change', 'draw-tool');
+        break;
+      case RectangleTool:
+        this.matomoTracker.trackEvent('tool-change', 'rectangle-tool');
+        break;
+      case ColorPickerTool:
+        this.matomoTracker.trackEvent('tool-change', 'color-picker');
+        break;
+      case SelectionTool:
+        this.matomoTracker.trackEvent('tool-change', 'selection-tool');
+        break;
+      case TextureTool:
+        this.matomoTracker.trackEvent('tool-change', 'texture-tool');
+        break;
+    }
 
     // Deactivate previous tools
     if (this.getTool() === ColorPickerTool) {
