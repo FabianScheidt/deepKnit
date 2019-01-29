@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import * as uuidv4 from 'uuid/v4';
+import { MatomoTracker } from 'ngx-matomo';
 
 @Component({
   selector: 'app-root',
@@ -8,9 +9,12 @@ import * as uuidv4 from 'uuid/v4';
 })
 export class AppComponent implements OnInit {
 
-  constructor() {
-    if (localStorage && !localStorage.getItem('client-uuid')) {
-      localStorage.setItem('client-uuid', uuidv4());
+  constructor(private matomoTracker: MatomoTracker) {
+    if (localStorage) {
+      if (!localStorage.getItem('client-uuid')) {
+        localStorage.setItem('client-uuid', uuidv4());
+      }
+      matomoTracker.setUserId(localStorage.getItem('client-uuid'));
     }
   }
 

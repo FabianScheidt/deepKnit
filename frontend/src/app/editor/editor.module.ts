@@ -27,6 +27,7 @@ import { UtilsModule } from './utils/utils.module';
 import { PatternComponent } from './patterns/pattern/pattern.component';
 import { PatternsBarComponent } from './patterns-bar/patterns-bar.component';
 import { ToolOptionsComponent } from './assembly/tool-options/tool-options.component';
+import { MatomoModule } from 'ngx-matomo';
 
 @NgModule({
   imports: [
@@ -44,7 +45,8 @@ import { ToolOptionsComponent } from './assembly/tool-options/tool-options.compo
     MatMenuModule,
     MatDividerModule,
     MatSliderModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    MatomoModule
   ],
   declarations: [
     EditorComponent,
