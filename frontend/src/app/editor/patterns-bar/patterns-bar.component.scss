@@ -15,9 +15,9 @@
 }
 
 .patterns {
-  height: 100%;
-  margin: -2px;
-  overflow: scroll;
+  flex-grow: 1;
+  margin: -2px -20px -2px -2px;
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
 
   .pattern {
