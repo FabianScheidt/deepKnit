@@ -9,6 +9,7 @@ from .image_reader import read_image
 from .image_writer import write_image
 from .normalize import normalize_bitmap_data
 from .syntax_check import check_syntax
+from .check import check
 
 
 class KnitPaint:
