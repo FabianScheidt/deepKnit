@@ -117,8 +117,7 @@ def test_single_move():
     assert_from_to(loops, 0, 8, 1, 8)
 
 
-def test_multi_move():
-    # Move left
+def test_multi_move_left():
     input_pattern = make_knitpaint([[1, 1, 1, 1,  1,  1],
                                     [1, 6, 6, 61, 62, 1]])
     loops = check(input_pattern)
@@ -130,7 +129,8 @@ def test_multi_move():
     assert_from_to(loops, 0, 4, 1, 2)
     assert_from_to(loops, 0, 5, 1, 5)
 
-    # Move right
+
+def test_multi_move_right():
     input_pattern = make_knitpaint([[1, 1,  1,  1, 1, 1],
                                     [1, 72, 71, 7, 7, 1]])
     loops = check(input_pattern)
