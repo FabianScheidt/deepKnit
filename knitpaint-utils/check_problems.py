@@ -21,9 +21,9 @@ class KnitpaintCheckProblem:
     """
     Superclass for problems that can occur referencing the location of the problem
     """
-    def __init__(self, course, needle):
+    def __init__(self, course, wale):
         self.course = course
-        self.needle = needle
+        self.wale = wale
 
 
 class KnitpaintCheckSyntaxError(KnitpaintCheckProblem):
@@ -96,12 +96,14 @@ class RackingError(KnitpaintCheckError):
 
 class LoopHoldWarning(KnitpaintCheckWarning):
     """
+    This warning occurs when too many loops are held in a needle. This can be caused by tucking or transfer stitches.
     """
     pass
 
 
 class LoopHoldError(KnitpaintCheckError):
     """
+    This error occurs when too many loops are held in a needle. This can be caused by tucking or transfer stitches.
     """
     pass
 

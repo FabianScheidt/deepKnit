@@ -87,9 +87,9 @@ def test_multi_line_cable_stitches():
     problems = err.value.problems
     assert len(problems) == 2
     assert problems[0].course == 0
-    assert problems[0].needle == 3
+    assert problems[0].wale == 3
     assert problems[1].course == 1
-    assert problems[1].needle == 0
+    assert problems[1].wale == 0
 
 
 def test_single_cable_stitches():
@@ -102,7 +102,7 @@ def test_single_cable_stitches():
     problems = err.value.problems
     assert len(problems) == 1
     assert problems[0].course == 0
-    assert problems[0].needle == 3
+    assert problems[0].wale == 3
 
     in_data = [1, 1, 1, 1, 1, 1, 1, 4]
     with pytest.raises(KnitpaintCheckException) as err:
@@ -110,7 +110,7 @@ def test_single_cable_stitches():
     problems = err.value.problems
     assert len(problems) == 1
     assert problems[0].course == 0
-    assert problems[0].needle == 7
+    assert problems[0].wale == 7
 
 
 def test_incompatible_cable_stitches():
@@ -123,9 +123,9 @@ def test_incompatible_cable_stitches():
     problems = err.value.problems
     assert len(problems) == 2
     assert problems[0].course == 0
-    assert problems[0].needle == 3
+    assert problems[0].wale == 3
     assert problems[1].course == 0
-    assert problems[1].needle == 4
+    assert problems[1].wale == 4
 
 
 def test_long_cable_stitches():
@@ -138,4 +138,4 @@ def test_long_cable_stitches():
     problems = err.value.problems
     assert len(problems) == 1
     assert problems[0].course == 0
-    assert problems[0].needle == 1
+    assert problems[0].wale == 1

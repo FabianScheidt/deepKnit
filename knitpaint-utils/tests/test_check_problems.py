@@ -1,0 +1,122 @@
+import pytest
+import numpy as np
+from .. import KnitPaint
+from ..check_problems import *
+from ..check import check
+
+
+def make_knitpaint(input_list):
+    """
+    Helper method to create knitpaint from a 2d list or array
+    :param input_list:
+    :return:
+    """
+    return KnitPaint(np.flipud(np.array(input_list)))
+
+
+def test_loops_in_needle_warn_by_tuck():
+    input_pattern = make_knitpaint([[1, 11, 1],
+                                    [1, 11, 1],
+                                    [1, 1,  1]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 1
+    assert isinstance(problems[0], NumberOfLoopsInNeedleWarning)
+    assert problems[0].course == 2
+    assert problems[0].wale == 1
+
+
+def test_loops_in_needle_error_by_tuck():
+    input_pattern = make_knitpaint([[1, 11, 1],
+                                    [1, 11, 1],
+                                    [1, 11, 1],
+                                    [1, 1,  1]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 2
+    assert isinstance(problems[1], NumberOfLoopsInNeedleError)
+    assert problems[1].course == 3
+    assert problems[1].wale == 1
+
+
+def test_loops_in_needle_warn_by_move():
+    input_pattern = make_knitpaint([[7, 1, 6]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 1
+    assert isinstance(problems[0], NumberOfLoopsInNeedleWarning)
+    assert problems[0].course == 0
+    assert problems[0].wale == 1
+
+
+def test_loops_in_needle_error_by_move():
+    input_pattern = make_knitpaint([[72, 7, 1, 6]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 1
+    assert isinstance(problems[0], NumberOfLoopsInNeedleError)
+    assert problems[0].course == 0
+    assert problems[0].wale == 2
+
+
+def test_loops_in_needle_warn_combined():
+    input_pattern = make_knitpaint([[1, 11, 1],
+                                    [1, 1,  6]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 1
+    assert isinstance(problems[0], NumberOfLoopsInNeedleWarning)
+    assert problems[0].course == 1
+    assert problems[0].wale == 1
+
+
+def test_loops_in_needle_error_combined():
+    input_pattern = make_knitpaint([[1, 11, 1],
+                                    [7, 1,  6]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 2
+    assert isinstance(problems[1], NumberOfLoopsInNeedleError)
+    assert problems[1].course == 1
+    assert problems[1].wale == 1
+
+
+def test_hold_error_by_miss():
+    input_pattern = make_knitpaint([[1, 1,  1],
+                                    *[[1, 16, 1]] * 7,
+                                    [1, 1,  1]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 1
+    assert isinstance(problems[0], LoopHoldError)
+    assert problems[0].course == 8
+    assert problems[0].wale == 1
+
+
+def test_max_rack_warn_by_move():
+    input_pattern = make_knitpaint([[1, 73, 1, 62, 1]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 1
+    assert isinstance(problems[0], RackingWarning)
+    assert problems[0].course == 0
+    assert problems[0].wale == 3
+
+
+def test_max_rack_error_by_move():
+    input_pattern = make_knitpaint([[1, 73, 1, 63, 1]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 1
+    assert isinstance(problems[0], RackingError)
+    assert problems[0].course == 0
+    assert problems[0].wale == 3

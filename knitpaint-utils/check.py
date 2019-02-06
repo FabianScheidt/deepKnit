@@ -70,6 +70,46 @@ def check(knitpaint):
         elif from_to is LINKS:
             raise ValueError("Links process is only available before operations and should be processed manually")
 
+    # Define a helper that creates a problem only if it is new
+    def create_problem(problem):
+        for index, p in enumerate(problems):
+            if p.course == problem.course and p.wale == problem.wale:
+                # Same problems will only be added once
+                if isinstance(problem, p.__class__):
+                    return
+
+                # Errors should override warnings
+                if (isinstance(p, NumberOfLoopsInNeedleWarning) and isinstance(problem, NumberOfLoopsInNeedleError)) or\
+                   (isinstance(p, LoopHoldWarning) and isinstance(problem, LoopHoldError)) or\
+                   (isinstance(p, RackingWarning) and isinstance(problem, RackingError)):
+                    problems[index] = problem
+                    return
+
+                # Warnings should not be added if an error exists
+                if (isinstance(problem, NumberOfLoopsInNeedleWarning) and isinstance(p, NumberOfLoopsInNeedleError)) or\
+                   (isinstance(problem, LoopHoldWarning) and isinstance(p, LoopHoldError)) or\
+                   (isinstance(problem, RackingWarning) and isinstance(p, RackingError)):
+                    return
+        problems.append(problem)
+
+    # Define a helper to check the current needle beds for problems
+    def check_for_problems():
+        for bed in bed_loops:
+            for needle, needle_loops in enumerate(bed):
+
+                # Check number of needles in beds
+                if len(needle_loops) >= MAX_NUMBER_OF_LOOPS_IN_NEEDLE_ERR_THRESH:
+                    create_problem(NumberOfLoopsInNeedleError(course, needle))
+                if len(needle_loops) >= MAX_NUMBER_OF_LOOPS_IN_NEEDLE_WARN_THRESH:
+                    create_problem(NumberOfLoopsInNeedleWarning(course, needle))
+
+                # Check origin of loops and their distance
+                for loop in needle_loops:
+                    if course - loop.src_course >= MAX_LOOP_HOLD_WARN_THRESH:
+                        create_problem(LoopHoldWarning(course, needle))
+                    if course - loop.src_course >= MAX_LOOP_HOLD_ERR_THRESH:
+                        create_problem(LoopHoldError(course, needle))
+
     # Iterate over all courses
     for course in range(height):
 
@@ -90,6 +130,8 @@ def check(knitpaint):
                     elif color_number.bed == BACK:
                         transfer_before = FRONT_TO_BACK
             transfer(transfer_before)
+
+        check_for_problems()
 
         # Perform operations
         for wale, color_number in iterate_course():
@@ -120,20 +162,27 @@ def check(knitpaint):
                 new_loop = create_loop()
                 bed_loops[color_number.bed][wale] = [new_loop]
 
+        check_for_problems()
+
         # Perform transfer before racking operations
         for wale, color_number in iterate_course():
             transfer(color_number.transfer_before_racking)
+
+        check_for_problems()
 
         # Perform racking operations in the same order as the machine
         for racking in [-1, 1, -2, 2, -3, 3, -4, 4, -5, 5, -6, 6, -7, 7]:
             for wale, color_number in iterate_course():
                 if color_number.racking == racking:
                     transfer(color_number.transfer_while_racking)
+            check_for_problems()
         racking = 0
 
         # Perform transfer after racking operations
         for wale, color_number in iterate_course():
             transfer(color_number.transfer_after_racking)
+
+        check_for_problems()
 
     # Raise exception of problems occurred
     if len(problems) > 0:
