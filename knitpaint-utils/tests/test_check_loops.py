@@ -12,22 +12,35 @@ def make_knitpaint(input_list):
     return KnitPaint(np.flipud(np.array(input_list)))
 
 
-def assert_from_to(loops, src_course, src_needle, dst_course, dst_needle):
+def assert_from_to(loops, src_course, src_wale, dst_course, dst_wale):
     """
     Helper method to assert if a loop goes from one position to another
     :param loops:
     :param src_course:
-    :param src_needle:
+    :param src_wale:
     :param dst_course:
-    :param dst_needle:
+    :param dst_wale:
     :return:
     """
-    matches = [l for l in loops if l.src_course == src_course and l.src_needle == src_needle
-               and l.dst_course == dst_course and l.dst_needle == dst_needle]
+    matches = [l for l in loops if l.src_course == src_course and l.src_wale == src_wale
+               and l.dst_course == dst_course and l.dst_wale == dst_wale]
     assert len(matches) == 1, "Expected loop was not found"
 
 
 def test_single_jersey():
+    input_pattern = make_knitpaint([[1, 1, 1],
+                                    [1, 1, 1]])
+    loops = check(input_pattern)
+    assert len(loops) == len(input_pattern.bitmap_data)
+    assert_from_to(loops, 0, 0, 1, 0)
+    assert_from_to(loops, 0, 1, 1, 1)
+    assert_from_to(loops, 0, 2, 1, 2)
+    assert_from_to(loops, 1, 0, None, None)
+    assert_from_to(loops, 1, 1, None, None)
+    assert_from_to(loops, 1, 2, None, None)
+
+
+def test_links_process():
     input_pattern = make_knitpaint([[2, 1, 2],
                                     [1, 2, 1]])
     loops = check(input_pattern)
