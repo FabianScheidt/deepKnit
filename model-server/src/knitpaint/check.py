@@ -86,14 +86,15 @@ class VirtualKnittingMachine:
                 # color number specify it and they are on different beds
                 if transfer_before is LINKS:
                     transfer_before = NO_TRANSFER
-                    previous_color_number = COLOR_NUMBERS[courses_data[data_course - 1][self.wale]]
-                    both_links = previous_color_number.transfer_before_operation is LINKS
-                    both_different_bed = previous_color_number.bed != color_number.bed
-                    if both_links and both_different_bed:
-                        if color_number.bed == FRONT:
-                            transfer_before = BACK_TO_FRONT
-                        elif color_number.bed == BACK:
-                            transfer_before = FRONT_TO_BACK
+                    if data_course > 0:
+                        previous_color_number = COLOR_NUMBERS[courses_data[data_course - 1][self.wale]]
+                        both_links = previous_color_number.transfer_before_operation is LINKS
+                        both_different_bed = previous_color_number.bed != color_number.bed
+                        if both_links and both_different_bed:
+                            if color_number.bed == FRONT:
+                                transfer_before = BACK_TO_FRONT
+                            elif color_number.bed == BACK:
+                                transfer_before = FRONT_TO_BACK
                 self.transfer(transfer_before)
 
             # Check if the transfer caused problems
