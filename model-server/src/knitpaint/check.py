@@ -171,10 +171,21 @@ def check(knitpaint):
         check_for_problems()
 
         # Perform racking operations in the same order as the machine
+        min_racking = 0
+        max_racking = 0
         for racking in [-1, 1, -2, 2, -3, 3, -4, 4, -5, 5, -6, 6, -7, 7]:
             for wale, color_number in iterate_course():
                 if color_number.racking == racking:
                     transfer(color_number.transfer_while_racking)
+
+                    min_racking = racking if racking < min_racking else min_racking
+                    max_racking = racking if racking > max_racking else max_racking
+
+                    if max_racking - min_racking >= MAX_RACKING_WARN_THRESH:
+                        create_problem(RackingWarning(course, wale))
+
+                    if max_racking - min_racking >= MAX_RACKING_ERR_THRESH:
+                        create_problem(RackingError(course, wale))
             check_for_problems()
         racking = 0
 

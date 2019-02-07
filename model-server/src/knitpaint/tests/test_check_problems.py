@@ -108,7 +108,7 @@ def test_max_rack_warn_by_move():
     assert len(problems) == 1
     assert isinstance(problems[0], RackingWarning)
     assert problems[0].course == 0
-    assert problems[0].wale == 3
+    assert problems[0].wale == 1
 
 
 def test_max_rack_error_by_move():
@@ -119,4 +119,4 @@ def test_max_rack_error_by_move():
     assert len(problems) == 1
     assert isinstance(problems[0], RackingError)
     assert problems[0].course == 0
-    assert problems[0].wale == 3
+    assert problems[0].wale == 1
