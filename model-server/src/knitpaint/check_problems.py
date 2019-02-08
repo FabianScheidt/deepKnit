@@ -110,5 +110,14 @@ class LoopHoldError(KnitpaintCheckError):
 
 class ContinuousPickupStitchWarning(KnitpaintCheckError):
     """
+    This error occurs when stitches that pick up a new yarn drop it at the same time
+    """
+    pass
+
+
+class TransferOutOfBedError(KnitpaintCheckError):
+    """
+    This error occurs when a stitch is transferred to a needle that does not exist because it is too far on either the
+    left or the right edge of the bed.
     """
     pass

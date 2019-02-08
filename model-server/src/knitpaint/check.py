@@ -282,11 +282,17 @@ class VirtualKnittingMachine:
         if from_to is FRONT_TO_BACK:
             transferred_loops = self.bed_loops[FRONT][self.wale]
             self.bed_loops[FRONT][self.wale] = []
-            self.bed_loops[BACK][self.wale + self.racking] += transferred_loops
+            if 0 <= self.wale + self.racking < len(self.bed_loops[BACK]):
+                self.bed_loops[BACK][self.wale + self.racking] += transferred_loops
+            else:
+                self.create_problem(TransferOutOfBedError(self.course, self.wale))
         elif from_to is BACK_TO_FRONT:
             transferred_loops = self.bed_loops[BACK][self.wale]
             self.bed_loops[BACK][self.wale] = []
-            self.bed_loops[FRONT][self.wale + self.racking] += transferred_loops
+            if 0 <= self.wale + self.racking < len(self.bed_loops[FRONT]):
+                self.bed_loops[FRONT][self.wale + self.racking] += transferred_loops
+            else:
+                self.create_problem(TransferOutOfBedError(self.course, self.wale))
         elif from_to is LINKS:
             raise ValueError("Links process is only available before operations and should be processed manually")
 
