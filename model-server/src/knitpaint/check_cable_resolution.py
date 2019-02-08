@@ -12,8 +12,10 @@ def resolve_cable_stitches(data, width):
     cable_pairs = [
         [4, 5], [5, 4],
         [4, 10], [10, 4],
+        [5, 10], [10, 5],
         [14, 15], [15, 14],
-        [14, 100], [100, 14]
+        [14, 100], [100, 14],
+        [15, 100], [100, 15]
     ]
     cable_stitches = [item for sublist in cable_pairs for item in sublist]
 
