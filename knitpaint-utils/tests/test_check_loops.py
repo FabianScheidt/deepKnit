@@ -38,6 +38,17 @@ def test_single_jersey():
     assert_from_to(loops, 1, 0, None, None)
     assert_from_to(loops, 1, 1, None, None)
     assert_from_to(loops, 1, 2, None, None)
+    assert loops[0].prev_loop is None
+    assert loops[0].next_loop is loops[1]
+    assert loops[0].dst_loop is loops[5]
+    assert loops[1].prev_loop is loops[0]
+    assert loops[1].next_loop is loops[2]
+    assert loops[1].dst_loop is loops[4]
+    assert loops[2].prev_loop is loops[1]
+    assert loops[2].next_loop is loops[3]
+    assert loops[2].dst_loop is loops[3]
+    assert len(loops[4].src_loops) == 1
+    assert loops[4].src_loops[0] is loops[1]
 
 
 def test_links_process():
@@ -76,6 +87,9 @@ def test_miss():
     assert_from_to(loops, 2, 4, None, None)
     assert_from_to(loops, 2, 5, None, None)
     assert_from_to(loops, 2, 6, None, None)
+    assert loops[3].dst_loop is loops[14]
+    assert len(loops[14].src_loops) == 1
+    assert loops[14].src_loops[0] is loops[3]
 
 
 def test_tuck():
@@ -99,6 +113,9 @@ def test_tuck():
     assert_from_to(loops, 2, 2, None, None)
     assert_from_to(loops, 2, 3, None, None)
     assert_from_to(loops, 2, 4, None, None)
+    assert len(loops[6].src_loops) == 0
+    assert len(loops[11].src_loops) == 2
+    assert len(loops[13].src_loops) == 2
 
 
 def test_single_move():

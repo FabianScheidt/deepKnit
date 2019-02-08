@@ -9,12 +9,15 @@ class Loop:
     def __init__(self, src_course, src_wale):
         self.src_course = src_course
         self.src_wale = src_wale
+        self.src_loops = []
+        self.prev_loop = None
+        self.next_loop = None
         self.dst_course = None
         self.dst_wale = None
         self.dst_loop = None
 
 
-def check(knitpaint):
+def check(knitpaint) -> List[Loop]:
     """
     Checks the provided knitpaint by virtually performing the actual knitting. Raises a KnitpaintCheckException
     containing a list of problems that occurred. Returns a list of loop if no problems occurred
@@ -52,6 +55,9 @@ class VirtualKnittingMachine:
         for _ in range(needle_count):
             self.bed_loops[FRONT].append([])
             self.bed_loops[BACK].append([])
+
+        # Keep track of the last knitted loop
+        self.last_loop: Loop = None
 
         # Set current course, wale and racking to default
         self.course = 0
@@ -160,11 +166,14 @@ class VirtualKnittingMachine:
     def iterate_course(self, color_numbers) -> Generator[ColorNumber, None, None]:
         """
         Iterates over the provided color numbers and sets the current wale accordingly. Throws an error if a color
-        number occurs that is not implemented
+        number occurs that is not implemented. Even courses will go left to right, uneven courses go right to left.
         :param color_numbers:
         :return:
         """
-        for self.wale in range(len(color_numbers)):
+        carriage_going_right = self.course % 2 == 0
+        wales = range(len(color_numbers))
+        wales = wales if carriage_going_right else reversed(wales)
+        for self.wale in wales:
             color_index = color_numbers[self.wale]
             color_number = COLOR_NUMBERS[color_index]
             if color_number is None:
@@ -177,6 +186,10 @@ class VirtualKnittingMachine:
         :return:
         """
         loop = Loop(self.course, self.wale)
+        if self.last_loop is not None:
+            loop.prev_loop = self.last_loop
+            self.last_loop.next_loop = loop
+        self.last_loop = loop
         self.all_loops.append(loop)
         return loop
 
@@ -188,6 +201,7 @@ class VirtualKnittingMachine:
         """
         new_loop = self.create_loop()
         existing_loops = self.bed_loops[bed][self.wale]
+        new_loop.src_loops = existing_loops
 
         for l in existing_loops:
             l.dst_course = self.course
