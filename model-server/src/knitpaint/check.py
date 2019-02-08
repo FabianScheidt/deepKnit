@@ -9,12 +9,52 @@ class Loop:
     def __init__(self, src_course, src_wale):
         self.src_course = src_course
         self.src_wale = src_wale
-        self.src_loops = []
-        self.prev_loop = None
-        self.next_loop = None
+        self.src_loops: List[Loop] = []
+        self.prev_loop: Loop = None
+        self.next_loop: Loop = None
         self.dst_course = None
         self.dst_wale = None
-        self.dst_loop = None
+        self.dst_loop: Loop = None
+
+    def is_pickup_stitch(self) -> bool:
+        """
+        Returns true if the loop has no source loops. oops in the first course should not be considered a pickup stitch
+        :return:
+        """
+        return self.src_course != 0 and len(self.src_loops) == 0
+
+    def is_continuous_pickup_stitch(self):
+        """
+        A pickup stitch becomes a continuous pickup stitch if adjacent pickup stitches are released adjacent
+        :return:
+        """
+        # The course can only be a continuous pickup stitch if it is a pickup stitch
+        if not self.is_pickup_stitch():
+            return False
+
+        # As long as the loop is still attached to a needle, it can not be a continuous pickup stitch
+        if self.dst_loop is None:
+            return False
+
+        # Check previous loop
+        if self.prev_loop is not None and \
+                self.prev_loop.src_course == self.src_course and \
+                self.prev_loop.is_pickup_stitch() and \
+                self.prev_loop.dst_loop is not None and \
+                (self.prev_loop.dst_loop.next_loop is self.dst_loop or
+                 self.prev_loop.dst_loop.prev_loop is self.dst_loop):
+            return True
+
+        # Check next loop
+        if self.next_loop is not None and \
+                self.next_loop.src_course == self.src_course and \
+                self.next_loop.is_pickup_stitch() and \
+                self.next_loop.dst_loop is not None and \
+                (self.next_loop.dst_loop.next_loop is self.dst_loop or
+                 self.next_loop.dst_loop.prev_loop is self.dst_loop):
+            return True
+
+        return False
 
 
 def check(knitpaint) -> List[Loop]:
@@ -157,6 +197,9 @@ class VirtualKnittingMachine:
             # Increase the course
             self.course += 1
 
+        # Check for continuous pickup stitches
+        self.check_for_continuous_pickup_stitches()
+
         # Raise exception of problems occurred
         if len(self.problems) > 0:
             raise KnitpaintCheckException(self.problems)
@@ -298,3 +341,13 @@ class VirtualKnittingMachine:
                         self.create_problem(LoopHoldWarning(self.course, needle))
                     if self.course - loop.src_course >= MAX_LOOP_HOLD_ERR_THRESH:
                         self.create_problem(LoopHoldError(self.course, needle))
+
+    def check_for_continuous_pickup_stitches(self):
+        """
+        Checks if any loop is a continuous pickup stitch
+        :return:
+        """
+        for loop in self.all_loops:
+            if loop.is_continuous_pickup_stitch():
+                problem = ContinuousPickupStitchWarning(loop.src_course, loop.src_wale)
+                self.create_problem(problem)

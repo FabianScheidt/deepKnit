@@ -1,3 +1,4 @@
+pytest
 Flask==1.0.2
 Flask-Cors==3.0.7
 numpy==1.15.2
