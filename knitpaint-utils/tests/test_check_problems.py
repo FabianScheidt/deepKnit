@@ -120,3 +120,114 @@ def test_max_rack_error_by_move():
     assert isinstance(problems[0], RackingError)
     assert problems[0].course == 0
     assert problems[0].wale == 1
+
+
+def test_continuous_pickup_1():
+    input_pattern = make_knitpaint([[1, 1, 1, 1],
+                                    [1, 1, 1, 1],
+                                    [1, 6, 7, 1]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) > 0
+    assert isinstance(problems[0], ContinuousPickupStitchWarning)
+
+
+def test_no_continuous_pickup_1():
+    input_pattern_1 = make_knitpaint([[1, 1,  1, 1],
+                                      [1, 16, 1, 1],
+                                      [1, 6,  7, 1]])
+    input_pattern_2 = make_knitpaint([[1, 1, 1,  1],
+                                      [1, 1, 16, 1],
+                                      [1, 6, 7,  1]])
+    # No exception should be thrown
+    check(input_pattern_1)
+    check(input_pattern_2)
+
+
+def test_continuous_pickup_2():
+    input_pattern = make_knitpaint([[1, 1, 1,  1,  1, 1],
+                                    [1, 1, 1,  1,  1, 1],
+                                    [1, 6, 72, 72, 1, 1]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) > 0
+    assert isinstance(problems[0], ContinuousPickupStitchWarning)
+
+
+def test_no_continuous_pickup_2():
+    input_pattern_1 = make_knitpaint([[1, 1, 1,  1,  1, 1],
+                                      [1, 1, 1,  1,  1, 1],
+                                      [1, 1, 16, 1,  1, 1],
+                                      [1, 6, 72, 72, 1, 1]])
+    input_pattern_2 = make_knitpaint([[1, 1, 1,  1,  1, 1],
+                                      [1, 1, 16, 1,  1, 1],
+                                      [1, 1, 1,  1,  1, 1],
+                                      [1, 6, 72, 72, 1, 1]])
+    # No exception should ne thrown
+    check(input_pattern_1)
+    check(input_pattern_2)
+
+
+def test_continuous_pickup_3():
+    input_pattern = make_knitpaint([[1, 1,  1,  1],
+                                    [1, 1,  1,  1],
+                                    [1, 16, 16, 1],
+                                    [1, 6,  7,  1]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) > 0
+    assert isinstance(problems[0], ContinuousPickupStitchWarning)
+
+
+def test_no_continuous_pickup_3():
+    input_pattern = make_knitpaint([[1, 1,  1,  1],
+                                    [1, 16, 1,  1],
+                                    [1, 16, 16, 1],
+                                    [1, 6,  7,  1]])
+    # No exception should ne thrown
+    check(input_pattern)
+
+
+def test_continuous_pickup_4():
+    input_pattern = make_knitpaint([[1, 1, 1, 1],
+                                    [1, 2, 2, 1],
+                                    [1, 2, 1, 1],
+                                    [1, 1, 2, 1],
+                                    [1, 6, 7, 1]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) > 0
+    assert isinstance(problems[0], ContinuousPickupStitchWarning)
+
+
+def test_no_continuous_pickup_4():
+    input_pattern = make_knitpaint([[1, 1,  1,  1],
+                                    [1, 2,  2,  1],
+                                    [1, 52, 51, 1],
+                                    [1, 51, 52, 1],
+                                    [1, 6,  7,  1]])
+    # No exception should ne thrown
+    check(input_pattern)
+
+
+def test_continuous_pickup_5():
+    input_pattern = make_knitpaint([[2, 2,  2,  2],
+                                    [2, 2,  2,  2],
+                                    [1, 51, 51, 1]])
+    with pytest.raises(KnitpaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) > 0
+    assert isinstance(problems[0], ContinuousPickupStitchWarning)
+
+
+def test_no_continuous_pickup_5():
+    input_pattern = make_knitpaint([[1, 1,  1,  1],
+                                    [1, 1,  1,  1],
+                                    [1, 51, 51, 1]])
+    # No exception should be thrown
+    check(input_pattern)
