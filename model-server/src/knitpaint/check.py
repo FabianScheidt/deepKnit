@@ -38,6 +38,11 @@ class Loop:
         if self.dst_loop is None:
             return False
 
+        # If the destination loop is attached to another loop (e. g. caused by a tuck), this loop is
+        # not a continuous pickup stitch
+        if len(self.dst_loop.src_loops) > 1:
+            return False
+
         # Check previous loop
         if self.prev_loop is not None and \
                 self.prev_loop.src_course == self.src_course and \
