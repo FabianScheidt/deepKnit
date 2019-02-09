@@ -73,7 +73,7 @@ class NumberOfLoopsInNeedleWarning(KnitpaintCheckWarning):
     pass
 
 
-class NumberOfLoopsInNeedleError(KnitpaintCheckWarning):
+class NumberOfLoopsInNeedleError(KnitpaintCheckError):
     """
     This error occurs when too many loops are held in a needle. It can occur by tucking to many times or transferring
     too many loops onto a needle
@@ -109,7 +109,7 @@ class LoopHoldError(KnitpaintCheckError):
     pass
 
 
-class ContinuousPickupStitchWarning(KnitpaintCheckError):
+class ContinuousPickupStitchWarning(KnitpaintCheckWarning):
     """
     This error occurs when stitches that pick up a new yarn drop it at the same time
     """
