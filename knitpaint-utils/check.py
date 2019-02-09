@@ -1,4 +1,5 @@
 from typing import Generator, List
+from functools import reduce
 from .check_color_numbers import *
 from .check_problems import *
 from .check_cable_resolution import resolve_cable_stitches
@@ -6,7 +7,7 @@ from .check_cable_resolution import resolve_cable_stitches
 
 # Create a class as a structure for processed loops
 class Loop:
-    def __init__(self, src_course, src_wale):
+    def __init__(self, src_course, src_wale, needs_links_process):
         self.src_course = src_course
         self.src_wale = src_wale
         self.src_loops: List[Loop] = []
@@ -15,6 +16,7 @@ class Loop:
         self.dst_course = None
         self.dst_wale = None
         self.dst_loop: Loop = None
+        self.needs_links_process: bool = needs_links_process
 
     def is_pickup_stitch(self) -> bool:
         """
@@ -128,19 +130,19 @@ class VirtualKnittingMachine:
             for color_number in self.iterate_course(data_course_color_numbers):
                 transfer_before = color_number.transfer_before_operation
 
-                # Links process will only be performed if the current and the previous
-                # color number specify it and they are on different beds
+                # Links process will only be performed if the current color number specifies it and there is at least
+                # one loop on the opposite bed that was knitted by a stitch that also specified it
                 if transfer_before is LINKS:
                     transfer_before = NO_TRANSFER
-                    if data_course > 0:
-                        previous_color_number = COLOR_NUMBERS[courses_data[data_course - 1][self.wale]]
-                        both_links = previous_color_number.transfer_before_operation is LINKS
-                        both_different_bed = previous_color_number.bed != color_number.bed
-                        if both_links and both_different_bed:
-                            if color_number.bed == FRONT:
-                                transfer_before = BACK_TO_FRONT
-                            elif color_number.bed == BACK:
-                                transfer_before = FRONT_TO_BACK
+                    opposite_bed = FRONT if color_number.bed == BACK else BACK
+                    opposite_loops = self.bed_loops[opposite_bed][self.wale]
+                    opposite_needs_links_process = [loop.needs_links_process for loop in opposite_loops]
+                    opposite_needs_links_process = reduce(lambda x, y: x or y, opposite_needs_links_process, False)
+                    if opposite_needs_links_process:
+                        if color_number.bed == FRONT:
+                            transfer_before = BACK_TO_FRONT
+                        elif color_number.bed == BACK:
+                            transfer_before = FRONT_TO_BACK
                 self.transfer(transfer_before)
 
             # Check if the transfer caused problems
@@ -149,11 +151,11 @@ class VirtualKnittingMachine:
             # Perform operations
             for color_number in self.iterate_course(data_course_color_numbers):
                 if color_number.operation is KNIT:
-                    self.knit(color_number.bed)
+                    self.knit(color_number.bed, color_number.transfer_before_operation == LINKS)
                 elif color_number.operation is TUCK:
-                    self.tuck(color_number.bed)
+                    self.tuck(color_number.bed, color_number.transfer_before_operation == LINKS)
                 elif color_number.operation is SPLIT:
-                    self.split(color_number.bed)
+                    self.split(color_number.bed, color_number.transfer_before_operation == LINKS)
 
             # Check if the operations caused problems
             self.check_number_of_loops_in_needles()
@@ -187,9 +189,9 @@ class VirtualKnittingMachine:
             # Reset racking
             self.racking = 0
 
-            # Perform transfer after racking operations
+            # Perform transfer after racking operations. If the loop was racked before it needs to be offset.
             for color_number in self.iterate_course(data_course_color_numbers):
-                self.transfer(color_number.transfer_after_racking)
+                self.transfer(color_number.transfer_after_racking, color_number.racking)
 
             # Check if the transfer caused problems
             self.check_number_of_loops_in_needles()
@@ -202,7 +204,7 @@ class VirtualKnittingMachine:
 
         # Raise exception of problems occurred
         if len(self.problems) > 0:
-            raise KnitpaintCheckException(self.problems)
+            raise KnitpaintCheckException(self.problems, self.all_loops)
 
         return self.all_loops
 
@@ -223,12 +225,12 @@ class VirtualKnittingMachine:
                 raise NotImplementedError("Color number " + str(color_index) + " is not implemented.")
             yield color_number
 
-    def create_loop(self) -> Loop:
+    def create_loop(self, needs_links_process) -> Loop:
         """
         Creates a loop at the current course and wale, adds it to the list of all loops and returns it
         :return:
         """
-        loop = Loop(self.course, self.wale)
+        loop = Loop(self.course, self.wale, needs_links_process)
         if self.last_loop is not None:
             loop.prev_loop = self.last_loop
             self.last_loop.next_loop = loop
@@ -236,13 +238,14 @@ class VirtualKnittingMachine:
         self.all_loops.append(loop)
         return loop
 
-    def knit(self, bed) -> None:
+    def knit(self, bed, needs_links_process) -> None:
         """
         Performs a knit operation at the current course and wale
         :param bed:
+        :param needs_links_process:
         :return:
         """
-        new_loop = self.create_loop()
+        new_loop = self.create_loop(needs_links_process)
         existing_loops = self.bed_loops[bed][self.wale]
         new_loop.src_loops = existing_loops
 
@@ -252,45 +255,46 @@ class VirtualKnittingMachine:
             l.dst_loop = new_loop
         self.bed_loops[bed][self.wale] = [new_loop]
 
-    def tuck(self, bed) -> None:
+    def tuck(self, bed, needs_links_process) -> None:
         """
         Performs a tuck operation at thr current course and wale
         :param bed:
+        :param needs_links_process:
         :return:
         """
-        new_loop = self.create_loop()
+        new_loop = self.create_loop(needs_links_process)
         self.bed_loops[bed][self.wale].append(new_loop)
 
-    def split(self, bed) -> None:
+    def split(self, bed, needs_links_process) -> None:
         """
         Performs a split operation at the current course and wale
         :param bed:
+        :param needs_links_process:
         :return:
         """
         if bed is FRONT:
             self.transfer(FRONT_TO_BACK)
         if bed is BACK:
             self.transfer(BACK_TO_FRONT)
-        self.knit(bed)
+        self.knit(bed, needs_links_process)
 
-    def transfer(self, from_to) -> None:
+    def transfer(self, from_to, offset=0) -> None:
         """
-        Performs a transfer from one bed to another at the current course and wale
+        Performs a transfer from one bed to another at the current course and wale. The wale can optionally be offset
         :param from_to:
+        :param offset:
         :return:
         """
-        if from_to is FRONT_TO_BACK:
-            transferred_loops = self.bed_loops[FRONT][self.wale]
-            self.bed_loops[FRONT][self.wale] = []
-            if 0 <= self.wale + self.racking < len(self.bed_loops[BACK]):
-                self.bed_loops[BACK][self.wale + self.racking] += transferred_loops
-            else:
-                self.create_problem(TransferOutOfBedError(self.course, self.wale))
-        elif from_to is BACK_TO_FRONT:
-            transferred_loops = self.bed_loops[BACK][self.wale]
-            self.bed_loops[BACK][self.wale] = []
-            if 0 <= self.wale + self.racking < len(self.bed_loops[FRONT]):
-                self.bed_loops[FRONT][self.wale + self.racking] += transferred_loops
+        if from_to is FRONT_TO_BACK or from_to is BACK_TO_FRONT:
+            front = self.bed_loops[FRONT]
+            back = self.bed_loops[BACK]
+            from_bed = front if from_to is FRONT_TO_BACK else back
+            to_bed = back if from_to is FRONT_TO_BACK else front
+            wale = self.wale + offset
+            transferred_loops = from_bed[wale]
+            if 0 <= wale < len(from_bed) and 0 <= wale + self.racking < len(to_bed):
+                from_bed[wale] = []
+                to_bed[wale + self.racking] += transferred_loops
             else:
                 self.create_problem(TransferOutOfBedError(self.course, self.wale))
         elif from_to is LINKS:
