@@ -1,5 +1,6 @@
 from typing import Generator, List
 from functools import reduce
+import numpy as np
 from .check_color_numbers import *
 from .check_problems import *
 from .check_cable_resolution import resolve_cable_stitches
@@ -80,6 +81,19 @@ def check(knitpaint) -> List[Loop]:
     # Create a virtual knitting machine and make it knit the processed data
     virtual_knitting_machine = VirtualKnittingMachine(num_wales)
     return virtual_knitting_machine.run(processed_data, num_wales)
+
+
+def check_pattern(knitpaint) -> None:
+    """
+    Checks if the provided knitpaint can be knitted by tiling it and surrounding it with single jersey stitches
+    :param knitpaint:
+    :return:
+    """
+    bitmap = knitpaint.get_np_bitmap_data()
+    tiled = np.tile(bitmap, (2, 2))
+    padded = np.pad(tiled, ((1, 1), (7, 7)), 'constant', constant_values=((1, 1), (1, 1)))
+    from . import KnitPaint
+    check(KnitPaint(padded))
 
 
 class VirtualKnittingMachine:
