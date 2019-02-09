@@ -13,8 +13,9 @@ class KnitpaintCheckException(Exception):
     Exceptions is thrown when warnings or errors occur during the check. The list of problems contains all warnings and
     errors that occurred.
     """
-    def __init__(self, problems):
+    def __init__(self, problems, loops=None):
         self.problems = problems
+        self.loops = loops if loops is not None else []
 
 
 class KnitpaintCheckProblem:

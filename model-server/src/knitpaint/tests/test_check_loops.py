@@ -160,6 +160,24 @@ def test_multi_move_right():
     assert_from_to(loops, 0, 5, 1, 5)
 
 
+def test_back_move_with_miss():
+    input_pattern = make_knitpaint([[2, 2, 2,  2, 2,  2, 2],
+                                    [2, 2, 16, 2, 16, 2, 2],
+                                    [2, 2, 8,  1, 9,  2, 2],
+                                    [2, 2, 2,  1, 2,  2, 2]])
+    loops = check(input_pattern)
+    assert_from_to(loops, 0, 1, 1, 1)
+    assert_from_to(loops, 0, 2, 1, 2)
+    assert_from_to(loops, 0, 3, 1, 3)
+    assert_from_to(loops, 0, 4, 1, 4)
+    assert_from_to(loops, 0, 5, 1, 5)
+    assert_from_to(loops, 1, 1, 2, 1)
+    assert_from_to(loops, 1, 2, 2, 1)
+    assert_from_to(loops, 1, 3, 2, 3)
+    assert_from_to(loops, 1, 4, 2, 5)
+    assert_from_to(loops, 1, 5, 2, 5)
+
+
 def test_cables():
     input_pattern = make_knitpaint([[1, 1, 1, 1, 1, 1],
                                     [1, 4, 4, 5, 5, 1]])
