@@ -1,6 +1,6 @@
 import numpy as np
-from .. import KnitPaint
-from ..check import check
+from ... import KnitPaint
+from .. import check
 
 
 def make_knitpaint(input_list):

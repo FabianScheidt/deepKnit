@@ -1,5 +1,6 @@
 import pytest
-from ..check import resolve_cable_stitches, KnitpaintCheckException
+from ..cable_resolution import resolve_cable_stitches
+from ..problems import KnitpaintCheckException
 
 
 def test_resolve_no_cable_stitches():

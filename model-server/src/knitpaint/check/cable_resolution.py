@@ -1,10 +1,11 @@
 import math
-from .check_problems import *
+from .problems import *
 
 
 def resolve_cable_stitches(data, width):
     """
-    Replaces cable stitches with move stitches neglecting the order of upper and lower stitch
+    Replaces cable stitches with move stitches neglecting the order of upper and lower stitch and the fact that
+    lower stitches are actually miss and move instead of knit and move operations
     :return:
     """
 

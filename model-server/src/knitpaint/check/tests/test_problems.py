@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
-from .. import KnitPaint
-from ..check_problems import *
-from ..check import check
+from ... import KnitPaint
+from ..problems import *
+from ... import check
 
 
 def make_knitpaint(input_list):
