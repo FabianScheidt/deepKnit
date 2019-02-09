@@ -35,7 +35,7 @@ class VirtualKnittingMachine:
         self.racking = 0
 
         # Initialize empty list of problems
-        self.problems: List[KnitpaintCheckProblem] = []
+        self.problems: List[KnitPaintCheckProblem] = []
 
     def run(self, data, num_wales) -> List[Loop]:
         """
@@ -132,7 +132,7 @@ class VirtualKnittingMachine:
 
         # Raise exception of problems occurred
         if len(self.problems) > 0:
-            raise KnitpaintCheckException(self.problems, self.all_loops)
+            raise KnitPaintCheckException(self.problems, self.all_loops)
 
         return self.all_loops
 
