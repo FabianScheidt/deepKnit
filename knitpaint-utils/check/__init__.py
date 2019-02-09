@@ -3,6 +3,7 @@ import numpy as np
 from .loop import Loop
 from .virtual_knitting_machine import VirtualKnittingMachine
 from .cable_resolution import resolve_cable_stitches
+from .problems import *
 
 
 def check(knitpaint) -> List[Loop]:
@@ -23,9 +24,11 @@ def check(knitpaint) -> List[Loop]:
     return knitting_machine.run(processed_data, num_wales)
 
 
-def check_pattern(knitpaint) -> None:
+def check_pattern(knitpaint) -> List[Loop]:
     """
-    Checks if the provided knitpaint can be knitted by tiling it and surrounding it with single jersey stitches
+    Checks if the provided knitpaint can be knitted by tiling it and surrounding it with single jersey stitches.
+    Raises a KnitpaintCheckException containing a list of problems that occurred. Returns a list of loop if no
+    problems occurred
     :param knitpaint:
     :return:
     """
@@ -33,4 +36,4 @@ def check_pattern(knitpaint) -> None:
     tiled = np.tile(bitmap, (2, 2))
     padded = np.pad(tiled, ((1, 1), (7, 7)), 'constant', constant_values=((1, 1), (1, 1)))
     from .. import KnitPaint
-    check(KnitPaint(padded))
+    return check(KnitPaint(padded))

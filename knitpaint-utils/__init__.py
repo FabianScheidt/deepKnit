@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from .constants import default_color_table
 from .dat_reader import read_dat
@@ -8,8 +9,7 @@ from .linebreak_writer import write_linebreak
 from .image_reader import read_image
 from .image_writer import write_image
 from .normalize import normalize_bitmap_data
-from .syntax_check import check_syntax
-from .check import check
+from .check import check, check_pattern
 
 
 class KnitPaint:
@@ -270,11 +270,30 @@ class KnitPaint:
         unused_chars = np.setdiff1d(all_chars, used_chars)
         return unused_chars.tolist()
 
-    def check_syntax(self, maximum_tucks: int, verbose=True):
+    def check_syntax(self, maximum_tucks=0, verbose=True):
         """
-        Checks current bitmap data for syntactical correctness
-        :param maximum_tucks: Maximum number of allowed subsequent tucks in the same column
-        :param verbose: Set to false if errors should not be logged
-        :return: True if syntax correct, False if syntax is incorrect
+        Fallback for deprecated syntax check. Use check instead.
+        :param maximum_tucks:
+        :param verbose:
+        :return:
         """
-        return check_syntax(self, maximum_tucks, verbose)
+        warnings.warn('"check_syntax" is deprecated, use "check" instead', DeprecationWarning)
+        return self.check()
+
+    def check(self):
+        """
+        Checks the current knitpaint by virtually performing the actual knitting. Raises a KnitpaintCheckException
+        containing a list of problems that occurred. Returns a list of loop if no problems occurred
+        :return:
+        """
+        return check(self)
+
+    def check_as_pattern(self):
+        """
+        Checks if the provided knitpaint can be knitted by tiling it and surrounding it with single jersey stitches.
+        Raises a KnitpaintCheckException containing a list of problems that occurred. Returns a list of loop if no
+        problems occurred
+        :return:
+        """
+        return check_pattern(self)
+
