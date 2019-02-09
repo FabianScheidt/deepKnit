@@ -1,7 +1,7 @@
 import pandas as pd
 from ... import KnitPaint
 from .. import check_pattern
-from ..problems import KnitpaintCheckException, KnitpaintCheckError, KnitpaintCheckSyntaxError
+from ..problems import KnitPaintCheckException, KnitPaintCheckError, KnitPaintCheckSyntaxError
 
 
 def test_samples():
@@ -19,10 +19,10 @@ def test_samples():
         try:
             check_pattern(knitpaint)
             correct += 1
-        except KnitpaintCheckException as e:
+        except KnitPaintCheckException as e:
             is_error = False
             for problem in e.problems:
-                if isinstance(problem, KnitpaintCheckError) or isinstance(problem, KnitpaintCheckSyntaxError):
+                if isinstance(problem, KnitPaintCheckError) or isinstance(problem, KnitPaintCheckSyntaxError):
                     is_error = True
             if is_error:
                 error += 1

@@ -25,7 +25,7 @@ def resolve_cable_stitches(data, width):
     cable_stitches = [item for sublist in cable_pairs for item in sublist]
 
     # Problems with the data will be stored here
-    problems: [KnitpaintCheckProblem] = []
+    problems: [KnitPaintCheckProblem] = []
 
     processed_data = data.copy()
     for course in range(0, math.ceil(len(data) / width)):
@@ -110,6 +110,6 @@ def resolve_cable_stitches(data, width):
 
     # Code with syntax problems can not be processed further
     if len(problems) > 0:
-        raise KnitpaintCheckException(problems)
+        raise KnitPaintCheckException(problems)
 
     return processed_data

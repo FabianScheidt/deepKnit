@@ -8,7 +8,7 @@ MAX_LOOP_HOLD_WARN_THRESH = 8
 MAX_LOOP_HOLD_ERR_THRESH = 8
 
 
-class KnitpaintCheckException(Exception):
+class KnitPaintCheckException(Exception):
     """
     Exceptions is thrown when warnings or errors occur during the check. The list of problems contains all warnings and
     errors that occurred.
@@ -18,7 +18,7 @@ class KnitpaintCheckException(Exception):
         self.loops = loops if loops is not None else []
 
 
-class KnitpaintCheckProblem:
+class KnitPaintCheckProblem:
     """
     Superclass for problems that can occur referencing the location of the problem
     """
@@ -27,7 +27,7 @@ class KnitpaintCheckProblem:
         self.wale = wale
 
 
-class KnitpaintCheckSyntaxError(KnitpaintCheckProblem):
+class KnitPaintCheckSyntaxError(KnitPaintCheckProblem):
     """
     Superclass for all errors that affect the syntax of the knitpaint. These problems can not be ignored. The knitpaint
     will not be processable.
@@ -35,7 +35,7 @@ class KnitpaintCheckSyntaxError(KnitpaintCheckProblem):
     pass
 
 
-class KnitpaintCheckWarning(KnitpaintCheckProblem):
+class KnitPaintCheckWarning(KnitPaintCheckProblem):
     """
     Superclass for all warnings that can occur during the check. The machine can process the knitpaint despite these
     warnings so they might be ignored.
@@ -43,7 +43,7 @@ class KnitpaintCheckWarning(KnitpaintCheckProblem):
     pass
 
 
-class KnitpaintCheckError(KnitpaintCheckProblem):
+class KnitPaintCheckError(KnitPaintCheckProblem):
     """
     Superclass for all errors that can occur during the check. The machine can process the knitpaint despite these
     errors so they might be ignored. Errors are more serious to cause damages compared to warnings.
@@ -51,21 +51,21 @@ class KnitpaintCheckError(KnitpaintCheckProblem):
     pass
 
 
-class IncompleteCableError(KnitpaintCheckSyntaxError):
+class IncompleteCableError(KnitPaintCheckSyntaxError):
     """
     This error occurs when a cable stitch does not pair with another one
     """
     pass
 
 
-class OversizedCableError(KnitpaintCheckSyntaxError):
+class OversizedCableError(KnitPaintCheckSyntaxError):
     """
     This error occurs when a cable stitch is too long
     """
     pass
 
 
-class NumberOfLoopsInNeedleWarning(KnitpaintCheckWarning):
+class NumberOfLoopsInNeedleWarning(KnitPaintCheckWarning):
     """
     This warning occurs when too many loops are held in a needle. It can occur by tucking to many times or transferring
     too many loops onto a needle
@@ -73,7 +73,7 @@ class NumberOfLoopsInNeedleWarning(KnitpaintCheckWarning):
     pass
 
 
-class NumberOfLoopsInNeedleError(KnitpaintCheckError):
+class NumberOfLoopsInNeedleError(KnitPaintCheckError):
     """
     This error occurs when too many loops are held in a needle. It can occur by tucking to many times or transferring
     too many loops onto a needle
@@ -81,42 +81,42 @@ class NumberOfLoopsInNeedleError(KnitpaintCheckError):
     pass
 
 
-class RackingWarning(KnitpaintCheckWarning):
+class RackingWarning(KnitPaintCheckWarning):
     """
     This warning occurs for too much racking caused by big move or cable stitches
     """
     pass
 
 
-class RackingError(KnitpaintCheckError):
+class RackingError(KnitPaintCheckError):
     """
     This error occurs for too much racking caused by big move or cable stitches
     """
     pass
 
 
-class LoopHoldWarning(KnitpaintCheckWarning):
+class LoopHoldWarning(KnitPaintCheckWarning):
     """
     This warning occurs when too many loops are held in a needle. This can be caused by tucking or transfer stitches.
     """
     pass
 
 
-class LoopHoldError(KnitpaintCheckError):
+class LoopHoldError(KnitPaintCheckError):
     """
     This error occurs when too many loops are held in a needle. This can be caused by tucking or transfer stitches.
     """
     pass
 
 
-class ContinuousPickupStitchWarning(KnitpaintCheckWarning):
+class ContinuousPickupStitchWarning(KnitPaintCheckWarning):
     """
     This error occurs when stitches that pick up a new yarn drop it at the same time
     """
     pass
 
 
-class TransferOutOfBedError(KnitpaintCheckError):
+class TransferOutOfBedError(KnitPaintCheckError):
     """
     This error occurs when a stitch is transferred to a needle that does not exist because it is too far on either the
     left or the right edge of the bed.

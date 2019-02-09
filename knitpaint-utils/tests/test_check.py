@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from .. import KnitPaint
-from ..check import KnitpaintCheckException, TransferOutOfBedError, ContinuousPickupStitchWarning
+from ..check import KnitPaintCheckException, TransferOutOfBedError, ContinuousPickupStitchWarning
 
 
 def test_correct_check():
@@ -16,7 +16,7 @@ def test_correct_check():
 def test_incorrect_check():
     input_pattern = np.array([[1, 1], [6, 1]])
     knitpaint = KnitPaint(input_pattern)
-    with pytest.raises(KnitpaintCheckException) as err:
+    with pytest.raises(KnitPaintCheckException) as err:
         knitpaint.check()
     problems = err.value.problems
     assert isinstance(problems[0], TransferOutOfBedError)
@@ -34,7 +34,7 @@ def test_correct_pattern_check():
 def test_incorrect_pattern_check():
     input_pattern = np.array([[1, 1, 1, 1], [1, 1, 1, 1], [1, 6, 7, 1]])
     knitpaint = KnitPaint(input_pattern)
-    with pytest.raises(KnitpaintCheckException) as err:
+    with pytest.raises(KnitPaintCheckException) as err:
         knitpaint.check_as_pattern()
     problems = err.value.problems
     assert isinstance(problems[0], ContinuousPickupStitchWarning)
