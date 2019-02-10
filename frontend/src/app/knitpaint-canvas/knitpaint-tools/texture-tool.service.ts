@@ -90,7 +90,7 @@ export class TextureTool extends AbstractKnitpaintTool implements KnitpaintTool 
 
     // Draw the texture image
     ctx.save();
-    ctx.setTransform(transform);
+    ctx.setTransform(transform.a, transform.b, transform.c, transform.d, transform.e, transform.f);
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.transformedTextureImage, canvasCoordinates.x, canvasCoordinates.y);
     ctx.restore();
