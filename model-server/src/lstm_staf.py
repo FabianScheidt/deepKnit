@@ -2,11 +2,18 @@ import pathlib, sys, functools
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras as keras
-import tensorflow.keras.backend as K
-from tensorflow.keras.layers import Input, Embedding, Lambda, concatenate, LSTM, CuDNNLSTM, Dense
+from tensorflow import keras
 from knitpaint import KnitPaint
 from lstm import LSTMModel
+
+K = keras.backend
+Input = keras.layers.Input
+Embedding = keras.layers.Embedding
+Lambda = keras.layers.Lambda
+concatenate = keras.layers.concatenate
+LSTM = keras.layers.LSTM
+CuDNNLSTM = keras.layers.CuDNNLSTM
+Dense = keras.layers.Dense
 
 PADDING_CHAR = 0
 END_OF_LINE_CHAR = 151

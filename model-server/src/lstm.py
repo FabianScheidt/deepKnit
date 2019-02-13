@@ -1,7 +1,11 @@
+import pathlib
+import sys
+import datetime
+import os
+import functools
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras as keras
-import pathlib, sys, datetime, os, functools
+from tensorflow import keras
 from knitpaint import KnitPaint
 
 

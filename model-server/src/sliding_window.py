@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras as keras
+from tensorflow import keras
 import pathlib, sys, datetime, os, random
 from knitpaint import KnitPaint
 
