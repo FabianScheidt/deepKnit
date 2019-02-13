@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow import keras
 from knitpaint import KnitPaint
 from lstm import LSTMModel
+from train_utils import masked_acc
 
 K = keras.backend
 Input = keras.layers.Input
@@ -16,6 +17,7 @@ CuDNNLSTM = keras.layers.CuDNNLSTM
 Dense = keras.layers.Dense
 
 PADDING_CHAR = 0
+BG_CHAR = 1
 END_OF_LINE_CHAR = 151
 END_OF_FILE_CHAR = 152
 CATEGORIES = ['Cable/Aran', 'Stitch move', 'Links', 'Miss', 'Tuck']
@@ -142,16 +144,11 @@ class LSTMModelStaf(LSTMModel):
         metrics = [] if metrics is None else metrics
         _, _, to_idx = self.read_vocab()
 
-        # Define a accuracy function that ignores the padding
-        def acc(y_true, y_pred):
-            mask_class = to_idx[PADDING_CHAR]
-            true_class = K.argmax(y_true, axis=-1)
-            pred_class = K.argmax(y_pred, axis=-1)
-            accuracy_mask = K.cast(K.not_equal(true_class, mask_class), 'int32')
-            accuracy_tensor = K.cast(K.equal(true_class, pred_class), 'int32') * accuracy_mask
-            accuracy = K.sum(accuracy_tensor) / K.maximum(K.sum(accuracy_mask), 1)
-            return accuracy
-        metrics.append(acc)
+        # Define accuracy functions that ignores the padding and the background single jersey
+        acc_full = masked_acc([to_idx[PADDING_CHAR]], acc_name='FULL')
+        acc_fg = masked_acc([to_idx[PADDING_CHAR], to_idx[BG_CHAR]], acc_name='FG')
+        metrics.append(acc_full)
+        metrics.append(acc_fg)
 
         super().train(metrics=metrics, **kwargs)
 

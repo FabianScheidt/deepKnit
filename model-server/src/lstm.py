@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from knitpaint import KnitPaint
+from train_utils import split_train_val
 
 
 class LSTMModel:
@@ -198,22 +199,8 @@ class LSTMModel:
             weights = weights[:, -output_data[0].shape[1]:]
 
         # Shuffle and split data manually into train and test to make sure that the batch size is correct
-        num_rows = input_data[0].shape[0]
-        p = np.random.permutation(num_rows)
-        input_data = [i[p] for i in input_data]
-        output_data = [o[p] for o in output_data]
-        weights = weights[p]
-        batch_count = num_rows // self.batch_size
-        train_batch_count = int(batch_count * (1.0 - val_split))
-        val_batch_count = batch_count - train_batch_count
-        train_count = train_batch_count * self.batch_size
-        val_count = val_batch_count * self.batch_size
-        train_input_data = [i[:train_count] for i in input_data]
-        val_input_data = [i[train_count:train_count + val_count] for i in input_data]
-        train_output_data = [o[:train_count] for o in output_data]
-        val_output_data = [o[train_count:train_count + val_count] for o in output_data]
-        train_weights = weights[:train_count]
-        val_weights = weights[train_count:train_count + val_count]
+        train_input_data, train_output_data, train_weights, val_input_data, val_output_data, val_weights = \
+            split_train_val(input_data, output_data, weights, self.batch_size, val_split)
 
         # Get the model
         model = self.get_model(vocab_size, [(self.batch_size, *i.shape[1:]) for i in input_data])
