@@ -59,7 +59,7 @@ def masked_acc(mask_classes, acc_name='acc'):
         true_class = K.argmax(y_true, axis=-1)
         pred_class = K.argmax(y_pred, axis=-1)
         masks = K.stack([K.not_equal(true_class, mask_class) for mask_class in mask_classes])
-        accuracy_mask = K.cast(K.any(masks, axis=0), 'int32')
+        accuracy_mask = K.cast(K.all(masks, axis=0), 'int32')
         accuracy_tensor = K.cast(K.equal(true_class, pred_class), 'int32') * accuracy_mask
         accuracy = K.sum(accuracy_tensor) / K.maximum(K.sum(accuracy_mask), 1)
         return accuracy
