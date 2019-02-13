@@ -4,7 +4,7 @@ from flask import Flask, Response, request, json
 from flask_cors import CORS
 from lstm import LSTMModel
 import lstm_staf
-from lstm_staf import LSTMModelStaf
+from lstm_staf import LSTMModelStaf, START_OF_FILE_CHAR
 from sliding_window import SlidingWindowModel
 from knitpaint import KnitPaint
 import knitpaint
@@ -183,8 +183,8 @@ def get_pattern():
         time.sleep(0.01)
     lstm_model_staf_locked = True
 
-    # Sample from lstm staf model
-    start = [1, 1, 1, 1, 1, 1]
+    # Sample from lstm staf model. Start with start character
+    start = [START_OF_FILE_CHAR]
     category_weights = [cable, stitch_move, links, miss, tuck]
     sample = sample_lstm_staf(start, category_weights, temperature=temperature, max_generate=400)
     generated_res = bytes()
@@ -194,7 +194,7 @@ def get_pattern():
     lstm_model_staf_locked = False
 
     # Read result as knitpaint
-    handler = knitpaint.read_linebreak(generated_res[:-1], 151, padding_char=1)
+    handler = knitpaint.read_linebreak(generated_res[1:-1], 151, padding_char=1)
     resp = Response(knitpaint_to_json(handler), mimetype='application/json')
     set_cache_headers(resp)
     return resp

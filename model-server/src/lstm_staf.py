@@ -18,6 +18,7 @@ Dense = keras.layers.Dense
 
 PADDING_CHAR = 0
 BG_CHAR = 1
+START_OF_FILE_CHAR = 150
 END_OF_LINE_CHAR = 151
 END_OF_FILE_CHAR = 152
 CATEGORIES = ['Cable/Aran', 'Stitch move', 'Links', 'Miss', 'Tuck']
@@ -52,7 +53,7 @@ class LSTMModelStaf(LSTMModel):
         df = pd.DataFrame(pd.read_json(self.data_dir + 'staf-details-training.json'))
 
         # Find max sequence length
-        max_sequence_length = ((df['apex_width'] + 1) * df['apex_height']).max()
+        max_sequence_length = ((df['apex_width'] + 1) * df['apex_height']).max() + 2
 
         # Sequences will contain the color numbers left to right, bottom to top. The sequences will be padded to fit the
         # maximum sequence length. A linebreak character will be placed at the end of each line, at the end of the
@@ -69,7 +70,7 @@ class LSTMModelStaf(LSTMModel):
             knitpaint = KnitPaint(apex_file)
             knitpaint.add_char_col(END_OF_LINE_CHAR)
             sequence = np.array(knitpaint.bitmap_data)
-            sequence[-1] = END_OF_FILE_CHAR
+            sequence = np.array([START_OF_FILE_CHAR, *sequence, END_OF_FILE_CHAR])
             sequences[i, :sequence.size] = sequence
             for j, category in enumerate(CATEGORIES):
                 categories[i, j] = 1.0 if category in row['category'] else 0.0
@@ -147,6 +148,7 @@ class LSTMModelStaf(LSTMModel):
         # Define accuracy functions that ignores the padding and the background single jersey
         acc_full = masked_acc([to_idx[PADDING_CHAR]], acc_name='FULL')
         acc_fg = masked_acc([to_idx[PADDING_CHAR], to_idx[BG_CHAR]], acc_name='FG')
+        metrics.append('acc')
         metrics.append(acc_full)
         metrics.append(acc_fg)
 
