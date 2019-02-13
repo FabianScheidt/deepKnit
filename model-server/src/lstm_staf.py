@@ -32,7 +32,7 @@ class LSTMModelStaf(LSTMModel):
         self.data_dir = '../data/raw/staf/'
         self.training_dir = '../data/processed/training-files/lstm-staf/'
         self.model_dir = '../output/models/lstm-staf/'
-        self.epochs = 130
+        self.epochs = 200
 
     def get_training_filename(self):
         """
@@ -103,9 +103,9 @@ class LSTMModelStaf(LSTMModel):
         return res
 
     def get_model(self, vocab_size, batch_shape, stateful=False, softmax=True):
-        # Use embedding layer on sequences
-        sequence_inputs_layer = Input(batch_shape=batch_shape[0], name='sequence_inputs_layer')
-        embedded_inputs = Embedding(vocab_size, 30, name='embedded_inputs')(sequence_inputs_layer)
+        # Build a one hot encoding on the fly. Use one hot instead of embedding since the vocab_size is small
+        sequence_inputs_layer = Input(batch_shape=batch_shape[0], name='sequence_inputs_layer', dtype='int32')
+        embedded_inputs = Lambda(lambda x: K.one_hot(x, vocab_size), name='one_hot_inputs')(sequence_inputs_layer)
 
         # Add a second input for the categories and repeat it across the sequence length dimension
         category_inputs_layer = Input(batch_shape=batch_shape[1], name='category_inputs_layer')
