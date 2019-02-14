@@ -1,8 +1,8 @@
-import { AfterViewChecked, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewChecked, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Knitpaint } from '../../knitpaint';
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, fromEvent, Observable, Subject } from 'rxjs';
 import { KnitpaintSamplingOptions, KnitpaintSamplingService } from '../../api/knitpaint-sampling.service';
-import { debounceTime, map, skip } from 'rxjs/operators';
+import { debounceTime, map, skip, takeUntil } from 'rxjs/operators';
 import { KnitpaintConversionService } from '../../api/knitpaint-conversion.service';
 import saveAs from 'file-saver';
 import { KnitpaintCanvasComponent } from '../../knitpaint-canvas/knitpaint-canvas.component';
@@ -16,7 +16,9 @@ import { VerticalSelectionTool } from '../../knitpaint-canvas/knitpaint-tools/ve
   templateUrl: './design-ideas.component.html',
   styleUrls: ['./design-ideas.component.scss']
 })
-export class DesignIdeasComponent implements OnInit, AfterViewChecked {
+export class DesignIdeasComponent implements OnInit, AfterViewChecked, OnDestroy {
+
+  private destroyed = new Subject<boolean>();
 
   designKnitpaint: BehaviorSubject<Knitpaint> = new BehaviorSubject<Knitpaint>(null);
   ideaKnitpaint: BehaviorSubject<Knitpaint> = new BehaviorSubject<Knitpaint>(null);
@@ -60,6 +62,12 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
     this.selection = this.ideaCanvas.getTool(VerticalSelectionTool).selection;
     this.selection.subscribe((selection) => this.selection_ = selection);
 
+    // Reset view whenever the window size changes
+    fromEvent(window, 'resize').pipe(takeUntil(this.destroyed)).subscribe(() => {
+      this.designCanvas.resetTransform();
+      this.ideaCanvas.resetTransform();
+    });
+
     // Generate the options for the sampling of the design ideas whenever the knitpaint or the temperature changes
     const options: Observable<KnitpaintSamplingOptions> = combineLatest(this.designKnitpaint, this.model, this.temperature).pipe(
       skip(1),
@@ -99,6 +107,10 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked {
 
   ngAfterViewChecked() {
     console.log('View Checked');
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed.next(true);
   }
 
   private initKnitpaintData() {

@@ -5,7 +5,7 @@ import {
   EventEmitter,
   Injector,
   Input,
-  OnChanges,
+  OnChanges, OnDestroy,
   Output,
   SimpleChanges,
   Type,
@@ -15,7 +15,8 @@ import { Knitpaint } from '../knitpaint';
 import { KnitpaintTool } from './knitpaint-tool';
 import { knitpaintTools } from './knitpaint-tools';
 import { KnitpaintCanvasUtils } from './knitpaint-canvas-utils';
-import { fromEvent } from 'rxjs';
+import { fromEvent, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 
 
@@ -25,7 +26,10 @@ import { fromEvent } from 'rxjs';
   styleUrls: ['./knitpaint-canvas.component.scss'],
   providers: knitpaintTools
 })
-export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
+export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
+
+  // Notify if the component is destroyed
+  private destroyed = new Subject<boolean>();
 
   // Knitpaint in- and output
   @Input() knitpaint: Knitpaint;
@@ -67,6 +71,9 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
 
     // Render
     this.requestRender();
+
+    // Render whenever the window is resized
+    fromEvent(window, 'resize').pipe(takeUntil(this.destroyed)).subscribe(() => this.requestRender());
   }
 
   /**
@@ -79,6 +86,13 @@ export class KnitpaintCanvasComponent implements AfterViewInit, OnChanges {
     if (changes['knitpaint'] && this.knitpaint) {
       this.setKnitpaint(this.knitpaint, false);
     }
+  }
+
+  /**
+   * Triggers the destroyed subject
+   */
+  ngOnDestroy(): void {
+    this.destroyed.next(true);
   }
 
   /**
