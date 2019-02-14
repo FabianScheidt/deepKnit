@@ -3,12 +3,10 @@ from uuid import UUID
 from flask import Flask, Response, request, json
 from flask_cors import CORS
 from lstm import LSTMModel
-import lstm_staf
-from lstm_staf import LSTMModelStaf, START_OF_FILE_CHAR
+from lstm_staf import LSTMModelStaf, START_OF_FILE_CHAR, END_OF_LINE_CHAR
 from sliding_window import SlidingWindowModel
 from knitpaint import KnitPaint
 import knitpaint
-import numpy as np
 
 # Create flask app that allows to sample from previously trained models
 app = Flask(__name__, static_url_path='', static_folder='../static')
@@ -76,7 +74,7 @@ def sample_model():
     model = 'lstm'
     temperature = 1.0
     num_generate = 57*70
-    start = [0]
+    start = []
     width = 57
 
     # Try to read options from JSON
@@ -94,19 +92,33 @@ def sample_model():
 
     # Return respective response
     if model == 'lstm':
+        if len(start) == 0:
+            start = [0]
         resp = Response(sample_lstm(start, temperature=temperature, num_generate=num_generate),
                         mimetype='application/octet-stream')
     elif model == 'lstm-staf':
-        start = [s for s in start if s != 0]
+        last_non_zero = True
+        res = []
+        for char in start:
+            if char != 0 and char:
+                res.append(char)
+                last_non_zero = True
+            else:
+                if last_non_zero:
+                    res.append(END_OF_LINE_CHAR)
+                last_non_zero = False
+
+        start = [START_OF_FILE_CHAR] + res
         category_weights = [0, 0, 1, 0, 0]
 
         def lstm_staf_generator():
             i = 0
             sample = sample_lstm_staf(start, category_weights, temperature=temperature, max_generate=num_generate)
             for generated in sample:
-                yield generated
-                i += 1
-                if int(generated[0]) == lstm_staf.END_OF_LINE_CHAR:
+                if int(generated[0]) != START_OF_FILE_CHAR:
+                    yield generated
+                    i += 1
+                if int(generated[0]) == END_OF_LINE_CHAR:
                     add_count = width - (i % width)
                     yield bytes([0] * add_count)
                     i += add_count
