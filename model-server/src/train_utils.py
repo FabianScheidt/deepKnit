@@ -1,3 +1,5 @@
+import datetime
+import pathlib
 import numpy as np
 from tensorflow import keras
 K = keras.backend
@@ -65,3 +67,48 @@ def masked_acc(mask_classes, acc_name='acc'):
         return accuracy
     acc.__name__ = acc_name
     return acc
+
+
+def fit_and_log(model, output_dir, *args, model_name='model', callbacks=None, **kwargs):
+    """
+    Trains the provided model. Saves it when the training is done or interrupted and stores a log using tensorboard
+
+    :param model:
+    The model to be trained
+
+    :param output_dir:
+    The output directory where both the model and the log will be stored
+
+    :param model_name:
+    Name of the model
+
+    :param args:
+    Arguments for the fit method
+
+    :param callbacks:
+    List of callbacks for the fit method. Will be extended with a tensorboard logger
+
+    :param kwargs:
+    Keyword arguments for the fit method
+
+    :return:
+    """
+    # Make sure the output directory exists
+    pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(output_dir + '/tensorboard-log').mkdir(parents=True, exist_ok=True)
+
+    # Create a tensorboard logger and attach it to the list of callbacks
+    callbacks = callbacks if callbacks is not None else []
+    log_date_str = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+    log_dir = output_dir + '/tensorboard-log/{}'.format(log_date_str)
+    tensor_board_callback = keras.callbacks.TensorBoard(log_dir=log_dir, write_graph=True)
+    callbacks.append(tensor_board_callback)
+
+    # Train, save a copy of the model if training is interrupted
+    try:
+        model.fit(*args, callbacks=callbacks, **kwargs)
+    except KeyboardInterrupt:
+        print('Saving current state of model...')
+        model.save(output_dir + '/' + model_name + '-interrupted.h5')
+        raise
+    model.save(output_dir + '/' + model_name + '.h5')

@@ -1,13 +1,12 @@
 import pathlib
 import sys
-import datetime
 import os
 import functools
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from knitpaint import KnitPaint
-from train_utils import split_train_val
+from train_utils import split_train_val, fit_and_log
 
 
 class LSTMModel:
@@ -212,21 +211,10 @@ class LSTMModel:
         model.summary()
 
         # Fit the data. Use Tensorboard to visualize the progress
-        try:
-            log_date_str = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-            log_dir = '../tensorboard-log/{}'.format(log_date_str)
-            tensor_board_callback = keras.callbacks.TensorBoard(log_dir=log_dir, write_graph=True)
-            model.fit(x=train_input_data, y=train_output_data, sample_weight=train_weights,
-                      validation_data=(val_input_data, val_output_data, val_weights),
-                      batch_size=self.batch_size, epochs=self.epochs, callbacks=[tensor_board_callback], shuffle=True)
-        except KeyboardInterrupt:
-            print('Saving current state of model...')
-            pathlib.Path(self.model_dir).mkdir(parents=True, exist_ok=True)
-            model.save(self.model_dir + 'lstm-model-interrupted.h5')
-            raise
-
-        pathlib.Path(self.model_dir).mkdir(parents=True, exist_ok=True)
-        model.save(self.model_dir + 'lstm-model.h5')
+        fit_and_log(model, self.model_dir, model_name='lstm-model',
+                    x=train_input_data, y=train_output_data, sample_weight=train_weights,
+                    validation_data=(val_input_data, val_output_data, val_weights),
+                    batch_size=self.batch_size, epochs=self.epochs, shuffle=True)
 
     def get_static_knitting_pattern_rules(self):
         """
