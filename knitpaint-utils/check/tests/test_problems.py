@@ -292,7 +292,7 @@ def test_transfer_of_overlapped_loops_1():
     problems = err.value.problems
     assert len(problems) == 1
     assert isinstance(problems[0], TransferWithOverlappedLoopsWarning)
-    assert problems[0].course == 1
+    assert problems[0].course == 0
     assert problems[0].wale == 1
 
 

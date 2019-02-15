@@ -1,5 +1,5 @@
 from .make_knitpaint import make_knitpaint
-from .. import check, KnitPaintCheckException, TransferWithOverlappedLoopsWarning
+from .. import check
 
 
 def assert_from_to(loops, src_course, src_wale, dst_course, dst_wale):
@@ -133,15 +133,7 @@ def test_tuck():
 def test_single_move():
     input_pattern = make_knitpaint([[1, 1, 1, 1, 1, 1, 1, 1, 1],
                                     [1, 6, 1, 8, 1, 7, 1, 9, 1]])
-    try:
-        loops = check(input_pattern)
-    except KnitPaintCheckException as e:
-        # Ignore a possibly occurring TransferWithOverlappedLoopsWarning for here. It is tested in test_links_process_3
-        non_transfer_warnings = [p for p in e.problems if not isinstance(p, TransferWithOverlappedLoopsWarning)]
-        if len(non_transfer_warnings) > 0:
-            raise
-        loops = e.loops
-        pass
+    loops = check(input_pattern)
     assert len(loops) == len(input_pattern.bitmap_data)
     assert_from_to(loops, 0, 0, 1, 0)
     assert_from_to(loops, 0, 1, 1, 0)

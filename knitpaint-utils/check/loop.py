@@ -5,7 +5,7 @@ class Loop:
     """
     a structure for processed loops
     """
-    def __init__(self, src_course, src_wale, needs_links_process):
+    def __init__(self, src_course, src_wale):
         self.src_course = src_course
         self.src_wale = src_wale
         self.src_loops: List[Loop] = []
@@ -14,7 +14,6 @@ class Loop:
         self.dst_course = None
         self.dst_wale = None
         self.dst_loop: Loop = None
-        self.needs_links_process: bool = needs_links_process
 
     def is_pickup_stitch(self) -> bool:
         """

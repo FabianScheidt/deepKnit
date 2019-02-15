@@ -1,5 +1,4 @@
 from typing import List, Generator
-from functools import reduce
 from .loop import Loop
 from .color_numbers import *
 from .problems import *
@@ -54,36 +53,14 @@ class VirtualKnittingMachine:
             # Check if the increase of the course causes distance problems
             self.check_distance_of_loops()
 
-            # Perform transfer before
-            for color_number in self.iterate_course(data_course_color_numbers):
-                transfer_before = color_number.transfer_before_operation
-
-                # Links process will only be performed if the current color number specifies it and there is at least
-                # one loop on the opposite bed that was knitted by a stitch that also specified it
-                if transfer_before is LINKS:
-                    transfer_before = NO_TRANSFER
-                    opposite_bed = FRONT if color_number.bed == BACK else BACK
-                    opposite_loops = self.bed_loops[opposite_bed][self.wale]
-                    opposite_needs_links_process = [loop.needs_links_process for loop in opposite_loops]
-                    opposite_needs_links_process = reduce(lambda x, y: x or y, opposite_needs_links_process, False)
-                    if opposite_needs_links_process:
-                        if color_number.bed == FRONT:
-                            transfer_before = BACK_TO_FRONT
-                        elif color_number.bed == BACK:
-                            transfer_before = FRONT_TO_BACK
-                self.transfer(transfer_before)
-
-            # Check if the transfer caused problems
-            self.check_number_of_loops_in_needles()
-
             # Perform operations
             for color_number in self.iterate_course(data_course_color_numbers):
                 if color_number.operation is KNIT:
-                    self.knit(color_number.bed, color_number.transfer_before_operation == LINKS)
+                    self.knit(color_number.bed)
                 elif color_number.operation is TUCK:
-                    self.tuck(color_number.bed, color_number.transfer_before_operation == LINKS)
+                    self.tuck(color_number.bed)
                 elif color_number.operation is SPLIT:
-                    self.split(color_number.bed, color_number.transfer_before_operation == LINKS)
+                    self.split(color_number.bed)
 
             # Check if the operations caused problems
             self.check_number_of_loops_in_needles()
@@ -119,7 +96,25 @@ class VirtualKnittingMachine:
 
             # Perform transfer after racking operations. If the loop was racked before it needs to be offset.
             for color_number in self.iterate_course(data_course_color_numbers):
-                self.transfer(color_number.transfer_after_racking, color_number.racking)
+                offset = color_number.racking
+                offset_wale = self.wale + offset
+
+                # If the current color number and the color number in the next course both use links process and both
+                # operate on different beds, a links transfer should be performed instead of a regular transfer
+                perform_links = False
+                if len(courses_data) > self.course + 1:
+                    next_course_data = courses_data[self.course + 1]
+                    next_color_number = COLOR_NUMBERS[next_course_data[offset_wale]]
+                    both_links = color_number.links_process and next_color_number.links_process
+                    both_opposite = (color_number.bed == FRONT and next_color_number.bed == BACK) or \
+                                    (color_number.bed == BACK and next_color_number.bed == FRONT)
+                    if both_links and both_opposite:
+                        perform_links = True
+
+                if perform_links:
+                    self.transfer(BACK_TO_FRONT if color_number.bed is BACK else FRONT_TO_BACK)
+                else:
+                    self.transfer(color_number.transfer_after_racking, offset)
 
             # Check if the transfer caused problems
             self.check_number_of_loops_in_needles()
@@ -153,12 +148,12 @@ class VirtualKnittingMachine:
                 raise NotImplementedError("Color number " + str(color_index) + " is not implemented.")
             yield color_number
 
-    def create_loop(self, needs_links_process) -> Loop:
+    def create_loop(self) -> Loop:
         """
         Creates a loop at the current course and wale, adds it to the list of all loops and returns it
         :return:
         """
-        loop = Loop(self.course, self.wale, needs_links_process)
+        loop = Loop(self.course, self.wale)
         if self.last_loop is not None:
             loop.prev_loop = self.last_loop
             self.last_loop.next_loop = loop
@@ -166,14 +161,13 @@ class VirtualKnittingMachine:
         self.all_loops.append(loop)
         return loop
 
-    def knit(self, bed, needs_links_process) -> None:
+    def knit(self, bed) -> None:
         """
         Performs a knit operation at the current course and wale
         :param bed:
-        :param needs_links_process:
         :return:
         """
-        new_loop = self.create_loop(needs_links_process)
+        new_loop = self.create_loop()
         existing_loops = self.bed_loops[bed][self.wale]
         new_loop.src_loops = existing_loops
 
@@ -183,28 +177,26 @@ class VirtualKnittingMachine:
             l.dst_loop = new_loop
         self.bed_loops[bed][self.wale] = [new_loop]
 
-    def tuck(self, bed, needs_links_process) -> None:
+    def tuck(self, bed) -> None:
         """
         Performs a tuck operation at thr current course and wale
         :param bed:
-        :param needs_links_process:
         :return:
         """
-        new_loop = self.create_loop(needs_links_process)
+        new_loop = self.create_loop()
         self.bed_loops[bed][self.wale].append(new_loop)
 
-    def split(self, bed, needs_links_process) -> None:
+    def split(self, bed) -> None:
         """
         Performs a split operation at the current course and wale
         :param bed:
-        :param needs_links_process:
         :return:
         """
         if bed is FRONT:
             self.transfer(FRONT_TO_BACK)
         if bed is BACK:
             self.transfer(BACK_TO_FRONT)
-        self.knit(bed, needs_links_process)
+        self.knit(bed)
 
     def transfer(self, from_to, offset=0) -> None:
         """
@@ -238,8 +230,6 @@ class VirtualKnittingMachine:
                 to_bed[wale + self.racking] += transferred_loops
             else:
                 self.create_problem(TransferOutOfBedError(self.course, self.wale))
-        elif from_to is LINKS:
-            raise ValueError("Links process is only available before operations and should be processed manually")
 
     def create_problem(self, problem) -> None:
         """
