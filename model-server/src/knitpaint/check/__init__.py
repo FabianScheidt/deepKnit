@@ -1,3 +1,4 @@
+import math
 from typing import List
 import numpy as np
 from .loop import Loop
@@ -33,7 +34,10 @@ def check_pattern(knitpaint) -> List[Loop]:
     :return:
     """
     bitmap = knitpaint.get_np_bitmap_data()
-    tiled = np.tile(bitmap, (2, 2))
+    min_height = 10
+    min_vertical_repetitions = math.ceil(min_height / bitmap.shape[0])
+    vertical_repetitions = max(2, min_vertical_repetitions)
+    tiled = np.tile(bitmap, (vertical_repetitions, 2))
     padded = np.pad(tiled, ((2, 2), (7, 7)), 'constant', constant_values=((1, 1), (1, 1)))
     from .. import KnitPaint
     return check(KnitPaint(padded))

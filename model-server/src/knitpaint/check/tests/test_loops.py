@@ -1,15 +1,5 @@
-import numpy as np
-from ... import KnitPaint
+from .make_knitpaint import make_knitpaint
 from .. import check
-
-
-def make_knitpaint(input_list):
-    """
-    Helper method to create knitpaint from a 2d list or array
-    :param input_list:
-    :return:
-    """
-    return KnitPaint(np.flipud(np.array(input_list)))
 
 
 def assert_from_to(loops, src_course, src_wale, dst_course, dst_wale):

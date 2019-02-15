@@ -1,17 +1,7 @@
 import pytest
-import numpy as np
-from ... import KnitPaint
+from .make_knitpaint import make_knitpaint
 from ..problems import *
 from ... import check
-
-
-def make_knitpaint(input_list):
-    """
-    Helper method to create knitpaint from a 2d list or array
-    :param input_list:
-    :return:
-    """
-    return KnitPaint(np.flipud(np.array(input_list)))
 
 
 def test_loops_in_needle_warn_by_tuck():
