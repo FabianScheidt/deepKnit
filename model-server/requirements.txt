@@ -1,3 +1,8 @@
+joblib
+matplotlib
+scikit-learn
+gensim
+pandas
 pytest
 Flask==1.0.2
 Flask-Cors==3.0.7
