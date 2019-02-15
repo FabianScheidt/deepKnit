@@ -1,5 +1,5 @@
 from .make_knitpaint import make_knitpaint
-from .. import check
+from .. import check, KnitPaintCheckException, TransferWithOverlappedLoopsWarning
 
 
 def assert_from_to(loops, src_course, src_wale, dst_course, dst_wale):
@@ -41,7 +41,7 @@ def test_single_jersey():
     assert loops[4].src_loops[0] is loops[1]
 
 
-def test_links_process():
+def test_links_process_1():
     input_pattern = make_knitpaint([[2, 1, 2],
                                     [1, 2, 1]])
     loops = check(input_pattern)
@@ -52,6 +52,24 @@ def test_links_process():
     assert_from_to(loops, 1, 0, None, None)
     assert_from_to(loops, 1, 1, None, None)
     assert_from_to(loops, 1, 2, None, None)
+
+
+def test_links_process_2():
+    input_pattern = make_knitpaint([[1, 1,  1],
+                                    [1, 16, 1],
+                                    [1, 2,  1]])
+    loops = check(input_pattern)
+    assert len(loops) == len(input_pattern.bitmap_data) - 1
+    assert_from_to(loops, 0, 1, None, None)
+    assert_from_to(loops, 2, 1, None, None)
+
+
+def test_links_process_3():
+    input_pattern = make_knitpaint([[1, 1, 1, 1, 1],
+                                    [1, 8, 1, 9, 1]])
+    # No error should occur since links process suppresses transfer at the end of move
+    loops = check(input_pattern)
+    assert len(loops) > 0
 
 
 def test_miss():
@@ -83,35 +101,47 @@ def test_miss():
 
 
 def test_tuck():
-    input_pattern = make_knitpaint([[1, 1,  1, 1,  1],
-                                    [1, 11, 1, 12, 1],
-                                    [1, 1,  1, 1,  1]])
+    input_pattern = make_knitpaint([[1, 1,  1, 2, 2,  2],
+                                    [1, 11, 1, 2, 12, 2],
+                                    [1, 1,  1, 2, 2,  2]])
     loops = check(input_pattern)
     assert len(loops) == len(input_pattern.bitmap_data)
     assert_from_to(loops, 0, 0, 1, 0)
     assert_from_to(loops, 0, 1, 2, 1)
     assert_from_to(loops, 0, 2, 1, 2)
-    assert_from_to(loops, 0, 3, 2, 3)
-    assert_from_to(loops, 0, 4, 1, 4)
+    assert_from_to(loops, 0, 3, 1, 3)
+    assert_from_to(loops, 0, 4, 2, 4)
+    assert_from_to(loops, 0, 5, 1, 5)
     assert_from_to(loops, 1, 0, 2, 0)
     assert_from_to(loops, 1, 1, 2, 1)
     assert_from_to(loops, 1, 2, 2, 2)
     assert_from_to(loops, 1, 3, 2, 3)
     assert_from_to(loops, 1, 4, 2, 4)
+    assert_from_to(loops, 1, 5, 2, 5)
     assert_from_to(loops, 2, 0, None, None)
     assert_from_to(loops, 2, 1, None, None)
     assert_from_to(loops, 2, 2, None, None)
     assert_from_to(loops, 2, 3, None, None)
     assert_from_to(loops, 2, 4, None, None)
-    assert len(loops[6].src_loops) == 0
-    assert len(loops[11].src_loops) == 2
+    assert_from_to(loops, 2, 5, None, None)
+    assert len(loops[7].src_loops) == 0
+    assert len(loops[10].src_loops) == 0
     assert len(loops[13].src_loops) == 2
+    assert len(loops[16].src_loops) == 2
 
 
 def test_single_move():
     input_pattern = make_knitpaint([[1, 1, 1, 1, 1, 1, 1, 1, 1],
                                     [1, 6, 1, 8, 1, 7, 1, 9, 1]])
-    loops = check(input_pattern)
+    try:
+        loops = check(input_pattern)
+    except KnitPaintCheckException as e:
+        # Ignore a possibly occurring TransferWithOverlappedLoopsWarning for here. It is tested in test_links_process_3
+        non_transfer_warnings = [p for p in e.problems if not isinstance(p, TransferWithOverlappedLoopsWarning)]
+        if len(non_transfer_warnings) > 0:
+            raise
+        loops = e.loops
+        pass
     assert len(loops) == len(input_pattern.bitmap_data)
     assert_from_to(loops, 0, 0, 1, 0)
     assert_from_to(loops, 0, 1, 1, 0)

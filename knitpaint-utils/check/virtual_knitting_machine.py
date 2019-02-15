@@ -220,9 +220,19 @@ class VirtualKnittingMachine:
             to_bed = back if from_to is FRONT_TO_BACK else front
             wale = self.wale + offset
             transferred_loops = from_bed[wale]
+
+            # Check how many loops are transferred
+            if len(transferred_loops) >= MAX_OVERLAPPED_LOOP_TRANSFER_WARN_THRESH:
+                self.create_problem(TransferWithOverlappedLoopsWarning(self.course, self.wale))
+            if len(transferred_loops) >= MAX_OVERLAPPED_LOOP_TRANSFER_ERR_THRESH:
+                self.create_problem(TransferWithOverlappedLoopsError(self.course, self.wale))
+
+            # Check if all of the transferred loops are pickup stitches
             transferred_pickup_loops = [loop for loop in transferred_loops if loop.is_pickup_stitch()]
             if len(transferred_pickup_loops) > 0 and len(transferred_pickup_loops) == len(transferred_loops):
                 self.create_problem(TransferOfPickupStitchWarning(self.course, self.wale))
+
+            # Check if the transfer goes out of the configured bed
             if 0 <= wale < len(from_bed) and 0 <= wale + self.racking < len(to_bed):
                 from_bed[wale] = []
                 to_bed[wale + self.racking] += transferred_loops

@@ -282,3 +282,25 @@ def test_transfer_of_pickup_stitch():
     assert isinstance(problems[0], TransferOfPickupStitchWarning)
     assert problems[0].course == 2
     assert problems[0].wale == 1
+
+
+def test_transfer_of_overlapped_loops_1():
+    input_pattern = make_knitpaint([[2, 2, 2],
+                                    [1, 1, 6]])
+    with pytest.raises(KnitPaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 1
+    assert isinstance(problems[0], TransferWithOverlappedLoopsWarning)
+    assert problems[0].course == 1
+    assert problems[0].wale == 1
+
+
+def test_transfer_of_overlapped_loops_2():
+    input_pattern = make_knitpaint([[2, 2, 2],
+                                    [7, 1, 6]])
+    with pytest.raises(KnitPaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) > 0
+    assert len([problem for problem in problems if isinstance(problem, TransferWithOverlappedLoopsError)]) > 0

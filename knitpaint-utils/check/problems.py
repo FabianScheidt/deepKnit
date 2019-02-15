@@ -6,6 +6,8 @@ MAX_RACKING_WARN_THRESH = 5
 MAX_RACKING_ERR_THRESH = 6
 MAX_LOOP_HOLD_WARN_THRESH = 8
 MAX_LOOP_HOLD_ERR_THRESH = 8
+MAX_OVERLAPPED_LOOP_TRANSFER_WARN_THRESH = 2
+MAX_OVERLAPPED_LOOP_TRANSFER_ERR_THRESH = 3
 
 
 class KnitPaintCheckException(Exception):
@@ -119,6 +121,20 @@ class ContinuousPickupStitchWarning(KnitPaintCheckWarning):
 class TransferOfPickupStitchWarning(KnitPaintCheckWarning):
     """
     This error occurs when pickup stitches are transferred
+    """
+    pass
+
+
+class TransferWithOverlappedLoopsWarning(KnitPaintCheckWarning):
+    """
+    This warning occurs when too many loops are transferred from one needle to another
+    """
+    pass
+
+
+class TransferWithOverlappedLoopsError(KnitPaintCheckError):
+    """
+    This error occurs when too many loops are transferred from one needle to another
     """
     pass
 
