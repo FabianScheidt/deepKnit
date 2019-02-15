@@ -241,7 +241,7 @@ def test_continuous_pickup_4():
         check(input_pattern)
     problems = err.value.problems
     assert len(problems) > 0
-    assert isinstance(problems[0], ContinuousPickupStitchWarning)
+    assert len([problem for problem in problems if isinstance(problem, ContinuousPickupStitchWarning)]) > 0
 
 
 def test_no_continuous_pickup_4():
@@ -279,3 +279,16 @@ def test_no_continuous_pickup_6():
                                     [1, 1,  1,  1]])
     # No exception should be thrown
     check(input_pattern)
+
+
+def test_transfer_of_pickup_stitch():
+    input_pattern = make_knitpaint([[1, 7, 1],
+                                    [1, 6, 1],
+                                    [1, 1, 1]])
+    with pytest.raises(KnitPaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 1
+    assert isinstance(problems[0], TransferOfPickupStitchWarning)
+    assert problems[0].course == 2
+    assert problems[0].wale == 1

@@ -116,6 +116,13 @@ class ContinuousPickupStitchWarning(KnitPaintCheckWarning):
     pass
 
 
+class TransferOfPickupStitchWarning(KnitPaintCheckWarning):
+    """
+    This error occurs when pickup stitches are transferred
+    """
+    pass
+
+
 class TransferOutOfBedError(KnitPaintCheckError):
     """
     This error occurs when a stitch is transferred to a needle that does not exist because it is too far on either the
