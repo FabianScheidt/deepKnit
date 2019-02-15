@@ -90,6 +90,21 @@ def test_hold_error_by_miss():
     assert problems[0].wale == 1
 
 
+def test_hold_error_missing_links_process():
+    input_pattern = make_knitpaint([*[[1, 1, 1]] * 7,
+                                    [1, 16, 1],
+                                    [1, 2, 1],
+                                    [1, 16, 1],
+                                    [1, 1, 1]])
+    with pytest.raises(KnitPaintCheckException) as err:
+        check(input_pattern)
+    problems = err.value.problems
+    assert len(problems) == 1
+    assert isinstance(problems[0], LoopHoldError)
+    assert problems[0].course == 10
+    assert problems[0].wale == 1
+
+
 def test_max_rack_warn_by_move():
     input_pattern = make_knitpaint([[1, 73, 1, 62, 1]])
     with pytest.raises(KnitPaintCheckException) as err:
