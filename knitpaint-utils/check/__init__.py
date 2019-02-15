@@ -34,6 +34,6 @@ def check_pattern(knitpaint) -> List[Loop]:
     """
     bitmap = knitpaint.get_np_bitmap_data()
     tiled = np.tile(bitmap, (2, 2))
-    padded = np.pad(tiled, ((1, 1), (7, 7)), 'constant', constant_values=((1, 1), (1, 1)))
+    padded = np.pad(tiled, ((2, 2), (7, 7)), 'constant', constant_values=((1, 1), (1, 1)))
     from .. import KnitPaint
     return check(KnitPaint(padded))
