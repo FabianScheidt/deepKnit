@@ -4,22 +4,15 @@ from .problems import *
 
 def resolve_cable_stitches(data, width):
     """
-    Replaces cable stitches with move stitches neglecting the order of upper and lower stitch and the fact that
-    lower stitches are actually miss and move instead of knit and move operations
+    Replaces cable stitches with move stitches
     :return:
     """
 
     # Build a list of possible pairs and stitches
     cable_pairs = [
         [4, 5], [5, 4],
-        [4, 10], [10, 4],
         [5, 10], [10, 5],
-        [4, 100], [100, 4],
-        [5, 100], [100, 5],
         [14, 15], [15, 14],
-        [14, 10], [10, 14],
-        [15, 10], [10, 15],
-        [14, 100], [100, 14],
         [15, 100], [100, 15]
     ]
     cable_stitches = [item for sublist in cable_pairs for item in sublist]
@@ -70,6 +63,8 @@ def resolve_cable_stitches(data, width):
                     cable_width = second_cable_end - first_cable_start
                     first_cable_width = first_cable_end - first_cable_start
                     second_cable_width = second_cable_end - second_cable_start
+                    first_cable_lower = first_cable_color == 10 or first_cable_color == 100
+                    second_cable_lower = second_cable_color == 10 or second_cable_color == 100
 
                     if first_cable_width > MAX_CABLE_THRESH or second_cable_width > MAX_CABLE_THRESH:
                         # The cable exceeds the maximum size. Create a syntax error
@@ -79,8 +74,8 @@ def resolve_cable_stitches(data, width):
                         # Do the replacement
                         first_move = cable_width - first_cable_width
                         second_move = cable_width - second_cable_width
-                        first_replacement = 70 + first_move
-                        second_replacement = 60 + second_move
+                        first_replacement = 70 + first_move + (20 if first_cable_lower else 0)
+                        second_replacement = 60 + second_move + (20 if second_cable_lower else 0)
                         for index in range(course * width + first_cable_start, course * width + first_cable_end):
                             processed_data[index] = first_replacement
                         for index in range(course * width + second_cable_start, course * width + second_cable_end):

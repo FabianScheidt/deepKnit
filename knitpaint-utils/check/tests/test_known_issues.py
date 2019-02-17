@@ -61,3 +61,14 @@ def test_different_back_knit_and_move():
     problems = err.value.problems
     assert len(problems) == 1
     assert isinstance(problems[0], TransferWithOverlappedLoopsWarning)
+
+
+def test_overlapping_cables():
+    """
+    A cable can cross another cable. Since there are two cable pairs available, one pair can form an outer cable while
+    the other pair forms an inner cable. The replacement should be correct and no error should occur
+    """
+    input_pattern = make_knitpaint([[1, 2,  1,  2, 1,   1],
+                                    [1, 15, 10, 5, 100, 1],
+                                    [1, 1,  2,  1, 2,   1]])
+    check(input_pattern)

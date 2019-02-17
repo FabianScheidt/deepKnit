@@ -23,6 +23,16 @@ def test_resolve_single_cable_stitches():
     assert res == ex_data
 
 
+def test_resolve_reverse_cable_stitches():
+    """
+    Single cables should be replaced properly
+    """
+    in_data = [1, 1, 1, 5,  10, 1, 1, 1]
+    ex_data = [1, 1, 1, 71, 81, 1, 1, 1]
+    res = resolve_cable_stitches(in_data, len(in_data))
+    assert res == ex_data
+
+
 def test_resolve_edge_cable_stitches():
     """
     Cables at the edge replaced properly
@@ -57,7 +67,7 @@ def test_resolve_imbalanced_cable_stitches():
     """
     Imbalanced cables should be replaced properly
     """
-    in_data = [1, 1, 1, 14, 100, 100, 1, 1]
+    in_data = [1, 1, 1, 14, 15, 15, 1, 1]
     ex_data = [1, 1, 1, 72, 61,  61,  1, 1]
     res = resolve_cable_stitches(in_data, len(in_data))
     assert res == ex_data
@@ -77,8 +87,8 @@ def test_multi_line_cable_stitches():
     """
     Cables should be found in multiple lines, not across lines
     """
-    in_data = [1, 5,  4,  1, 1, 14, 100, 1]
-    ex_data = [1, 71, 61, 1, 1, 71, 61,  1]
+    in_data = [1, 5,  4,  1, 1, 14, 15, 1]
+    ex_data = [1, 71, 61, 1, 1, 71, 61, 1]
     res = resolve_cable_stitches(in_data, 4)
     assert res == ex_data
 
