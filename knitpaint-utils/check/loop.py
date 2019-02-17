@@ -45,6 +45,7 @@ class Loop:
                 self.prev_loop.src_course == self.src_course and \
                 self.prev_loop.is_pickup_stitch() and \
                 self.prev_loop.dst_loop is not None and \
+                len(self.prev_loop.dst_loop.src_loops) <= 1 and \
                 (self.prev_loop.dst_loop.next_loop is self.dst_loop or
                  self.prev_loop.dst_loop.prev_loop is self.dst_loop):
             return True
@@ -54,6 +55,7 @@ class Loop:
                 self.next_loop.src_course == self.src_course and \
                 self.next_loop.is_pickup_stitch() and \
                 self.next_loop.dst_loop is not None and \
+                len(self.next_loop.dst_loop.src_loops) <= 1 and \
                 (self.next_loop.dst_loop.next_loop is self.dst_loop or
                  self.next_loop.dst_loop.prev_loop is self.dst_loop):
             return True

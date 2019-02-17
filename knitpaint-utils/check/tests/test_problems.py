@@ -286,6 +286,16 @@ def test_no_continuous_pickup_6():
     check(input_pattern)
 
 
+def test_no_continuous_pickup_7():
+    input_pattern = make_knitpaint([[1, 1,  1,  1,  1],
+                                    [1, 11, 11, 11, 1],
+                                    [1, 16, 1,  16, 1],
+                                    [1, 2,  16, 2,  1],
+                                    [1, 1,  1,  1,  1]])
+    # No exception should be thrown
+    check(input_pattern)
+
+
 def test_transfer_of_pickup_stitch():
     input_pattern = make_knitpaint([[1, 7, 1],
                                     [1, 6, 1],
