@@ -112,7 +112,7 @@ class VirtualKnittingMachine:
                         perform_links = True
 
                 if perform_links:
-                    self.transfer(BACK_TO_FRONT if color_number.bed is BACK else FRONT_TO_BACK)
+                    self.transfer(BACK_TO_FRONT if color_number.bed is BACK else FRONT_TO_BACK, offset)
                 else:
                     self.transfer(color_number.transfer_after_racking, offset)
 

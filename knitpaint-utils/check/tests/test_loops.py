@@ -72,6 +72,15 @@ def test_links_process_3():
     assert len(loops) > 0
 
 
+def test_links_process_4():
+    input_pattern = make_knitpaint([*[[1, 1, 2, 1]] * 8,
+                                      [1, 4, 5, 1],
+                                      [1, 1, 1, 1]])
+    # No error should occur since links process suppresses transfer at the end of move
+    loops = check(input_pattern)
+    assert len(loops) > 0
+
+
 def test_miss():
     input_pattern = make_knitpaint([[1, 1,  1, 1,   1, 1,   1],
                                     [1, 16, 1, 116, 1, 117, 1],
