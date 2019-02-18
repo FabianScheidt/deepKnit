@@ -8,7 +8,7 @@ from .linebreak_reader import read_linebreak
 from .linebreak_writer import write_linebreak
 from .image_reader import read_image
 from .image_writer import write_image
-from .normalize import normalize_bitmap_data
+from .normalize import normalize_color_numbers, normalize_bitmap_data
 from .check import check, check_pattern
 
 
@@ -214,6 +214,13 @@ class KnitPaint:
         if bottom_to_top:
             bitmap_np_shaped = np.flipud(bitmap_np_shaped)
         return bitmap_np_shaped
+
+    def normalize_color_numbers(self):
+        """
+        Replaces redundant color numbers with a normalized number
+        :return:
+        """
+        return normalize_color_numbers(self)
 
     def normalize_bitmap_data(self, has_option_line=True, option_line='keep'):
         """

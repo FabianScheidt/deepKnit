@@ -1,6 +1,19 @@
 import numpy as np
 
 
+def normalize_color_numbers(dst):
+    """
+    Replaces redundant color numbers with a normalized number
+    :param dst:
+    :return:
+    """
+    dst.bitmap_data = [6 if c == 61 else c for c in dst.bitmap_data]
+    dst.bitmap_data = [7 if c == 71 else c for c in dst.bitmap_data]
+    dst.bitmap_data = [8 if c == 81 else c for c in dst.bitmap_data]
+    dst.bitmap_data = [9 if c == 91 else c for c in dst.bitmap_data]
+    return dst
+
+
 def normalize_bitmap_data(dst, has_option_line=True, option_line='keep'):
     """
     Crops the bitmap data by removing all the "black" around the edges. Optionally modifies the option line
