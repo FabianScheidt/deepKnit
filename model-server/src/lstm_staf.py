@@ -83,6 +83,8 @@ class LSTMModelStaf(LSTMModel):
         # Weights will be 1 for values and 0 for padding. End of line and end of file should have weight 10 and 100.
         weights = np.ones_like(sequences, dtype=int)
         weights = np.where(sequences == PADDING_CHAR,     np.zeros_like(weights, dtype=int), weights)
+        weights = np.where(sequences == 1,                np.ones_like(weights, dtype=int) * 0.8, weights)
+        weights = np.where(sequences == 2,                np.ones_like(weights, dtype=int) * 0.9, weights)
         weights = np.where(sequences == END_OF_LINE_CHAR, np.ones_like(weights, dtype=int) * 10, weights)
         weights = np.where(sequences == END_OF_FILE_CHAR, np.ones_like(weights, dtype=int) * 100, weights)
 
@@ -125,9 +127,9 @@ class LSTMModelStaf(LSTMModel):
         else:
             lstm_layer = functools.partial(LSTM, activation='tanh', recurrent_activation='sigmoid')
 
-        lstm_1 = lstm_layer(200, return_sequences=True, recurrent_initializer='glorot_uniform',
+        lstm_1 = lstm_layer(300, return_sequences=True, recurrent_initializer='glorot_uniform',
                             stateful=stateful, name='lstm_1')(concatenate_layer)
-        lstm_2 = lstm_layer(200, return_sequences=True, recurrent_initializer='glorot_uniform',
+        lstm_2 = lstm_layer(300, return_sequences=True, recurrent_initializer='glorot_uniform',
                             stateful=stateful, name='lstm_2')(lstm_1)
 
         # Dense output: One element for each color number in the vocabulary
