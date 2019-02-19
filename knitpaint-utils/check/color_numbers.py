@@ -101,5 +101,5 @@ COLOR_NUMBERS[94] = ColorNumber(BACK, KNIT, FRONT_TO_BACK, 4, BACK_TO_FRONT, FRO
 COLOR_NUMBERS[95] = ColorNumber(BACK, KNIT, FRONT_TO_BACK, 1, BACK_TO_FRONT, FRONT_TO_BACK, links_process=True)
 COLOR_NUMBERS[96] = ColorNumber(BACK, KNIT, FRONT_TO_BACK, 2, BACK_TO_FRONT, FRONT_TO_BACK, links_process=True)
 COLOR_NUMBERS[97] = ColorNumber(BACK, KNIT, FRONT_TO_BACK, 4, BACK_TO_FRONT, FRONT_TO_BACK, links_process=True)
-COLOR_NUMBERS[116] = ColorNumber(BACK, MISS, links_process=True)
-COLOR_NUMBERS[117] = ColorNumber(FRONT, MISS, links_process=True)
+COLOR_NUMBERS[116] = ColorNumber(FRONT, MISS, links_process=True)
+COLOR_NUMBERS[117] = ColorNumber(BACK, MISS, links_process=True)
