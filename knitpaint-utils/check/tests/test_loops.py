@@ -81,7 +81,17 @@ def test_links_process_4():
     assert len(loops) > 0
 
 
-def test_miss():
+def test_links_process_5():
+    input_pattern = make_knitpaint([*[[1, 2,   1]] * 8,
+                                      [1, 116, 1],
+                                      [1, 1,   1]])
+    # No error should occur
+    loops = check(input_pattern)
+    assert len(loops) > 0
+    assert_from_to(loops, 0, 1, 2, 1)
+
+
+def test_miss_1():
     input_pattern = make_knitpaint([[1, 1,  1, 1,   1, 1,   1],
                                     [1, 16, 1, 116, 1, 117, 1],
                                     [1, 1,  1, 1,   1, 1,   1]])
@@ -107,6 +117,15 @@ def test_miss():
     assert loops[3].dst_loop is loops[14]
     assert len(loops[14].src_loops) == 1
     assert loops[14].src_loops[0] is loops[3]
+
+
+def test_miss_2():
+    input_pattern = make_knitpaint([[1, 1,   1, 2, 2,   2],
+                                    [1, 116, 1, 2, 117, 2],
+                                    [7, 1,   1, 2, 2,   8]])
+    # No error should occur
+    loops = check(input_pattern)
+    assert len(loops) > 0
 
 
 def test_tuck():
