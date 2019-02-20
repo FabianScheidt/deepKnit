@@ -139,6 +139,28 @@ def test_incompatible_cable_stitches():
     assert problems[1].wale == 4
 
 
+def test_incomplete_cable_stitches_1():
+    """
+    Cable stitches that do not pair should throw an error
+    """
+    in_data = [1, 1, 4, 4, 1, 1]
+    with pytest.raises(KnitPaintCheckException) as err:
+        resolve_cable_stitches(in_data, len(in_data))
+    problems = err.value.problems
+    assert len(problems) > 0
+
+
+def test_incomplete_cable_stitches_2():
+    """
+    Multiple same cable stitches that do not pair should throw an error
+    """
+    in_data = [1, 4, 4, 1, 4, 4, 1]
+    with pytest.raises(KnitPaintCheckException) as err:
+        resolve_cable_stitches(in_data, len(in_data))
+    problems = err.value.problems
+    assert len(problems) > 0
+
+
 def test_long_cable_stitches():
     """
     Cable stitches that are too big should throw an error
