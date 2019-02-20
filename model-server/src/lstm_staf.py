@@ -1,4 +1,4 @@
-import pathlib, sys, functools
+import pathlib, sys, functools, os
 import pandas as pd
 import numpy as np
 import tensorflow as tf
@@ -6,6 +6,8 @@ from tensorflow import keras
 from knitpaint import KnitPaint
 from lstm import LSTMModel
 from train_utils import masked_acc
+from knitpaint import read_linebreak
+from knitpaint.check import KnitPaintCheckException
 
 K = keras.backend
 Input = keras.layers.Input
@@ -22,6 +24,8 @@ START_OF_FILE_CHAR = 150
 END_OF_LINE_CHAR = 151
 END_OF_FILE_CHAR = 152
 CATEGORIES = ['Cable/Aran', 'Stitch move', 'Links', 'Miss', 'Tuck']
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 class LSTMModelStaf(LSTMModel):
@@ -79,6 +83,15 @@ class LSTMModelStaf(LSTMModel):
         # Normalize rows of categories so they sum up to 1.0
         categories_row_sums = categories.sum(axis=1)
         categories = categories / categories_row_sums[:, np.newaxis]
+
+        # Find and print some category statistics
+        unique_categories, unique_categories_counts = np.unique(categories, axis=0, return_counts=True)
+        unique_categories_counts = np.expand_dims(unique_categories_counts, axis=1)
+        unique_categories = np.hstack((unique_categories_counts, unique_categories))
+        unique_categories = unique_categories[(-unique_categories[:, 0]).argsort()]
+        print('\n\nCategory counts:\n')
+        with np.printoptions(formatter={'float': '{: 0.2f}'.format}):
+            print(unique_categories)
 
         # Weights will be 1 for values and 0 for padding. End of line and end of file should have weight 10 and 100.
         weights = np.ones_like(sequences, dtype=int)
@@ -178,6 +191,123 @@ class LSTMModelStaf(LSTMModel):
 
         return do_sample
 
+    def evaluate(self):
+        """
+        Samples from the model using various temperatures and categories. Then performs a check for each sample and
+        stores the resulting evaluation
+        :return:
+        """
+        sample = self.sample()
+        evaluation = []
+
+        # Configure evaluation parameters
+        temperatures = [1.5, 1.0, 0.7, 0.5, 0.2, 0.1, 0.001]
+        category_weights_names = ['Move', 'Cable', 'Miss', 'Move and Miss', 'Move and Links', 'Links', 'Cable and Move',
+                                  'Cable and Links', 'Miss and Links', 'Tuck', 'Move and Tuck', 'Tuck and Links',
+                                  'Miss and Tuck', 'Cable and Miss', 'Cable, Move, Links', 'Cable and Tuck',
+                                  'Move, Links, Tuck', 'Cable, Links, Miss', 'Cable, Move, Miss']
+        category_weights_train_counts = [393, 213, 120, 96, 75, 69, 54, 54, 28, 23, 21, 7, 6, 5, 2, 2, 1, 1, 1]
+        category_weights_values = [
+            [0.0, 1.0, 0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.5, 0.0, 0.5, 0.0],
+            [0.0, 0.5, 0.5, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.5, 0.5, 0.0, 0.0, 0.0],
+            [0.5, 0.0, 0.5, 0.0, 0.0],
+            [0.0, 0.0, 0.5, 0.5, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0],
+            [0.0, 0.5, 0.0, 0.0, 0.5],
+            [0.0, 0.0, 0.5, 0.0, 0.5],
+            [0.0, 0.0, 0.0, 0.5, 0.5],
+            [0.5, 0.0, 0.0, 0.5, 0.0],
+            [1/3, 1/3, 1/3, 0.0, 0.0],
+            [0.5, 0.0, 0.0, 0.0, 0.5],
+            [0.0, 1/3, 1/3, 0.0, 1/3],
+            [1/3, 0.0, 1/3, 1/3, 0.0],
+            [1/3, 1/3, 0.0, 1/3, 0.0]
+        ]
+        assert len(category_weights_names) == len(category_weights_values)
+        num_samples = 20
+
+        # Configure progress logger and silence tensorflow
+        progress = tf.keras.utils.Progbar(len(temperatures) * len(category_weights_values) * num_samples)
+        progress_counter = 0
+
+        for temperature in temperatures:
+            for i, category_weights in enumerate(category_weights_values):
+                # Keep a set of hashes of previously sampled knitpaint
+                previous = set()
+
+                # Sample some knitpaint
+                for _ in range(num_samples):
+
+                    # Sample and create knitpaint object from result
+                    generated_res = bytes()
+                    for s in sample([START_OF_FILE_CHAR], category_weights, temperature=temperature, max_generate=400):
+                        generated_res = generated_res + s
+                    knitpaint = read_linebreak(generated_res[1:-1], 151, padding_char=1)
+                    knitpaint_hash = hash(bytes(knitpaint.bitmap_data))
+
+                    # Check if the data is knittable
+                    knittable = True
+                    try:
+                        knitpaint.check_as_pattern()
+                    except (KnitPaintCheckException, AttributeError, ZeroDivisionError, NotImplementedError):
+                        knittable = False
+
+                    # Append to result list
+                    evaluation.append({
+                        'temperature': temperature,
+                        'category_weights_value': category_weights,
+                        'category_weights_name': category_weights_names[i],
+                        'category_weights_train_count': category_weights_train_counts[i],
+                        'knittable': knittable,
+                        'unique': knitpaint_hash not in previous,
+                        'width': knitpaint.get_width(),
+                        'height': knitpaint.get_height(),
+                        'area': len(knitpaint.bitmap_data)
+                    })
+
+                    # Save matching knitpaint some for MetaKnit project
+                    if knittable and knitpaint.get_width() == 4 and knitpaint.get_height() == 6 \
+                            and knitpaint_hash not in previous and 0.1 < temperature < 0.8:
+                        knitpaint.write_dat(self.model_dir + 'meta-knit/' + str(progress_counter) + '.dat')
+
+                    # Add to set of previous knitpaint
+                    previous.add(knitpaint_hash)
+
+                    # Log progress
+                    progress_counter += 1
+                    progress.update(progress_counter)
+
+        # Convert evaluation to data frame and save it
+        df = pd.DataFrame(evaluation)
+        df.to_excel(self.model_dir + 'evaluation.xlsx')
+
+        # Calculate and some metrics
+        unique_and_knittable_mean = df.groupby(['temperature', 'category_weights_name'])[['knittable', 'unique']].mean()
+        knittable = df[df['knittable']]
+        unique_of_knittable_mean = knittable.groupby(['temperature', 'category_weights_name'])[['unique']].mean()
+        unique_of_knittable_mean = unique_of_knittable_mean.rename(columns={'unique': 'unique-of-knittable'})
+        unique_knittable = pd.concat([unique_and_knittable_mean, unique_of_knittable_mean], axis=1, sort=False)
+        unique_knittable_pivot = pd.pivot_table(unique_knittable, values=['knittable', 'unique', 'unique-of-knittable'],
+                                                index=['temperature'], columns=['category_weights_name'],
+                                                aggfunc='mean')
+        knittable_widths = knittable.groupby(['width']).size()
+        knittable_heights = knittable.groupby(['height']).size()
+        knittable_areas = knittable.groupby(['area']).size()
+
+        # Save to excel
+        writer = pd.ExcelWriter(self.model_dir + 'evaluation_metrics.xlsx', engine='xlsxwriter')
+        unique_knittable.to_excel(writer, sheet_name='Means')
+        unique_knittable_pivot.to_excel(writer, sheet_name='Means Pivot')
+        knittable_widths.to_excel(writer, sheet_name='Knittable Widths')
+        knittable_heights.to_excel(writer, sheet_name='Knittable Heights')
+        knittable_areas.to_excel(writer, sheet_name='Knittable Areas')
+        writer.save()
+
 
 if __name__ == '__main__':
     lstm_model = LSTMModelStaf()
@@ -193,5 +323,8 @@ if __name__ == '__main__':
         start = [1]*8 + [END_OF_LINE_CHAR] + [1]*2
         for test in lstm_model.sample()(start, temperature=0.01, max_generate=400):
             print('Sampled: ' + str(test))
+    elif sys.argv[1] == 'evaluate':
+        print('Evaluating...')
+        lstm_model.evaluate()
 
     print('Done!')
