@@ -326,16 +326,16 @@ class LSTMModel:
 
                 # Feed the start string
                 model.reset_states()
-                input = [np.array([generated[:-1]])] + additional_inputs
-                model.predict(input)
+                if len(generated) > 1:
+                    model_input = [np.array([generated[:-1]])] + additional_inputs
+                    model.predict(model_input)
 
                 # Now generate by constantly feeding the last generated index and predicting the next
-                print('Generating')
                 for i in range(len(start_string), num_generate):
                     try:
-                        input_idx = generated[-1]
-                        input = [np.array([[input_idx]])] + additional_inputs
-                        output = model.predict(input)
+                        model_input_idx = generated[-1]
+                        model_input = [np.array([[model_input_idx]])] + additional_inputs
+                        output = model.predict(model_input)
 
                         # Pick with multinomial distribution to get a single prediction
                         predicted_idx = sess.run(prediction, feed_dict={model_output: output, index: i, temp: temperature})
