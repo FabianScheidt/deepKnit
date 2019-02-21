@@ -1,15 +1,20 @@
-import pathlib, sys, functools, os
-import pandas as pd
+import functools
+import os
+import pathlib
+import sys
+
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
+
 from knitpaint import KnitPaint
-from lstm import LSTMModel
-from train_utils import masked_acc
 from knitpaint import read_linebreak
 from knitpaint.check import KnitPaintCheckException
+from train_utils import masked_acc, split_train_val, fit_and_log
 
 K = keras.backend
+Model = keras.Model
 Input = keras.layers.Input
 Embedding = keras.layers.Embedding
 Lambda = keras.layers.Lambda
@@ -17,6 +22,7 @@ concatenate = keras.layers.concatenate
 LSTM = keras.layers.LSTM
 CuDNNLSTM = keras.layers.CuDNNLSTM
 Dense = keras.layers.Dense
+Softmax = keras.layers.Softmax
 
 PADDING_CHAR = 0
 BG_CHAR = 1
@@ -28,25 +34,18 @@ CATEGORIES = ['Cable/Aran', 'Stitch move', 'Links', 'Miss', 'Tuck']
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
-class LSTMModelStaf(LSTMModel):
+class LSTMModelStaf:
     """
     Uses knit patterns from the staf library to train an lstm
     """
 
     def __init__(self):
         super().__init__()
-        self.trained_width = None
         self.data_dir = '../data/raw/staf/'
         self.training_dir = '../data/processed/training-files/lstm-staf/'
         self.model_dir = '../output/models/lstm-staf/'
         self.epochs = 200
-
-    def get_training_filename(self):
-        """
-        Overrides the inherited function with a static filename
-        :return:
-        """
-        return 'training-sequences'
+        self.batch_size = 32
 
     def generate_training_file(self):
         """
@@ -108,28 +107,64 @@ class LSTMModelStaf(LSTMModel):
 
         # Save sequences and vocabulary
         print('\n\nSaving results...')
-        training_filename = self.get_training_filename()
         pathlib.Path(self.training_dir).mkdir(parents=True, exist_ok=True)
-        np.save(self.training_dir + training_filename + '.npy', sequences)
-        np.save(self.training_dir + training_filename + '-categories.npy', categories)
-        np.save(self.training_dir + training_filename + '-weights.npy', weights)
-        np.save(self.training_dir + training_filename + '-vocab.npy', vocab)
+        np.save(self.training_dir + 'training-sequences.npy', sequences)
+        np.save(self.training_dir + 'training-sequences-categories.npy', categories)
+        np.save(self.training_dir + 'training-sequences-weights.npy', weights)
+        np.save(self.training_dir + 'training-sequences-vocab.npy', vocab)
+
+    def read_vocab(self):
+        """
+        Reads the vocabulary from previously generated training files
+        :return:
+        """
+        # Read vocabulary
+        vocab = np.load(self.training_dir + 'training-sequences-vocab.npy')
+
+        # Build lookups
+        to_idx = np.zeros(256, dtype=int)
+        from_idx = np.zeros(256, dtype=int)
+        for idx, data in enumerate(np.nditer(vocab)):
+            to_idx[data] = idx
+            from_idx[idx] = data
+
+        return vocab, from_idx, to_idx
 
     def read_training_dataset(self):
-        categories = np.load(self.training_dir + self.get_training_filename() + '-categories.npy')
-        res = super().read_training_dataset()
-        res[0].append(categories)
-        return res
+        """
+        Reads and returns the previously generated training data files
+        :return:
+        """
+        # Read sequences
+        sequences = np.load(self.training_dir + 'training-sequences.npy')
+        weights = np.load(self.training_dir + 'training-sequences-weights.npy')
 
-    def get_model(self, vocab_size, batch_shape, stateful=False, softmax=True):
+        # Read categories
+        categories = np.load(self.training_dir + 'training-sequences-categories.npy')
+
+        # Read vocabulary
+        vocab, from_idx, to_idx = self.read_vocab()
+        vocab_size = vocab.size
+
+        # Transform sequences to index representation
+        sequences = to_idx[sequences]
+
+        # Split into inputs and outputs
+        input_data = [sequences[:, :-1], categories]
+        output_data = [sequences[:, 1:]]
+        weights = weights[:, -output_data[0].shape[1]:]
+
+        return input_data, output_data, weights, vocab_size, from_idx, to_idx
+
+    def get_model(self, vocab_size, batch_size=None, stateful=False):
         # Build a one hot encoding on the fly. Use one hot instead of embedding since the vocab_size is small
-        sequence_inputs_layer = Input(batch_shape=batch_shape[0], name='sequence_inputs_layer', dtype='int32')
+        sequence_inputs_layer = Input(batch_shape=(batch_size, None), name='sequence_inputs_layer', dtype='int32')
         embedded_inputs = Lambda(lambda x: K.one_hot(x, vocab_size), name='one_hot_inputs')(sequence_inputs_layer)
 
         # Add a second input for the categories and repeat it across the sequence length dimension
-        category_inputs_layer = Input(batch_shape=batch_shape[1], name='category_inputs_layer')
+        category_inputs_layer = Input(batch_shape=(batch_size, len(CATEGORIES)), name='category_inputs_layer')
         category_repeat_layer = Lambda(lambda args: keras.layers.RepeatVector(K.shape(args[1])[1])(args[0]),
-                                       output_shape=(batch_shape[0][1], batch_shape[1][1]),
+                                       output_shape=(batch_size, len(CATEGORIES)),
                                        name='category_repeat_layer')([category_inputs_layer, embedded_inputs])
 
         # Concatenate both inputs
@@ -146,50 +181,129 @@ class LSTMModelStaf(LSTMModel):
                             stateful=stateful, name='lstm_2')(lstm_1)
 
         # Dense output: One element for each color number in the vocabulary
-        activation = 'softmax' if softmax else None
-        dense_output = Dense(vocab_size, name='dense_output', activation=activation)(lstm_2)
-        model = keras.Model(inputs=[sequence_inputs_layer, category_inputs_layer], outputs=dense_output)
-        return model
+        dense_output = Dense(vocab_size, name='dense_output')(lstm_2)
+        softmax_output = Softmax()(dense_output)
 
-    def train(self, metrics=None, **kwargs):
+        # Define training model
+        train_inputs = [sequence_inputs_layer, category_inputs_layer]
+        train_outputs = [dense_output]
+        train_model = Model(inputs=train_inputs, outputs=train_outputs)
+
+        # Define sampling model
+        sample_inputs = [sequence_inputs_layer, category_inputs_layer]
+        sample_outputs = [softmax_output]
+        sample_model = Model(inputs=sample_inputs, outputs=sample_outputs)
+
+        return train_model, sample_model
+
+    def train(self, val_split=0.05):
         """
         Trains the model
-        :param metrics:
-        :param kwargs:
+        :param val_split:
         :return:
         """
-        metrics = [] if metrics is None else metrics
-        _, _, to_idx = self.read_vocab()
+        # Read input and output data
+        input_data, output_data, weights, vocab_size, _, to_idx = self.read_training_dataset()
+        output_data = tf.keras.utils.to_categorical(output_data, vocab_size)
 
-        # Define accuracy functions that ignores the padding and the background single jersey
+        # Shuffle and split data manually into train and test to make sure that the batch size is correct
+        train_input_data, train_output_data, train_weights, val_input_data, val_output_data, val_weights = \
+            split_train_val(input_data, output_data, weights, self.batch_size, val_split)
+
+        # Define accuracy functions that ignore the padding and the background single jersey
         acc_full = masked_acc([to_idx[PADDING_CHAR]], acc_name='FULL')
         acc_fg = masked_acc([to_idx[PADDING_CHAR], to_idx[BG_CHAR]], acc_name='FG')
-        metrics.append('acc')
-        metrics.append(acc_full)
-        metrics.append(acc_fg)
+        metrics = ['acc', acc_full, acc_fg]
 
-        super().train(metrics=metrics, **kwargs)
+        # Get the model
+        model, _ = self.get_model(vocab_size)
 
-    def sample(self, additional_batch_shape=None):
+        # Compile the model
+        model.compile(optimizer=tf.train.AdamOptimizer(),
+                      sample_weight_mode='temporal',
+                      loss='categorical_crossentropy', metrics=metrics)
+        model.summary()
+
+        # Fit the data. Use Tensorboard to visualize the progress
+        fit_and_log(model, self.model_dir, model_name='lstm-model',
+                    x=train_input_data, y=train_output_data, sample_weight=train_weights,
+                    validation_data=(val_input_data, val_output_data, val_weights),
+                    batch_size=self.batch_size, epochs=self.epochs, shuffle=True)
+
+    def sample(self):
         """
         Samples using the inherited sampling function but stops when a end of file character is generated
         :return:
         """
+
+        # Get a reference to the default tensorflow graph
+        graph = tf.get_default_graph()
+
+        # Load the vocabulary
+        vocab, from_idx, to_idx = self.read_vocab()
+
+        # Build a new model and load just the weights but use a batch-size and sequence-length different from the
+        # training without softmax output. This allows the prediction of sequences of any size. Additionally no CUDA
+        # is needed for the sampling. Note that the RNN layers need to be stateful so Keras does not reset the state
+        # after every batch.
         category_shape = (1, len(CATEGORIES))
-        additional_batch_shape = [category_shape] if additional_batch_shape is None else additional_batch_shape
-        super_do_sample = super().sample(additional_batch_shape=additional_batch_shape)
+        _, model = self.get_model(vocab.size, batch_size=1, stateful=True)
+        model.load_weights(self.model_dir + 'lstm-model.h5')
+        model.summary()
 
-        def do_sample(start_string, category_weights, temperature=1.0, max_generate=100):
-            additional_inputs = [np.array(category_weights).reshape(category_shape)]
-            samples = super_do_sample(start_string, temperature=temperature,
-                                      num_generate=max_generate, additional_inputs=additional_inputs)
-            for predicted in samples:
-                yield predicted
-                predicted_int = int(predicted[0])
-                if predicted_int == END_OF_FILE_CHAR:
-                    break
+        # Build a graph to pick a prediction from the logits returned by the RNN
+        # This graph picks randomly from the probabilities
+        model_output = tf.placeholder(tf.float32, shape=(1, None, vocab.size))
+        logits = tf.squeeze(model_output, 0)
+        temp = tf.placeholder(tf.float32)
+        logits_scaled = tf.div(logits, temp)
+        prediction = tf.multinomial(logits_scaled, num_samples=1)[-1, 0]
 
-        return do_sample
+        # Define and return a method that performs the sampling on the loaded model and graph
+        def do_sampling(start_string, category_weights=None, temperature=1.0, max_generate=100):
+            category_weights = [0.0, 0.0, 1.0, 0.0, 0.0] if category_weights is None else category_weights
+            category_weights = np.array(category_weights).reshape(category_shape)
+
+            # Immediately return the start string
+            for char in start_string:
+                yield bytes([char])
+
+            # Keep a record of the generated bytes
+            generated = [to_idx[char] for char in start_string]
+
+            # Make sure that the correct graph is used
+            with graph.as_default():
+                # Create a tensorflow session
+                sess = tf.Session()
+
+                # Feed the start string
+                model.reset_states()
+                if len(generated) > 1:
+                    model_input = [np.array([generated[:-1]]), category_weights]
+                    model.predict(model_input)
+
+                # Now generate by constantly feeding the last generated index and predicting the next
+                for i in range(len(start_string), max_generate):
+                    try:
+                        model_input_idx = generated[-1]
+                        model_input = [np.array([[model_input_idx]]), category_weights]
+                        output = model.predict(model_input)
+
+                        # Pick with multinomial distribution to get a single prediction
+                        predicted_idx = sess.run(prediction,
+                                                 feed_dict={model_output: output, temp: temperature})
+
+                        # Append and yield prediction
+                        generated.append(predicted_idx)
+                        yield bytes([from_idx[predicted_idx]])
+
+                        predicted_int = int(from_idx[predicted_idx])
+                        if predicted_int == END_OF_FILE_CHAR:
+                            break
+                    except GeneratorExit:
+                        return
+
+        return do_sampling
 
     def evaluate(self):
         """
@@ -317,10 +431,10 @@ if __name__ == '__main__':
         lstm_model.generate_training_file()
     elif sys.argv[1] == 'train':
         print('Training...')
-        lstm_model.train(use_weights=True)
+        lstm_model.train()
     elif sys.argv[1] == 'sample':
         print('Sampling...')
-        start = [1]*8 + [END_OF_LINE_CHAR] + [1]*2
+        start = [START_OF_FILE_CHAR]
         for test in lstm_model.sample()(start, temperature=0.01, max_generate=400):
             print('Sampled: ' + str(test))
     elif sys.argv[1] == 'evaluate':
