@@ -229,7 +229,7 @@ class LSTMModelStaf(LSTMModel):
             [1/3, 1/3, 0.0, 1/3, 0.0]
         ]
         assert len(category_weights_names) == len(category_weights_values)
-        num_samples = 20
+        num_samples = 2000
 
         # Configure progress logger and silence tensorflow
         progress = tf.keras.utils.Progbar(len(temperatures) * len(category_weights_values) * num_samples)
