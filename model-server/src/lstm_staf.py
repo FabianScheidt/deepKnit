@@ -10,7 +10,7 @@ from tensorflow import keras
 from knitpaint import KnitPaint
 from knitpaint import read_linebreak
 from knitpaint.check import KnitPaintCheckException
-from train_utils import masked_acc, split_train_val, fit_and_log, OptionalCuDNNLSTM, TemperatureSampling
+from train_utils import masked_acc, split_train_val, fit_and_log, get_lstm_layer, TemperatureSampling
 
 K = keras.backend
 Model = keras.Model
@@ -173,10 +173,10 @@ class LSTMModelStaf:
         sequence_input, category_input, concatenated_inputs = self._get_model_input(vocab_size, batch_size)
 
         # Define two lstm layers
-        lstm_layer_1 = OptionalCuDNNLSTM(300, return_sequences=True, recurrent_initializer='glorot_uniform',
-                                         name='lstm_1')
-        lstm_layer_2 = OptionalCuDNNLSTM(300, return_sequences=True, recurrent_initializer='glorot_uniform',
-                                         name='lstm_2')
+        lstm_layer_1 = get_lstm_layer()(300, return_sequences=True, recurrent_initializer='glorot_uniform',
+                                        name='lstm_1')
+        lstm_layer_2 = get_lstm_layer()(300, return_sequences=True, recurrent_initializer='glorot_uniform',
+                                        name='lstm_2')
 
         # Dense output: One element for each color number in the vocabulary
         dense_output_layer = Dense(vocab_size, name='dense_output')
@@ -198,8 +198,8 @@ class LSTMModelStaf:
         sequence_input, category_input, concatenated_inputs = self._get_model_input(vocab_size, batch_size)
 
         # Define two lstm layers
-        lstm_layer_1 = OptionalCuDNNLSTM(300, return_sequences=True, return_state=True, name='lstm_1')
-        lstm_layer_2 = OptionalCuDNNLSTM(300, return_sequences=False, return_state=True, name='lstm_2')
+        lstm_layer_1 = get_lstm_layer()(300, return_sequences=True, return_state=True, name='lstm_1')
+        lstm_layer_2 = get_lstm_layer()(300, return_sequences=False, return_state=True, name='lstm_2')
 
         # The sampling model needs additional inputs for the lstm states
         lstm_1_states_input = [Input(batch_shape=(batch_size, 300), name='lstm_1_initial_h'),
@@ -232,10 +232,11 @@ class LSTMModelStaf:
         :return:
         """
         sess = tf.Session()
-        h_1 = tf.get_variable('h_1', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
-        c_1 = tf.get_variable('c_1', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
-        h_2 = tf.get_variable('h_2', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
-        c_2 = tf.get_variable('c_2', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
+        with tf.variable_scope("initial_state", reuse=tf.AUTO_REUSE):
+            h_1 = tf.get_variable('h_1', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
+            c_1 = tf.get_variable('c_1', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
+            h_2 = tf.get_variable('h_2', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
+            c_2 = tf.get_variable('c_2', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
         sess.run(tf.global_variables_initializer())
         return sess.run([h_1, c_1, h_2, c_2])
 

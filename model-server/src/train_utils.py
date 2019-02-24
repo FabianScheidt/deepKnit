@@ -7,11 +7,16 @@ from tensorflow import keras
 
 K = keras.backend
 
-# Reference matching LSTM
-if tf.test.is_gpu_available():
-    OptionalCuDNNLSTM = keras.layers.CuDNNLSTM
-else:
-    OptionalCuDNNLSTM = functools.partial(keras.layers.LSTM, activation='tanh', recurrent_activation='sigmoid')
+
+def get_lstm_layer():
+    """
+    Retunrs CuDNNLSTM if a GPU is available, otherwise the regular LSTM
+    :return:
+    """
+    if tf.test.is_gpu_available():
+        return keras.layers.CuDNNLSTM
+    else:
+        return functools.partial(keras.layers.LSTM, activation='tanh', recurrent_activation='sigmoid')
 
 
 class TemperatureSampling(tf.keras.layers.Layer):
