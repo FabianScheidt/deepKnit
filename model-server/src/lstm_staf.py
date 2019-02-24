@@ -292,10 +292,13 @@ class LSTMModelStaf:
         model.summary()
 
         # Define and return a method that performs the sampling on the loaded model and graph
-        def do_sampling(start_string, category_weights=None, temperature=1.0, max_generate=100):
+        def do_sampling(start_string, category_weights=None, method='stochastic', temperature=1.0, max_generate=100):
             category_weights = [0.0, 0.0, 1.0, 0.0, 0.0] if category_weights is None else category_weights
             category_weights = np.array(category_weights).reshape(category_shape)
             temperature = np.array([temperature])
+
+            if method not in ['stochastic', 'greedy']:
+                raise NotImplementedError
 
             # Immediately return the start string
             for char in start_string:
@@ -315,9 +318,13 @@ class LSTMModelStaf:
 
                     # Predict and make sure that the correct graph is used
                     with graph.as_default():
-                        _, prediction, lstm_1_h, lstm_1_c, lstm_2_h, lstm_2_c = model.predict(model_input)
+                        dense_output, prediction, lstm_1_h, lstm_1_c, lstm_2_h, lstm_2_c = model.predict(model_input)
                     last_state = [lstm_1_h, lstm_1_c, lstm_2_h, lstm_2_c]
-                    last_generated = int(prediction)
+
+                    if method == 'greedy':
+                        last_generated = np.argmax(dense_output[0], axis=0)
+                    else:
+                        last_generated = int(prediction)
 
                     # Append and yield prediction
                     generated.append(last_generated)

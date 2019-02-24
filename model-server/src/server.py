@@ -181,6 +181,7 @@ def to_dat():
 def get_pattern():
     # Read URL parameters
     args = request.args
+    method = 'stochastic' if args.get('method') is None else args.get('method')
     temperature = 0.7 if args.get('temperature') is None else float(args.get('temperature'))
     cable = 0.2 if args.get('cable') is None else float(args.get('cable'))
     stitch_move = 0.2 if args.get('stitchMove') is None else float(args.get('stitchMove'))
@@ -191,7 +192,8 @@ def get_pattern():
     # Sample from lstm staf model. Start with start character
     start = [START_OF_FILE_CHAR]
     category_weights = [cable, stitch_move, links, miss, tuck]
-    sample = sample_lstm_staf(start, category_weights=category_weights, temperature=temperature, max_generate=400)
+    sample = sample_lstm_staf(start, category_weights=category_weights, method=method,
+                              temperature=temperature, max_generate=400)
     generated_res = bytes()
     for generated in sample:
         generated_res = generated_res + generated
