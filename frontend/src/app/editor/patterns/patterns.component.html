@@ -60,7 +60,19 @@
       <div class="value">{{ samplingOptions.cable | percent }}</div>
     </div>
     <div class="category">Options</div>
-    <div class="parameter temperature">
+    <div class="parameter sampling-method">
+      <div class="label">Method</div>
+      <div class="select">
+        <mat-form-field>
+          <mat-select [value]="samplingOptions.method" (valueChange)="setSamplingOptions('method', $event)">
+            <mat-option value="greedy">Greedy Sampling</mat-option>
+            <mat-option value="stochastic">Stochastic Sampling</mat-option>
+            <mat-option value="beam-search">Beam Search</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+    <div class="parameter temperature" *ngIf="samplingOptions.method === 'stochastic'">
       <div class="label">Randomness</div>
       <div class="slider">
         <mat-slider min="0.01" max="2" step="0.01" value="0.5" [value]="samplingOptions.temperature"

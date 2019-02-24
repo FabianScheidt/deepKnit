@@ -92,6 +92,8 @@
 
       .label {
         width: 70px;
+        flex-grow: 0;
+        flex-shrink: 0;
       }
 
       .slider {
@@ -103,8 +105,25 @@
         }
       }
 
+      .select {
+        flex-grow: 1;
+        flex-shrink: 1;
+        padding: 8px 0 8px 8px;
+
+        mat-form-field {
+          margin: -10px 0;
+          width: 134px;
+        }
+
+        mat-select {
+          width: 100%;
+        }
+      }
+
       .value {
         width: 40px;
+        flex-grow: 0;
+        flex-shrink: 0;
         text-align: right;
       }
     }

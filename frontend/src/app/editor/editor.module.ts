@@ -19,6 +19,7 @@ import {
   MatIconModule,
   MatInputModule,
   MatMenuModule,
+  MatSelectModule,
   MatSliderModule,
   MatSlideToggleModule
 } from '@angular/material';
@@ -46,6 +47,7 @@ import { MatomoModule } from 'ngx-matomo';
     MatDividerModule,
     MatSliderModule,
     MatSlideToggleModule,
+    MatSelectModule,
     MatomoModule
   ],
   declarations: [

@@ -16,6 +16,7 @@ export class PatternsComponent implements OnInit, OnDestroy {
 
   private numLoad = 28;
   samplingOptions: PatternSamplingOptions = {
+    method: 'stochastic',
     temperature: 0.7,
     cable: 0,
     stitchMove: 0.8,
@@ -109,11 +110,11 @@ export class PatternsComponent implements OnInit, OnDestroy {
    */
   public setSamplingOptions(which: string, value: number) {
     this.samplingOptions[which] = value;
-    if (which !== 'temperature') {
+    if (which !== 'method' && which !== 'temperature') {
       let othersSum = 0;
       let othersCount = 0;
       for (const key of Object.keys(this.samplingOptions)) {
-        if (key !== 'temperature' && key !== which) {
+        if (key !== 'method' && key !== 'temperature' && key !== which) {
           othersSum += this.samplingOptions[key];
           othersCount++;
         }
@@ -121,7 +122,7 @@ export class PatternsComponent implements OnInit, OnDestroy {
       const excess = 1 - othersSum - value;
 
       for (const key of Object.keys(this.samplingOptions)) {
-        if (key !== 'temperature' && key !== which) {
+        if (key !== 'method' && key !== 'temperature' && key !== which) {
           const fraction = othersSum === 0 ? 1 / othersCount : this.samplingOptions[key] / othersSum;
           this.samplingOptions[key] = Math.round((this.samplingOptions[key] + excess * fraction) * 1000) / 1000;
         }
