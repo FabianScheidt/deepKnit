@@ -1,4 +1,3 @@
-import functools
 import os
 import pathlib
 import sys
@@ -11,7 +10,7 @@ from tensorflow import keras
 from knitpaint import KnitPaint
 from knitpaint import read_linebreak
 from knitpaint.check import KnitPaintCheckException
-from train_utils import masked_acc, split_train_val, fit_and_log
+from train_utils import masked_acc, split_train_val, fit_and_log, OptionalCuDNNLSTM, TemperatureSampling
 
 K = keras.backend
 Model = keras.Model
@@ -19,8 +18,6 @@ Input = keras.layers.Input
 Embedding = keras.layers.Embedding
 Lambda = keras.layers.Lambda
 concatenate = keras.layers.concatenate
-LSTM = keras.layers.LSTM
-CuDNNLSTM = keras.layers.CuDNNLSTM
 Dense = keras.layers.Dense
 Softmax = keras.layers.Softmax
 
@@ -156,45 +153,91 @@ class LSTMModelStaf:
 
         return input_data, output_data, weights, vocab_size, from_idx, to_idx
 
-    def get_model(self, vocab_size, batch_size=None, stateful=False):
+    def _get_model_input(self, vocab_size, batch_size):
         # Build a one hot encoding on the fly. Use one hot instead of embedding since the vocab_size is small
-        sequence_inputs_layer = Input(batch_shape=(batch_size, None), name='sequence_inputs_layer', dtype='int32')
-        embedded_inputs = Lambda(lambda x: K.one_hot(x, vocab_size), name='one_hot_inputs')(sequence_inputs_layer)
+        sequence_input = Input(batch_shape=(batch_size, None), name='sequence_inputs_layer', dtype='int32')
+        embedded_input = Lambda(lambda x: K.one_hot(x, vocab_size), name='one_hot_inputs')(sequence_input)
 
         # Add a second input for the categories and repeat it across the sequence length dimension
-        category_inputs_layer = Input(batch_shape=(batch_size, len(CATEGORIES)), name='category_inputs_layer')
-        category_repeat_layer = Lambda(lambda args: keras.layers.RepeatVector(K.shape(args[1])[1])(args[0]),
-                                       output_shape=(batch_size, len(CATEGORIES)),
-                                       name='category_repeat_layer')([category_inputs_layer, embedded_inputs])
+        category_input = Input(batch_shape=(batch_size, len(CATEGORIES)), name='category_inputs_layer')
+        category_repeated = Lambda(lambda args: keras.layers.RepeatVector(K.shape(args[1])[1])(args[0]),
+                                   output_shape=(batch_size, len(CATEGORIES)),
+                                   name='category_repeat_layer')([category_input, embedded_input])
 
         # Concatenate both inputs
-        concatenate_layer = concatenate([embedded_inputs, category_repeat_layer])
+        concatenated_inputs = concatenate([embedded_input, category_repeated])
+        return sequence_input, category_input, concatenated_inputs
 
-        if tf.test.is_gpu_available():
-            lstm_layer = CuDNNLSTM
-        else:
-            lstm_layer = functools.partial(LSTM, activation='tanh', recurrent_activation='sigmoid')
+    def get_train_model(self, vocab_size, batch_size=None):
+        # Get concatenated inputs
+        sequence_input, category_input, concatenated_inputs = self._get_model_input(vocab_size, batch_size)
 
-        lstm_1 = lstm_layer(300, return_sequences=True, recurrent_initializer='glorot_uniform',
-                            stateful=stateful, name='lstm_1')(concatenate_layer)
-        lstm_2 = lstm_layer(300, return_sequences=True, recurrent_initializer='glorot_uniform',
-                            stateful=stateful, name='lstm_2')(lstm_1)
+        # Define two lstm layers
+        lstm_layer_1 = OptionalCuDNNLSTM(300, return_sequences=True, recurrent_initializer='glorot_uniform',
+                                         name='lstm_1')
+        lstm_layer_2 = OptionalCuDNNLSTM(300, return_sequences=True, recurrent_initializer='glorot_uniform',
+                                         name='lstm_2')
 
         # Dense output: One element for each color number in the vocabulary
-        dense_output = Dense(vocab_size, name='dense_output')(lstm_2)
-        softmax_output = Softmax()(dense_output)
+        dense_output_layer = Dense(vocab_size, name='dense_output')
+        softmax_output_layer = Softmax(name='softmax_output')
+
+        # Now assemble the layers
+        lstm_1 = lstm_layer_1(concatenated_inputs)
+        lstm_2 = lstm_layer_2(lstm_1)
+        dense_output = dense_output_layer(lstm_2)
+        softmax_output = softmax_output_layer(dense_output)
 
         # Define training model
-        train_inputs = [sequence_inputs_layer, category_inputs_layer]
-        train_outputs = [dense_output]
-        train_model = Model(inputs=train_inputs, outputs=train_outputs)
+        inputs = [sequence_input, category_input]
+        outputs = [softmax_output]
+        return Model(inputs=inputs, outputs=outputs)
+
+    def get_sample_model(self, vocab_size, batch_size=None):
+        # Get concatenated inputs
+        sequence_input, category_input, concatenated_inputs = self._get_model_input(vocab_size, batch_size)
+
+        # Define two lstm layers
+        lstm_layer_1 = OptionalCuDNNLSTM(300, return_sequences=True, return_state=True, name='lstm_1')
+        lstm_layer_2 = OptionalCuDNNLSTM(300, return_sequences=False, return_state=True, name='lstm_2')
+
+        # The sampling model needs additional inputs for the lstm states
+        lstm_1_states_input = [Input(batch_shape=(batch_size, 300), name='lstm_1_initial_h'),
+                               Input(batch_shape=(batch_size, 300), name='lstm_1_initial_c')]
+        lstm_2_states_input = [Input(batch_shape=(batch_size, 300), name='lstm_2_initial_h'),
+                               Input(batch_shape=(batch_size, 300), name='lstm_2_initial_c')]
+
+        # Dense output: One element for each color number in the vocabulary
+        dense_output_layer = Dense(vocab_size, name='dense_output')
+
+        # Now assemble the layers
+        lstm_1, lstm_1_h, lstm_1_c = lstm_layer_1(concatenated_inputs, initial_state=lstm_1_states_input)
+        lstm_2, lstm_2_h, lstm_2_c = lstm_layer_2(lstm_1, initial_state=lstm_2_states_input)
+        lstm_1_states = [lstm_1_h, lstm_1_c]
+        lstm_2_states = [lstm_2_h, lstm_2_c]
+        dense_output = dense_output_layer(lstm_2)
+
+        # Create an additional input and output for temperature sampling
+        temperature_input = Input(batch_shape=(batch_size, 1), name='temperature')
+        prediction = TemperatureSampling()(dense_output, temperature=temperature_input)
 
         # Define sampling model
-        sample_inputs = [sequence_inputs_layer, category_inputs_layer]
-        sample_outputs = [softmax_output]
-        sample_model = Model(inputs=sample_inputs, outputs=sample_outputs)
+        inputs = [sequence_input, category_input, temperature_input] + lstm_1_states_input + lstm_2_states_input
+        outputs = [dense_output, prediction] + lstm_1_states + lstm_2_states
+        return Model(inputs=inputs, outputs=outputs)
 
-        return train_model, sample_model
+    def get_initial_state(self):
+        """
+        Returns a random initial state for the model
+        :return:
+        """
+        sess = tf.Session()
+        h_1 = tf.get_variable('h_1', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
+        c_1 = tf.get_variable('c_1', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
+        h_2 = tf.get_variable('h_2', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
+        c_2 = tf.get_variable('c_2', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
+        sess.run(tf.global_variables_initializer())
+        return sess.run([h_1, c_1, h_2, c_2])
 
     def train(self, val_split=0.05):
         """
@@ -216,7 +259,7 @@ class LSTMModelStaf:
         metrics = ['acc', acc_full, acc_fg]
 
         # Get the model
-        model, _ = self.get_model(vocab_size)
+        model = self.get_train_model(vocab_size)
 
         # Compile the model
         model.compile(optimizer=tf.train.AdamOptimizer(),
@@ -235,34 +278,23 @@ class LSTMModelStaf:
         Samples using the inherited sampling function but stops when a end of file character is generated
         :return:
         """
-
         # Get a reference to the default tensorflow graph
         graph = tf.get_default_graph()
 
         # Load the vocabulary
         vocab, from_idx, to_idx = self.read_vocab()
 
-        # Build a new model and load just the weights but use a batch-size and sequence-length different from the
-        # training without softmax output. This allows the prediction of sequences of any size. Additionally no CUDA
-        # is needed for the sampling. Note that the RNN layers need to be stateful so Keras does not reset the state
-        # after every batch.
+        # Load the model with batch size 1 and load the weights from the previously trained model
         category_shape = (1, len(CATEGORIES))
-        _, model = self.get_model(vocab.size, batch_size=1, stateful=True)
-        model.load_weights(self.model_dir + 'lstm-model.h5')
+        model = self.get_sample_model(vocab.size, batch_size=1)
+        model.load_weights(self.model_dir + 'lstm-model.h5', by_name=True)
         model.summary()
-
-        # Build a graph to pick a prediction from the logits returned by the RNN
-        # This graph picks randomly from the probabilities
-        model_output = tf.placeholder(tf.float32, shape=(1, None, vocab.size))
-        logits = tf.squeeze(model_output, 0)
-        temp = tf.placeholder(tf.float32)
-        logits_scaled = tf.div(logits, temp)
-        prediction = tf.multinomial(logits_scaled, num_samples=1)[-1, 0]
 
         # Define and return a method that performs the sampling on the loaded model and graph
         def do_sampling(start_string, category_weights=None, temperature=1.0, max_generate=100):
             category_weights = [0.0, 0.0, 1.0, 0.0, 0.0] if category_weights is None else category_weights
             category_weights = np.array(category_weights).reshape(category_shape)
+            temperature = np.array([temperature])
 
             # Immediately return the start string
             for char in start_string:
@@ -271,37 +303,30 @@ class LSTMModelStaf:
             # Keep a record of the generated bytes
             generated = [to_idx[char] for char in start_string]
 
-            # Make sure that the correct graph is used
-            with graph.as_default():
-                # Create a tensorflow session
-                sess = tf.Session()
+            # Now generate by constantly feeding the last generated index and predicting the next
+            last_generated = None
+            last_state = self.get_initial_state()
+            for i in range(len(start_string) - 1, max_generate):
+                try:
+                    # Prepare model input
+                    input_seq = np.array([generated]) if last_generated is None else np.array([[last_generated]])
+                    model_input = [input_seq, category_weights, temperature] + last_state
 
-                # Feed the start string
-                model.reset_states()
-                if len(generated) > 1:
-                    model_input = [np.array([generated[:-1]]), category_weights]
-                    model.predict(model_input)
+                    # Predict and make sure that the correct graph is used
+                    with graph.as_default():
+                        _, prediction, lstm_1_h, lstm_1_c, lstm_2_h, lstm_2_c = model.predict(model_input)
+                    last_state = [lstm_1_h, lstm_1_c, lstm_2_h, lstm_2_c]
+                    last_generated = int(prediction)
 
-                # Now generate by constantly feeding the last generated index and predicting the next
-                for i in range(len(start_string), max_generate):
-                    try:
-                        model_input_idx = generated[-1]
-                        model_input = [np.array([[model_input_idx]]), category_weights]
-                        output = model.predict(model_input)
+                    # Append and yield prediction
+                    generated.append(last_generated)
+                    yield bytes([from_idx[last_generated]])
 
-                        # Pick with multinomial distribution to get a single prediction
-                        predicted_idx = sess.run(prediction,
-                                                 feed_dict={model_output: output, temp: temperature})
-
-                        # Append and yield prediction
-                        generated.append(predicted_idx)
-                        yield bytes([from_idx[predicted_idx]])
-
-                        predicted_int = int(from_idx[predicted_idx])
-                        if predicted_int == END_OF_FILE_CHAR:
-                            break
-                    except GeneratorExit:
-                        return
+                    # Stop if end of file character is reached
+                    if last_generated == to_idx[END_OF_FILE_CHAR]:
+                        break
+                except GeneratorExit:
+                    return
 
         return do_sampling
 

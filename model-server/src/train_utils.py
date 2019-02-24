@@ -1,8 +1,30 @@
 import datetime
 import pathlib
+import functools
 import numpy as np
+import tensorflow as tf
 from tensorflow import keras
+
 K = keras.backend
+
+# Reference matching LSTM
+if tf.test.is_gpu_available():
+    OptionalCuDNNLSTM = keras.layers.CuDNNLSTM
+else:
+    OptionalCuDNNLSTM = functools.partial(keras.layers.LSTM, activation='tanh', recurrent_activation='sigmoid')
+
+
+class TemperatureSampling(tf.keras.layers.Layer):
+    """
+    Keras layer for temperature sampling from logits
+    """
+    def __init__(self):
+        super().__init__()
+
+    def call(self, logits, temperature=None, **kwargs):
+        logits_scaled = tf.divide(logits, temperature)
+        prediction = tf.multinomial(logits_scaled, num_samples=1)[-1, 0]
+        return prediction
 
 
 def split_train_val(input_data, output_data, weights, batch_size, val_split):

@@ -22,7 +22,6 @@ lstm_model = LSTMModel()
 sample_lstm = lstm_model.sample()
 lstm_model_staf = LSTMModelStaf()
 sample_lstm_staf = lstm_model_staf.sample()
-lstm_model_staf_locked = False
 sliding_window_model = SlidingWindowModel()
 sample_sliding_window = sliding_window_model.sample()
 
@@ -189,21 +188,13 @@ def get_pattern():
     miss = 0.2 if args.get('miss') is None else float(args.get('miss'))
     tuck = 0.2 if args.get('tuck') is None else float(args.get('tuck'))
 
-    global lstm_model_staf_locked
-    while lstm_model_staf_locked:
-        print('Locked')
-        time.sleep(0.01)
-    lstm_model_staf_locked = True
-
     # Sample from lstm staf model. Start with start character
     start = [START_OF_FILE_CHAR]
     category_weights = [cable, stitch_move, links, miss, tuck]
-    sample = sample_lstm_staf(start, category_weights, temperature=temperature, max_generate=400)
+    sample = sample_lstm_staf(start, category_weights=category_weights, temperature=temperature, max_generate=400)
     generated_res = bytes()
     for generated in sample:
         generated_res = generated_res + generated
-
-    lstm_model_staf_locked = False
 
     # Read result as knitpaint
     handler = knitpaint.read_linebreak(generated_res[1:-1], 151, padding_char=1)
