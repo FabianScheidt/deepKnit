@@ -1,6 +1,7 @@
 import os
 import pathlib
 import sys
+import math
 
 import numpy as np
 import pandas as pd
@@ -209,6 +210,7 @@ class LSTMModelStaf:
 
         # Dense output: One element for each color number in the vocabulary
         dense_output_layer = Dense(vocab_size, name='dense_output')
+        softmax_output_layer = Softmax(name='softmax_output')
 
         # Now assemble the layers
         lstm_1, lstm_1_h, lstm_1_c = lstm_layer_1(concatenated_inputs, initial_state=lstm_1_states_input)
@@ -216,6 +218,7 @@ class LSTMModelStaf:
         lstm_1_states = [lstm_1_h, lstm_1_c]
         lstm_2_states = [lstm_2_h, lstm_2_c]
         dense_output = dense_output_layer(lstm_2)
+        softmax_output = softmax_output_layer(dense_output)
 
         # Create an additional input and output for temperature sampling
         temperature_input = Input(batch_shape=(batch_size, 1), name='temperature')
@@ -223,7 +226,7 @@ class LSTMModelStaf:
 
         # Define sampling model
         inputs = [sequence_input, category_input, temperature_input] + lstm_1_states_input + lstm_2_states_input
-        outputs = [dense_output, prediction] + lstm_1_states + lstm_2_states
+        outputs = [softmax_output, prediction] + lstm_1_states + lstm_2_states
         return Model(inputs=inputs, outputs=outputs)
 
     def get_initial_state(self):
@@ -293,6 +296,9 @@ class LSTMModelStaf:
 
         # Define a method that samples either stochastic or greedy (temperature -> 0)
         def do_stochastic_sampling(start_seq_idx, category_weights, method, temperature, max_generate):
+            # Yield the start sequence
+            yield start_seq_idx
+
             # Now generate by constantly feeding the last generated index and predicting the next
             last_generated_idx = None
             last_state = self.get_initial_state()
@@ -322,10 +328,52 @@ class LSTMModelStaf:
                     return
 
         # Define a method that samples using beam search
-        def do_beam_search(start_seq_idx, category_weights, max_generate):
-            res = [to_idx[c] for c in [4, 0, 4, END_OF_LINE_CHAR, END_OF_FILE_CHAR]]
-            # Todo...
-            yield res
+        def do_beam_search(start_seq_idx, category_weights, max_generate, k=8):
+            # 1) Define lists of initial and final hypothesis
+            hypotheses = [{
+                'seq': start_seq_idx,
+                'state': None,
+                'prob': 0
+            }]
+            hypotheses_final = []
+
+            # 2) Repeat until the maximum sequence length is reached
+            for _ in range(len(start_seq_idx), max_generate):
+                # a) Generate new hypotheses based on the existing ones
+                prev_hypotheses = hypotheses.copy()
+                hypotheses = []
+                for hypothesis in prev_hypotheses:
+                    # Build model input. In the beginning there is no state and therefore the input is different
+                    input_seq = hypothesis['seq'] if hypothesis['state'] is None else hypothesis['seq'][-1:]
+                    input_state = hypothesis['state'] if hypothesis['state'] is not None else self.get_initial_state()
+                    model_input = [input_seq, category_weights, np.array([1])] + input_state
+
+                    # Get the dense output and the state by reading the model
+                    with graph.as_default():
+                        dense_output, _, lstm_1_h, lstm_1_c, lstm_2_h, lstm_2_c = model.predict(model_input)
+
+                    # Create a new hypothesis for each possible output of the model
+                    for i, prob in enumerate(dense_output[0].tolist()):
+                        hypotheses.append({
+                            'seq': hypothesis['seq'] + [i],
+                            'state': [lstm_1_h, lstm_1_c, lstm_2_h, lstm_2_c],
+                            'prob': hypothesis['prob'] + math.log(prob) + 0.15
+                            # Todo: 0.15 is a hyper parameter that should be investigated further
+                        })
+
+                # b) Move hypotheses to hypotheses final if they end with an end of file token
+                for hypothesis in hypotheses.copy():
+                    if hypothesis['seq'][-1] == to_idx[END_OF_FILE_CHAR]:
+                        hypotheses_final.append(hypothesis)
+                        hypotheses.remove(hypothesis)
+
+                # c) Keep only the top k hypotheses
+                hypotheses = sorted(hypotheses, key=lambda h: h['prob'])[-k:]
+
+            # 3) Pick the best final hypothesis
+            hypotheses_final = hypotheses_final + hypotheses
+            best_hypothesis = sorted(hypotheses_final, key=lambda h: h['prob'])[-1]
+            yield best_hypothesis['seq']
 
         # Define and return a method that performs the sampling on the loaded model and graph
         def do_sampling(start_seq, category_weights=None, method='stochastic', temperature=1.0, max_generate=100):
@@ -342,9 +390,6 @@ class LSTMModelStaf:
                 sample = do_beam_search(start_seq_idx, category_weights, max_generate)
             else:
                 raise NotImplementedError
-
-            # Yield the start sequence
-            yield start_seq
 
             # Yield every response from the sample generator
             for generated in sample:
