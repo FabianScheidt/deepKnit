@@ -91,7 +91,7 @@
       color: $active;
 
       .label {
-        width: 70px;
+        width: 80px;
         flex-grow: 0;
         flex-shrink: 0;
       }
@@ -105,14 +105,14 @@
         }
       }
 
-      .select {
+      .select, .toggle {
         flex-grow: 1;
         flex-shrink: 1;
         padding: 8px 0 8px 8px;
 
         mat-form-field {
           margin: -10px 0;
-          width: 134px;
+          width: 130px;
         }
 
         mat-select {
@@ -121,7 +121,7 @@
       }
 
       .value {
-        width: 40px;
+        width: 36px;
         flex-grow: 0;
         flex-shrink: 0;
         text-align: right;

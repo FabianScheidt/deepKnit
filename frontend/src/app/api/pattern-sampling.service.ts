@@ -34,12 +34,6 @@ export class PatternSamplingService {
 
   public samplePattern(options?: PatternSamplingOptions): Observable<Knitpaint> {
     const url = environment.backendUrl + 'pattern';
-    const params = {};
-    if (options) {
-      for (const key of Object.keys(options)) {
-        params[key] = options[key].toString(10);
-      }
-    }
-    return this.httpClient.get(url, { params: params }).pipe(map(k => Knitpaint.fromJSON(k)));
+    return this.httpClient.post(url, options).pipe(map(k => Knitpaint.fromJSON(k)));
   }
 }

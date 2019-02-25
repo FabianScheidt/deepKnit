@@ -9,7 +9,7 @@
   </div>
 
   <!-- Fill divs are required to fix the centered layout -->
-  <div class="fill" *ngFor="let i of [0, 1, 2, 3, 4, 5]"></div>
+  <div class="fill" *ngFor="let i of [0, 1, 2, 3, 4, 5, 6, 7, 8]"></div>
 
   <div class="more" [hidden]="!isMoreAvailable()">
     <button mat-button (click)="loadMorePatterns()">Load more...</button>
@@ -22,49 +22,49 @@
     <div class="parameter">
       <div class="label">Links</div>
       <div class="slider">
-        <mat-slider min="0" max="1" step="0.01" [value]="samplingOptions.links"
-                    (input)="this.setSamplingOptions('links', $event.value)"></mat-slider>
+        <mat-slider min="0" max="1" step="0.01" [value]="categoryWeights.links"
+                    (input)="setSamplingOptions(categoryWeights, 'links', $event.value)"></mat-slider>
       </div>
-      <div class="value">{{ samplingOptions.links | percent }}</div>
+      <div class="value">{{ categoryWeights.links | percent }}</div>
     </div>
     <div class="parameter">
       <div class="label">Miss</div>
       <div class="slider">
-        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="samplingOptions.miss"
-                    (input)="this.setSamplingOptions('miss', $event.value)"></mat-slider>
+        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="categoryWeights.miss"
+                    (input)="setSamplingOptions(categoryWeights, 'miss', $event.value)"></mat-slider>
       </div>
-      <div class="value">{{ samplingOptions.miss | percent }}</div>
+      <div class="value">{{ categoryWeights.miss | percent }}</div>
     </div>
     <div class="parameter">
       <div class="label">Tuck</div>
       <div class="slider">
-        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="samplingOptions.tuck"
-                    (input)="this.setSamplingOptions('tuck', $event.value)"></mat-slider>
+        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="categoryWeights.tuck"
+                    (input)="setSamplingOptions(categoryWeights, 'tuck', $event.value)"></mat-slider>
       </div>
-      <div class="value">{{ samplingOptions.tuck | percent }}</div>
+      <div class="value">{{ categoryWeights.tuck | percent }}</div>
     </div>
     <div class="parameter">
       <div class="label">Stitch Move</div>
       <div class="slider">
-        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="samplingOptions.stitchMove"
-                    (input)="this.setSamplingOptions('stitchMove', $event.value)"></mat-slider>
+        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="categoryWeights.stitchMove"
+                    (input)="setSamplingOptions(categoryWeights, 'stitchMove', $event.value)"></mat-slider>
       </div>
-      <div class="value">{{ samplingOptions.stitchMove | percent }}</div>
+      <div class="value">{{ categoryWeights.stitchMove | percent }}</div>
     </div>
     <div class="parameter">
       <div class="label">Cable</div>
       <div class="slider">
-        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="samplingOptions.cable"
-                    (input)="this.setSamplingOptions('cable', $event.value)"></mat-slider>
+        <mat-slider min="0" max="1" step="0.01" value="0.5" [value]="categoryWeights.cable"
+                    (input)="setSamplingOptions(categoryWeights, 'cable', $event.value)"></mat-slider>
       </div>
-      <div class="value">{{ samplingOptions.cable | percent }}</div>
+      <div class="value">{{ categoryWeights.cable | percent }}</div>
     </div>
     <div class="category">Options</div>
     <div class="parameter sampling-method">
       <div class="label">Method</div>
       <div class="select">
         <mat-form-field>
-          <mat-select [value]="samplingOptions.method" (valueChange)="setSamplingOptions('method', $event)">
+          <mat-select [value]="samplingMethod" (valueChange)="setSamplingOptions(samplingMethod, null, $event)">
             <mat-option value="greedy">Greedy Sampling</mat-option>
             <mat-option value="stochastic">Stochastic Sampling</mat-option>
             <mat-option value="beam-search">Beam Search</mat-option>
@@ -72,14 +72,53 @@
         </mat-form-field>
       </div>
     </div>
-    <div class="parameter temperature" *ngIf="samplingOptions.method === 'stochastic'">
-      <div class="label">Randomness</div>
-      <div class="slider">
-        <mat-slider min="0.01" max="2" step="0.01" value="0.5" [value]="samplingOptions.temperature"
-                    (input)="this.setSamplingOptions('temperature', $event.value)"></mat-slider>
+
+    <!-- Stochastic options -->
+    <ng-container *ngIf="samplingMethod === 'stochastic'">
+      <div class="parameter temperature">
+        <div class="label">Randomness</div>
+        <div class="slider">
+          <mat-slider min="0.01" max="2" step="0.01" [value]="stochasticOptions.temperature"
+                      (input)="setSamplingOptions(stochasticOptions, 'temperature', $event.value)"></mat-slider>
+        </div>
+        <div class="value">{{ stochasticOptions.temperature }}</div>
       </div>
-      <div class="value">{{ samplingOptions.temperature }}</div>
-    </div>
+    </ng-container>
+
+    <!-- Beam search options -->
+    <ng-container *ngIf="samplingMethod === 'beam-search'">
+      <div class="parameter temperature">
+        <div class="label">Temperature</div>
+        <div class="slider">
+          <mat-slider min="0.5" max="5" step="0.1" [value]="beamSearchOptions.temperature"
+                      (input)="setSamplingOptions(beamSearchOptions, 'temperature', $event.value)"></mat-slider>
+        </div>
+        <div class="value">{{ beamSearchOptions.temperature }}</div>
+      </div>
+      <div class="parameter beam-width">
+        <div class="label">Beam Width</div>
+        <div class="slider">
+          <mat-slider min="1" max="16" step="1" [value]="beamSearchOptions.k"
+                      (input)="setSamplingOptions(beamSearchOptions, 'k', $event.value)"></mat-slider>
+        </div>
+        <div class="value">{{ beamSearchOptions.k }}</div>
+      </div>
+      <div class="parameter length-normalization">
+        <div class="label">Len. Normalize</div>
+        <div class="toggle">
+          <mat-slide-toggle [ngModel]="beamSearchOptions.lengthNormalization"
+                            (ngModelChange)="setSamplingOptions(beamSearchOptions, 'lengthNormalization', $event)"></mat-slide-toggle>
+        </div>
+      </div>
+      <div class="parameter length-bonus">
+        <div class="label">Len. Bonus</div>
+        <div class="slider">
+          <mat-slider min="0" max="2" step="0.01" [value]="beamSearchOptions.lengthBonusFactor"
+                      (input)="setSamplingOptions(beamSearchOptions, 'lengthBonusFactor', $event.value)"></mat-slider>
+        </div>
+        <div class="value">{{ beamSearchOptions.lengthBonusFactor }}</div>
+      </div>
+    </ng-container>
   </div>
   <app-patterns-bar [allowRemoval]="true"></app-patterns-bar>
 </div>
