@@ -114,15 +114,16 @@ def sample_model():
             i = 0
             sample = sample_lstm_staf(start, category_weights, temperature=temperature, max_generate=num_generate)
             for generated in sample:
-                if int(generated[0]) != START_OF_FILE_CHAR:
-                    yield generated
-                    i += 1
-                if int(generated[0]) == END_OF_LINE_CHAR:
-                    add_count = width - (i % width)
-                    yield bytes([0] * add_count)
-                    i += add_count
-                if i >= num_generate:
-                    break
+                for single_generated in generated:
+                    if int(single_generated) != START_OF_FILE_CHAR:
+                        yield bytes([single_generated])
+                        i += 1
+                    if int(single_generated) == END_OF_LINE_CHAR:
+                        add_count = width - (i % width)
+                        yield bytes([0] * add_count)
+                        i += add_count
+                    if i >= num_generate:
+                        break
 
         resp = Response(lstm_staf_generator(), mimetype='application/octet-stream')
     elif model == 'sliding-window':
@@ -194,9 +195,9 @@ def get_pattern():
     category_weights = [cable, stitch_move, links, miss, tuck]
     sample = sample_lstm_staf(start, category_weights=category_weights, method=method,
                               temperature=temperature, max_generate=400)
-    generated_res = bytes()
+    generated_res = []
     for generated in sample:
-        generated_res = generated_res + generated
+        generated_res += generated
 
     # Read result as knitpaint
     handler = knitpaint.read_linebreak(generated_res[1:-1], 151, padding_char=1)
