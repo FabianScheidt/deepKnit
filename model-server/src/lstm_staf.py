@@ -336,7 +336,8 @@ class LSTMModelStaf:
                     return
 
         # Define a method that samples using beam search
-        def do_beam_search(start_seq_idx, category_weights, temperature, max_generate, k=5):
+        def do_beam_search(start_seq_idx, category_weights, temperature, k=5, length_normalization=False,
+                           length_bonus_factor=0, max_generate=100):
             # 1) Define lists of initial and final hypothesis
             hypotheses = [{
                 'seq': start_seq_idx,
@@ -378,13 +379,20 @@ class LSTMModelStaf:
                 # c) Keep only the top k hypotheses
                 hypotheses = heapq.nlargest(k, hypotheses, key=lambda h: h['prob'])
 
+            # Optionally apply length normalization or bonus
+            for hypothesis in hypotheses_final:
+                length = len(hypothesis['seq'])
+                length_quotient = length if length_normalization else 1
+                length_bonus = length * length_bonus_factor
+                hypothesis['prob'] = hypothesis['prob'] / length_quotient + length_bonus
+
             # 3) Pick the best final hypothesis
-            hypotheses_final = hypotheses_final + hypotheses
             best_hypothesis = heapq.nlargest(1, hypotheses_final, key=lambda h: h['prob'])[0]
             yield best_hypothesis['seq']
 
         # Define and return a method that performs the sampling on the loaded model and graph
-        def do_sampling(start_seq, category_weights=None, method='stochastic', temperature=1.0, max_generate=100):
+        def do_sampling(start_seq, category_weights=None, method='stochastic', temperature=1.0, k=5,
+                        length_normalization=False, length_bonus_factor=0, max_generate=100):
             # Prepare input
             category_weights = [0.0, 0.0, 1.0, 0.0, 0.0] if category_weights is None else category_weights
             category_weights = np.array(category_weights).reshape(category_shape)
@@ -395,7 +403,8 @@ class LSTMModelStaf:
             if method in ['stochastic', 'greedy']:
                 sample = do_stochastic_sampling(start_seq_idx, category_weights, method, temperature, max_generate)
             elif method == 'beam-search':
-                sample = do_beam_search(start_seq_idx, category_weights, temperature, max_generate)
+                sample = do_beam_search(start_seq_idx, category_weights, temperature, k, length_normalization,
+                                        length_bonus_factor, max_generate)
             else:
                 raise NotImplementedError
 

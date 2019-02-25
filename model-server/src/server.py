@@ -178,23 +178,37 @@ def to_dat():
     return resp
 
 
-@app.route('/api/pattern', methods=['GET'])
+@app.route('/api/pattern', methods=['POST'])
 def get_pattern():
-    # Read URL parameters
-    args = request.args
-    method = 'stochastic' if args.get('method') is None else args.get('method')
-    temperature = 0.7 if args.get('temperature') is None else float(args.get('temperature'))
-    cable = 0.2 if args.get('cable') is None else float(args.get('cable'))
-    stitch_move = 0.2 if args.get('stitchMove') is None else float(args.get('stitchMove'))
-    links = 0.2 if args.get('links') is None else float(args.get('links'))
-    miss = 0.2 if args.get('miss') is None else float(args.get('miss'))
-    tuck = 0.2 if args.get('tuck') is None else float(args.get('tuck'))
+    # Read and sanitize options
+    options = request.get_json()
+
+    method = 'stochastic' if 'method' not in options else options['method']
+
+    method_options = {} if 'methodOptions' not in options else options['methodOptions']
+    temperature = 0.7 if 'temperature' not in method_options else method_options['temperature']
+    k = 5 if 'k' not in method_options else method_options['k']
+    k = max(1, min(16, k))
+    length_normalization = True if 'lengthNormalization' not in method_options else \
+        bool(method_options['lengthNormalization'])
+    length_bonus_factor = 0 if 'lengthBonusFactor' not in method_options else float(method_options['lengthBonusFactor'])
+
+    weights = {} if 'categoryWeights' not in options else options['categoryWeights']
+    cable = 0.2 if 'cable' not in weights else float(weights['cable'])
+    stitch_move = 0.2 if 'stitchMove' not in weights else float(weights['stitchMove'])
+    links = 0.2 if 'links' not in weights else float(weights['links'])
+    miss = 0.2 if 'miss' not in weights else float(weights['miss'])
+    tuck = 0.2 if 'tuck' not in weights else float(weights['tuck'])
+    category_weights = [cable, stitch_move, links, miss, tuck]
+
+    max_generate = 400 if 'maxGenerate' not in options else int(options['maxGenerate'])
+    max_generate = max(1, min(1000, max_generate))
 
     # Sample from lstm staf model. Start with start character
-    start = [START_OF_FILE_CHAR]
-    category_weights = [cable, stitch_move, links, miss, tuck]
-    sample = sample_lstm_staf(start, category_weights=category_weights, method=method,
-                              temperature=temperature, max_generate=400)
+    start_seq = [START_OF_FILE_CHAR]
+    sample = sample_lstm_staf(start_seq, category_weights=category_weights, method=method, temperature=temperature, k=k,
+                              length_normalization=length_normalization, length_bonus_factor=length_bonus_factor,
+                              max_generate=max_generate)
     generated_res = []
     for generated in sample:
         generated_res += generated
