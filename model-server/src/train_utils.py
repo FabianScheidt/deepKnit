@@ -19,17 +19,20 @@ def get_lstm_layer():
         return functools.partial(keras.layers.LSTM, activation='tanh', recurrent_activation='sigmoid')
 
 
-class TemperatureSampling(tf.keras.layers.Layer):
+class TemperatureScaling(tf.keras.layers.Layer):
     """
-    Keras layer for temperature sampling from logits
+    Scales a logits by a temperature parameter
     """
-    def __init__(self):
-        super().__init__()
-
     def call(self, logits, temperature=None, **kwargs):
-        logits_scaled = tf.divide(logits, temperature)
-        prediction = tf.multinomial(logits_scaled, num_samples=1)[-1, 0]
-        return prediction
+        return tf.divide(logits, temperature)
+
+
+class StochasticSampling(tf.keras.layers.Layer):
+    """
+    Keras layer for stochastic sampling from logits
+    """
+    def call(self, logits, temperature=None, **kwargs):
+        return tf.multinomial(logits, num_samples=1)[-1, 0]
 
 
 def split_train_val(input_data, output_data, weights, batch_size, val_split):

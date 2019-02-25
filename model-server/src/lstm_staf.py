@@ -1,6 +1,7 @@
 import os
 import pathlib
 import sys
+import heapq
 import math
 
 import numpy as np
@@ -11,7 +12,7 @@ from tensorflow import keras
 from knitpaint import KnitPaint
 from knitpaint import read_linebreak
 from knitpaint.check import KnitPaintCheckException
-from train_utils import masked_acc, split_train_val, fit_and_log, get_lstm_layer, TemperatureSampling
+from train_utils import masked_acc, split_train_val, fit_and_log, get_lstm_layer, TemperatureScaling, StochasticSampling
 
 K = keras.backend
 Model = keras.Model
@@ -208,9 +209,18 @@ class LSTMModelStaf:
         lstm_2_states_input = [Input(batch_shape=(batch_size, 300), name='lstm_2_initial_h'),
                                Input(batch_shape=(batch_size, 300), name='lstm_2_initial_c')]
 
+        # The output can be scaled by a temperature
+        temperature_input = Input(batch_shape=(batch_size, 1), name='temperature')
+
         # Dense output: One element for each color number in the vocabulary
         dense_output_layer = Dense(vocab_size, name='dense_output')
+
+        # Output can be scaled using a temperature before softmax output
+        temperature_scaling_layer = TemperatureScaling()
         softmax_output_layer = Softmax(name='softmax_output')
+
+        # An additional output is the result of stochastic sampling
+        stochastic_sampling_layer = StochasticSampling()
 
         # Now assemble the layers
         lstm_1, lstm_1_h, lstm_1_c = lstm_layer_1(concatenated_inputs, initial_state=lstm_1_states_input)
@@ -218,11 +228,9 @@ class LSTMModelStaf:
         lstm_1_states = [lstm_1_h, lstm_1_c]
         lstm_2_states = [lstm_2_h, lstm_2_c]
         dense_output = dense_output_layer(lstm_2)
-        softmax_output = softmax_output_layer(dense_output)
-
-        # Create an additional input and output for temperature sampling
-        temperature_input = Input(batch_shape=(batch_size, 1), name='temperature')
-        prediction = TemperatureSampling()(dense_output, temperature=temperature_input)
+        scaled_output = temperature_scaling_layer(dense_output, temperature=temperature_input)
+        softmax_output = softmax_output_layer(scaled_output)
+        prediction = stochastic_sampling_layer(scaled_output, temperature=temperature_input)
 
         # Define sampling model
         inputs = [sequence_input, category_input, temperature_input] + lstm_1_states_input + lstm_2_states_input
@@ -328,7 +336,7 @@ class LSTMModelStaf:
                     return
 
         # Define a method that samples using beam search
-        def do_beam_search(start_seq_idx, category_weights, max_generate, k=8):
+        def do_beam_search(start_seq_idx, category_weights, temperature, max_generate, k=5):
             # 1) Define lists of initial and final hypothesis
             hypotheses = [{
                 'seq': start_seq_idx,
@@ -346,7 +354,7 @@ class LSTMModelStaf:
                     # Build model input. In the beginning there is no state and therefore the input is different
                     input_seq = hypothesis['seq'] if hypothesis['state'] is None else hypothesis['seq'][-1:]
                     input_state = hypothesis['state'] if hypothesis['state'] is not None else self.get_initial_state()
-                    model_input = [input_seq, category_weights, np.array([1])] + input_state
+                    model_input = [input_seq, category_weights, temperature] + input_state
 
                     # Get the dense output and the state by reading the model
                     with graph.as_default():
@@ -354,12 +362,12 @@ class LSTMModelStaf:
 
                     # Create a new hypothesis for each possible output of the model
                     for i, prob in enumerate(dense_output[0].tolist()):
-                        hypotheses.append({
-                            'seq': hypothesis['seq'] + [i],
-                            'state': [lstm_1_h, lstm_1_c, lstm_2_h, lstm_2_c],
-                            'prob': hypothesis['prob'] + math.log(prob) + 0.15
-                            # Todo: 0.15 is a hyper parameter that should be investigated further
-                        })
+                        if prob > 0:
+                            hypotheses.append({
+                                'seq': hypothesis['seq'] + [i],
+                                'state': [lstm_1_h, lstm_1_c, lstm_2_h, lstm_2_c],
+                                'prob': hypothesis['prob'] + math.log(prob)
+                            })
 
                 # b) Move hypotheses to hypotheses final if they end with an end of file token
                 for hypothesis in hypotheses.copy():
@@ -368,11 +376,11 @@ class LSTMModelStaf:
                         hypotheses.remove(hypothesis)
 
                 # c) Keep only the top k hypotheses
-                hypotheses = sorted(hypotheses, key=lambda h: h['prob'])[-k:]
+                hypotheses = heapq.nlargest(k, hypotheses, key=lambda h: h['prob'])
 
             # 3) Pick the best final hypothesis
             hypotheses_final = hypotheses_final + hypotheses
-            best_hypothesis = sorted(hypotheses_final, key=lambda h: h['prob'])[-1]
+            best_hypothesis = heapq.nlargest(1, hypotheses_final, key=lambda h: h['prob'])[0]
             yield best_hypothesis['seq']
 
         # Define and return a method that performs the sampling on the loaded model and graph
@@ -387,7 +395,7 @@ class LSTMModelStaf:
             if method in ['stochastic', 'greedy']:
                 sample = do_stochastic_sampling(start_seq_idx, category_weights, method, temperature, max_generate)
             elif method == 'beam-search':
-                sample = do_beam_search(start_seq_idx, category_weights, max_generate)
+                sample = do_beam_search(start_seq_idx, category_weights, temperature, max_generate)
             else:
                 raise NotImplementedError
 
