@@ -2,12 +2,55 @@
 
 :host {
   display: block;
+  width: 100%;
+  height: 100%;
+}
+
+
+.flip-container {
+  width: 100%;
+  height: 100%;
+  perspective: 500px;
+}
+
+.flip-container.flippable:hover .flipper, .flip-container.flippable.flipped .flipper {
+  transform: rotateY(180deg);
+}
+
+.flip-container.flipped:hover .flipper {
+  transform: rotateY(0deg);
+}
+
+.flipper {
+  transition: 0.6s;
+  transform-style: preserve-3d;
+
   position: relative;
   width: 100%;
   height: 100%;
 }
 
-.canvas {
+.front, .back {
+  backface-visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: $panel-background;
+}
+
+.front {
+  z-index: 2;
+  transform: rotateY(0deg);
+}
+
+.back {
+  transform: rotateY(180deg);
+}
+
+
+.canvas, .thumbnail {
   position: absolute;
   top: 0;
   left: 0;
@@ -16,9 +59,29 @@
   height: 100%;
   padding: 20px;
 
+}
+
+.canvas {
   app-knitpaint-canvas {
     width: 100%;
     height: 100%;
+  }
+}
+
+.thumbnail {
+  white-space: nowrap;
+  text-align: center;
+
+  .center-helper {
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+  }
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    vertical-align: middle;
   }
 }
 

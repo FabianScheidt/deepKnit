@@ -26,29 +26,28 @@
     width: 160px;
     height: 160px;
     margin: 2px;
-    background-color: $panel-background;
 
-    &.loading {
+    /deep/ .loading {
       animation-name: pulsating-background;
       animation-duration: 3s;
       animation-iteration-count: infinite;
       animation-timing-function: ease-in-out;
+    }
 
-      &:nth-child(6n - 1) {
-        animation-delay: 0.5s;
-      }
-      &:nth-child(6n - 2) {
-        animation-delay: 1.5s;
-      }
-      &:nth-child(6n - 3) {
-        animation-delay: 2s;
-      }
-      &:nth-child(6n - 4) {
-        animation-delay: 1s;
-      }
-      &:nth-child(6n - 0) {
-        animation-delay: 2.5s;
-      }
+    &:nth-child(6n - 1) /deep/ .loading {
+      animation-delay: 0.5s;
+    }
+    &:nth-child(6n - 2) /deep/ .loading {
+      animation-delay: 1.5s;
+    }
+    &:nth-child(6n - 3) /deep/ .loading {
+      animation-delay: 2s;
+    }
+    &:nth-child(6n - 4) /deep/ .loading {
+      animation-delay: 1s;
+    }
+    &:nth-child(6n - 0) /deep/ .loading {
+      animation-delay: 2.5s;
     }
   }
 
@@ -68,7 +67,7 @@
   margin: 0 0 0 4px;
   background-color: $panel-background;
 
-  .ai-parameters {
+  .parameters {
     padding: 20px;
 
     .title {

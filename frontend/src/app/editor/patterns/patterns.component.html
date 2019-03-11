@@ -2,10 +2,11 @@
   &nbsp;
 </div>
 <div class="patterns">
-  <div class="pattern" *ngFor="let index of patternIndices" [class.loading]="!getPattern(index)">
+  <div class="pattern" *ngFor="let index of patternIndices">
     <app-pattern [knitpaint]="getPattern(index)"
                  [saved]="isPatternSaved(getPattern(index))"
-                 (savedChange)="toggleSavePattern(getPattern(index))"></app-pattern>
+                 (savedChange)="toggleSavePattern(getPattern(index))"
+                 [showThumbnail]="showThumbnails"></app-pattern>
   </div>
 
   <!-- Fill divs are required to fix the centered layout -->
@@ -16,8 +17,11 @@
   </div>
 </div>
 <div class="sidebar">
-  <div class="ai-parameters">
-    <div class="title">AI-Parameters</div>
+  <div class="parameters">
+    <div class="title">Parameters</div>
+
+
+    <!-- Style -->
     <div class="category">Style</div>
     <div class="parameter">
       <div class="label">Links</div>
@@ -59,7 +63,10 @@
       </div>
       <div class="value">{{ categoryWeights.cable | percent }}</div>
     </div>
-    <div class="category">Options</div>
+
+
+    <!-- Sampling -->
+    <div class="category">Sampling</div>
     <div class="parameter sampling-method">
       <div class="label">Method</div>
       <div class="select">
@@ -119,6 +126,15 @@
         <div class="value">{{ beamSearchOptions.lengthBonusFactor }}</div>
       </div>
     </ng-container>
+
+    <!-- Preview -->
+    <div class="category">Preview</div>
+    <div class="parameter preview-toggle">
+      <div class="label">Rendering</div>
+      <div class="toggle">
+        <mat-slide-toggle [(ngModel)]="showThumbnails"></mat-slide-toggle>
+      </div>
+    </div>
   </div>
   <app-patterns-bar [allowRemoval]="true"></app-patterns-bar>
 </div>

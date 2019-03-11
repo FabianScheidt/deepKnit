@@ -37,6 +37,8 @@ export class PatternsComponent implements OnInit, OnDestroy {
   patternIndices = [];
   sampledPatterns: Knitpaint[] = [];
 
+  showThumbnails = false;
+
   private isDestroyed: Subject<void> = new Subject<void>();
   private samplingOptionsChanged: Subject<void> = new Subject<void>();
 
