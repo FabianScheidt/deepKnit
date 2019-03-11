@@ -40,7 +40,7 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked, OnDestroy
   selection_: [number, number] = null;
   selection: BehaviorSubject<[number, number]>;
 
-  model: BehaviorSubject<string> = new BehaviorSubject<string>('lstm');
+  model: BehaviorSubject<string> = new BehaviorSubject<string>('lstm-staf');
   temperature: BehaviorSubject<number> = new BehaviorSubject(1.0);
 
   isiOS = !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
@@ -79,13 +79,13 @@ export class DesignIdeasComponent implements OnInit, AfterViewChecked, OnDestroy
         const dataUint8Array = new Uint8Array(data);
 
         // Find the last non-black index
-        let lastNonBlackIndex = 0;
+        let endIndex = 0;
         dataUint8Array.forEach((value, index) => {
           if (value !== 0) {
-            lastNonBlackIndex = index;
+            endIndex = index + 1;
           }
         });
-        const start = dataUint8Array.slice(0, lastNonBlackIndex + 1);
+        const start = dataUint8Array.slice(0, endIndex);
         return {
           model,
           temperature,

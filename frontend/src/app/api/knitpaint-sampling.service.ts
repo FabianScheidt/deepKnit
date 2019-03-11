@@ -27,7 +27,7 @@ export class KnitpaintSamplingService {
         this.fetchSamples(currentOptions).pipe(
           takeUntil(options),
           throttleTime(40, undefined, { leading: true, trailing: true }),
-          tap(() => this.ngZone.run(() => {})))
+          tap(() => setTimeout(() => this.ngZone.run(() => {}))))
       )
     );
   }
