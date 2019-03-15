@@ -50,11 +50,13 @@ export class NavigationComponent {
   public importAssemblyFromDat = () => { this.editorIoService.importAssemblyFromDatFile(); this.track('import', 'assembly-dat'); };
   public exportAssemblyToImage = () => { this.editorIoService.exportAssemblyToImageFile(); this.track('export', 'assembly-image'); };
   public importAssemblyFromImage = () => { this.editorIoService.importAssemblyFromImageFile(); this.track('import', 'assembly-image'); };
+  public exportAssemblyThumbnail = () => { this.editorIoService.exportAssemblyThumbnail(); this.track('export', 'assembly-thumbnail'); };
 
   public exportPatternToDat = () => { this.editorIoService.exportToDatFile(this.editorStateService.getSelectedPattern()); this.track('export', 'pattern-dat'); };
   public importPatternFromDat = () => { this.editorIoService.importFromDatFile().subscribe(res => this.addPattern(res)); this.track('import', 'pattern-dat'); };
   public exportPatternToImage = () => { this.editorIoService.exportToImageFile(this.editorStateService.getSelectedPattern()); this.track('export', 'pattern-image'); };
   public importPatternFromImage = () => { this.editorIoService.importFromImageFile().subscribe(res => this.addPattern(res)); this.track('import', 'pattern-image'); };
+  public exportPatternThumbnail = () => { this.editorIoService.exportThumbnail(this.editorStateService.getSelectedPattern());  this.track('export', 'pattern-thumbnail'); };
 
   public undo = () => this.editorStateService.undo();
   public redo = () => this.editorStateService.redo();

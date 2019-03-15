@@ -6,12 +6,14 @@ import { Knitpaint } from '../knitpaint';
 import { KnitpaintConversionService } from '../api/knitpaint-conversion.service';
 import saveAs from 'file-saver';
 import { flatMap } from 'rxjs/operators';
+import { KnitpaintThumbnailService } from '../api/knitpaint-thumbnail.service';
 
 @Injectable()
 export class EditorIoService {
 
   constructor(private projectService: ProjectService,
-              private knitpaintConversionService: KnitpaintConversionService) {}
+              private knitpaintConversionService: KnitpaintConversionService,
+              private knitpaintThumbnailService: KnitpaintThumbnailService) {}
 
   /**
    * Starts a download containing the current project
@@ -71,6 +73,14 @@ export class EditorIoService {
       const newProject = this.projectService.getProject().setAssembly(knitpaint);
       this.projectService.setProject(newProject);
     });
+  }
+
+  /**
+   * Creates a rendering of the current assembly and starts a download
+   */
+  public exportAssemblyThumbnail(): void {
+    const assembly = this.projectService.getProject().assembly;
+    this.exportThumbnail(assembly);
   }
 
   /**
@@ -154,6 +164,17 @@ export class EditorIoService {
         image.src = res;
       }, (err) => observer.error(err));
     });
+  }
+
+  /**
+   * Creates a rendering of the provided knitpaint and starts a download
+   *
+   * @param knitpaint
+   */
+  public exportThumbnail(knitpaint: Knitpaint) {
+    this.knitpaintThumbnailService
+      .generateThumbnail(knitpaint, 'png', 200, 2, [160, 170, 185], true)
+      .subscribe((blob: Blob) => saveAs(blob, 'deepknit.png'));
   }
 
   /**

@@ -37,14 +37,20 @@
   <mat-menu #assemblyMenu="matMenu">
     <button mat-menu-item (click)="importAssemblyFromDat()" appTapClick>Import from APEX</button>
     <button mat-menu-item (click)="exportAssemblyToDat()" appTapClick>Export to APEX</button>
+    <mat-divider></mat-divider>
     <button mat-menu-item (click)="importAssemblyFromImage()" appTapClick>Import from Image</button>
     <button mat-menu-item (click)="exportAssemblyToImage()" appTapClick>Export as Image</button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="exportAssemblyThumbnail()" appTapClick>Export Rendering</button>
   </mat-menu>
 
   <mat-menu #patternMenu="matMenu">
     <button mat-menu-item (click)="importPatternFromDat()" appTapClick>Import from APEX</button>
     <button mat-menu-item (click)="exportPatternToDat()" appTapClick>Export to APEX</button>
+    <mat-divider></mat-divider>
     <button mat-menu-item (click)="importPatternFromImage()" appTapClick>Import from Image</button>
     <button mat-menu-item (click)="exportPatternToImage()" appTapClick>Export as Image</button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="exportPatternThumbnail()" appTapClick>Export Rendering</button>
   </mat-menu>
 </div>
