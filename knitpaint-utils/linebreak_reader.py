@@ -61,6 +61,8 @@ def read_linebreak_bytes(input_bytes, linebreak_char, padding_char=0, target_wid
         else:
             current_line.append(bitmap_element)
     if len(current_line) > 0:
+        if len(current_line) > width:
+            width = len(current_line)
         lines.append(current_line)
 
     # Allow to set a predefined width and height
