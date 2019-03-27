@@ -1,4 +1,5 @@
-import os, logging, base64, datetime, pathlib, time
+import os, logging, base64, datetime, pathlib
+from functools import reduce
 from uuid import UUID
 from flask import Flask, Response, request, json
 from flask_cors import CORS
@@ -6,6 +7,7 @@ from lstm import LSTMModel
 from lstm_staf import LSTMModelStaf, START_OF_FILE_CHAR, END_OF_LINE_CHAR
 from sliding_window import SlidingWindowModel
 from knitpaint import KnitPaint, KnitPaintCheckException
+from knitpaint.check import KnitPaintCheckSyntaxError, KnitPaintCheckError, KnitPaintCheckWarning
 import knitpaint
 
 # Create flask app that allows to sample from previously trained models
@@ -220,9 +222,20 @@ def get_pattern():
     # Perform a check
     try:
         handler.check_as_pattern()
-        json_resp['knittable'] = True
-    except KnitPaintCheckException:
-        json_resp['knittable'] = False
+        json_resp['generator_error'] = False
+        json_resp['syntax_error'] = False
+        json_resp['knit_error'] = False
+        json_resp['knit_warning'] = False
+    except (AttributeError, ZeroDivisionError, NotImplementedError):
+        json_resp['generator_error'] = True
+        json_resp['syntax_error'] = False
+        json_resp['knit_error'] = False
+        json_resp['knit_warning'] = False
+    except KnitPaintCheckException as e:
+        json_resp['generator_error'] = False
+        json_resp['syntax_error'] = reduce(lambda a, b: a or isinstance(b, KnitPaintCheckSyntaxError), e.problems, False)
+        json_resp['knit_error'] = reduce(lambda a, b: a or isinstance(b, KnitPaintCheckError), e.problems, False)
+        json_resp['knit_warning'] = reduce(lambda a, b: a or isinstance(b, KnitPaintCheckWarning), e.problems, False)
 
     # Return the response
     resp = Response(json.dumps(json_resp), mimetype='application/json')
