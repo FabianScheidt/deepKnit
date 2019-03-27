@@ -6,14 +6,28 @@ from ... import check
 
 def test_false_yarn_worn_out():
     """
-    More racking should be possible for cables when the upper stitch has additional misses before it. The test
-    should therefore not throw an error.
+    More racking should be possible for cables when the upper stitch has additional misses before it. This is called
+    relief knitting. The test should therefore not throw an error.
     """
     input_pattern = make_knitpaint([[1, 1, 1, 1, 1,  1,  1,  1],
                                     [1, 4, 4, 4, 5,  5,  5,  1],
                                     [1, 1, 1, 1, 16, 16, 16, 1],
                                     [1, 1, 1, 1, 1,  1,  1,  1]])
     check(input_pattern)
+
+
+def test_automatic_relief_knitting():
+    """
+    When moving a cable more than 3P, color number 5 and 15 become front miss and move stitches instead of front knit
+    and move.
+    :return:
+    """
+    input_pattern = make_knitpaint([[1, 1, 1, 1, 1, 1, 1, 1],
+                                    [1, 4, 4, 4, 5, 5, 5, 1],
+                                    [1, 1, 1, 1, 1, 1, 1, 1],
+                                    [1, 1, 1, 1, 1, 1, 1, 1]])
+    loops = check(input_pattern)
+    assert len(loops) == len(input_pattern.bitmap_data - 3)
 
 
 def test_false_continuous_pickup_stitch():
