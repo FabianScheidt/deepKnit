@@ -21,7 +21,8 @@ import {
   MatMenuModule,
   MatSelectModule,
   MatSliderModule,
-  MatSlideToggleModule
+  MatSlideToggleModule,
+  MatTooltipModule
 } from '@angular/material';
 import { ToolbarModule } from './toolbar/toolbar.module';
 import { UtilsModule } from './utils/utils.module';
@@ -48,6 +49,7 @@ import { MatomoModule } from 'ngx-matomo';
     MatSliderModule,
     MatSlideToggleModule,
     MatSelectModule,
+    MatTooltipModule,
     MatomoModule
   ],
   declarations: [

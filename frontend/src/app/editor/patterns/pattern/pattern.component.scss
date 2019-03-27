@@ -85,10 +85,28 @@
   }
 }
 
+.check {
+  position: absolute;
+  top: 4px;
+  left: 3px;
+
+  /deep/ mat-icon {
+    font-size: 18px;
+    cursor: pointer;
+    color: $inactive;
+    opacity: 0.6;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+
 .save {
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 4px;
+  right: 3px;
 
   /deep/ mat-icon {
     font-size: 18px;

@@ -9,6 +9,9 @@ export class Knitpaint {
 
   public readonly data: ArrayBufferLike;
   public readonly width;
+  public readonly syntax_error;
+  public readonly knit_error;
+  public readonly knit_warning;
   public get height(): number {
     return Math.ceil(this.data.byteLength / this.width);
   }
@@ -58,17 +61,23 @@ export class Knitpaint {
       data[i] = binaryData.charCodeAt(i);
     }
     const width = parseInt(json.width, 10);
-    return new Knitpaint(data.buffer, width);
+    return new Knitpaint(data.buffer, width, json.syntax_error, json.knit_error, json.knit_warning);
   }
 
   /**
    * Creates a new Knitpaint object from an array buffer
    * @param data
    * @param width
+   * @param syntax_error
+   * @param knit_error
+   * @param knit_warning
    */
-  constructor(data: ArrayBufferLike, width: number) {
+  constructor(data: ArrayBufferLike, width: number, syntax_error?: boolean, knit_error?: boolean, knit_warning?: boolean) {
     this.data = data;
     this.width = width;
+    this.syntax_error = syntax_error;
+    this.knit_error = knit_error;
+    this.knit_warning = knit_warning;
   }
 
   /**
