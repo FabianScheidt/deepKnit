@@ -9,7 +9,7 @@ from .linebreak_writer import write_linebreak
 from .image_reader import read_image
 from .image_writer import write_image
 from .normalize import normalize_color_numbers, normalize_bitmap_data
-from .check import check, check_pattern
+from .check import check, check_pattern, KnitPaintCheckException
 
 
 class KnitPaint:
