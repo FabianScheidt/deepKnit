@@ -424,7 +424,7 @@ class LSTMModelStaf:
         evaluation = []
 
         # Configure evaluation parameters
-        temperatures = [1.5, 1.0, 0.7, 0.5, 0.2, 0.1, 0.001]
+        temperatures = [1000000, 1.5, 1.0, 0.7, 0.5, 0.2, 0.1, 0.001, 0.0000001]
         category_weights_names = ['Move', 'Cable', 'Miss', 'Move and Miss', 'Move and Links', 'Links', 'Cable and Move',
                                   'Cable and Links', 'Miss and Links', 'Tuck', 'Move and Tuck', 'Tuck and Links',
                                   'Miss and Tuck', 'Cable and Miss', 'Cable, Move, Links', 'Cable and Tuck',
