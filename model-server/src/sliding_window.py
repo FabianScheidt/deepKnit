@@ -1,8 +1,9 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-import pathlib, sys, datetime, os, random
+import pathlib, sys, os, random
 from knitpaint import KnitPaint
+from train_utils import fit_and_log
 
 
 class SlidingWindowModel:
@@ -130,12 +131,10 @@ class SlidingWindowModel:
         inputs_layer = keras.layers.Input(batch_shape=batch_shape, name='inputs_layer')
         embedded_inputs = keras.layers.Embedding(vocab_size, 5, name='embedded_inputs')(inputs_layer)
 
-        # Convolutional...
+        # Convolutional
         # upsampling_1 = keras.layers.UpSampling2D(name='upsampling_1')(embedded_inputs)
         # conv_1 = keras.layers.Conv2D(32, 3, 1, activation='relu', name='conv_1', padding='same')(upsampling_1)
         # conv_2 = keras.layers.Conv2D(32, 3, 1, activation='relu', name='conv_2', padding='same')(conv_1)
-        # # pooling_1 = keras.layers.MaxPool2D(pool_size=(2, 2), name='pooling_1')(conv_2)
-        # # conv_3 = keras.layers.Conv2D(8, 3, 1, activation='relu', name='conv_3', padding='same')(pooling_1)
         # dropout_1 = keras.layers.Dropout(0.2, name='dropout_1')(conv_2)
         # flatten = keras.layers.Flatten(name='flatten')(dropout_1)
 
@@ -162,27 +161,15 @@ class SlidingWindowModel:
         # Get the model
         model = self.get_model(vocab_size, (None, *input_data.shape[1:]), True)
 
-        # Compile the model. Use sparse categorical crossentropy so we don't need one hot output vectors
-        # When not using eager execution, the target shape needs to be defined explicitly using a custom placeholder
+        # Compile the model
         model.compile(optimizer=tf.train.AdamOptimizer(),
                       loss='categorical_crossentropy', metrics=['accuracy'])
         model.summary()
 
         # Fit the data. Use Tensorboard to visualize the progress
-        try:
-            log_date_str = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-            log_dir = '../tensorboard-log/{}'.format(log_date_str)
-            tensor_board_callback = keras.callbacks.TensorBoard(log_dir=log_dir, write_graph=True)
-            model.fit(input_data, output_data, validation_split=val_split, batch_size=self.batch_size,
-                      epochs=self.epochs, callbacks=[tensor_board_callback], shuffle=True)
-        except KeyboardInterrupt:
-            print('Saving current state of model...')
-            pathlib.Path(self.model_dir).mkdir(parents=True, exist_ok=True)
-            model.save(self.model_dir + 'sliding-window-model-interrupted.h5')
-            raise
-
-        pathlib.Path(self.model_dir).mkdir(parents=True, exist_ok=True)
-        model.save(self.model_dir + 'sliding-window-model.h5')
+        fit_and_log(model, self.model_dir, model_name='sliding-window-model',
+                    x=input_data, y=output_data, validation_split=val_split,
+                    batch_size=self.batch_size, epochs=self.epochs, shuffle=True)
 
     def sample(self):
         # Get a reference to the default tensorflow graph
@@ -260,9 +247,14 @@ if __name__ == '__main__':
         sliding_window_model.train()
     elif sys.argv[1] == 'sample':
         print('Sampling...')
-        line = [0]*4 + [13] + [1, 2]*24 + [13] + [0]*4
-        start = line*4
-        for test in sliding_window_model.sample()(58, start, 0.01, 400):
-            print('Sampled: ' + str(test))
+        sample_input = KnitPaint('../data/sliding-window-sample-input.dat')
+        sample_width = sample_input.get_width()
+        sample_data = sample_input.bitmap_data
+        sampled = bytearray()
+        for s in sliding_window_model.sample()(sample_width, sample_data, 0.2, sample_width * 300):
+            sampled += s
+        res = KnitPaint()
+        res.set_bitmap_data(sampled, sample_width, len(sampled) // sample_width)
+        res.write_image('sliding-window-sample.png')
 
     print('Done!')

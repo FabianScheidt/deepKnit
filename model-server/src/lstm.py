@@ -146,7 +146,7 @@ class LSTMModel:
         """
         # Build the model. Start with Input and Embedding
         inputs_layer = keras.layers.Input(batch_shape=batch_shape[0], name='inputs_layer')
-        embedded_inputs = keras.layers.Embedding(vocab_size, 30, name='embedded_inputs')(inputs_layer)
+        embedded_inputs = keras.layers.Embedding(vocab_size, 5, name='embedded_inputs')(inputs_layer)
 
         # Add 3 lstm-layers with dropout in between
         if tf.test.is_gpu_available():
@@ -156,13 +156,13 @@ class LSTMModel:
 
         lstm_1 = lstm_layer(500, return_sequences=True, recurrent_initializer='glorot_uniform',
                             stateful=stateful, name='lstm_1')(embedded_inputs)
-        dropout_1 = tf.keras.layers.Dropout(0.3, name='dropout_1')(lstm_1)
+        dropout_1 = tf.keras.layers.Dropout(0.2, name='dropout_1')(lstm_1)
         lstm_2 = lstm_layer(500, return_sequences=True, recurrent_initializer='glorot_uniform',
                             stateful=stateful, name='lstm_2')(dropout_1)
-        dropout_2 = tf.keras.layers.Dropout(0.3, name='dropout_2')(lstm_2)
+        dropout_2 = tf.keras.layers.Dropout(0.2, name='dropout_2')(lstm_2)
         lstm_3 = lstm_layer(500, return_sequences=True, recurrent_initializer='glorot_uniform',
                             stateful=stateful, name='lstm_3')(dropout_2)
-        dropout_3 = tf.keras.layers.Dropout(0.3, name='dropout_3')(lstm_3)
+        dropout_3 = tf.keras.layers.Dropout(0.2, name='dropout_3')(lstm_3)
 
         # Dense output: One element for each color number in the vocabulary
         activation = 'softmax' if softmax else None
