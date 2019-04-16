@@ -11,7 +11,8 @@ from tensorflow import keras
 
 from knitpaint import KnitPaint
 from knitpaint import read_linebreak
-from knitpaint.check import KnitPaintCheckException
+from knitpaint.check import KnitPaintCheckException, NumberOfLoopsInNeedleWarning, TransferWithOverlappedLoopsWarning,\
+    TransferOfPickupStitchWarning
 from train_utils import masked_acc, split_train_val, fit_and_log, get_lstm_layer, TemperatureScaling, StochasticSampling
 
 K = keras.backend
@@ -242,14 +243,11 @@ class LSTMModelStaf:
         Returns a random initial state for the model
         :return:
         """
-        sess = tf.Session()
-        with tf.variable_scope("initial_state", reuse=tf.AUTO_REUSE):
-            h_1 = tf.get_variable('h_1', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
-            c_1 = tf.get_variable('c_1', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
-            h_2 = tf.get_variable('h_2', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
-            c_2 = tf.get_variable('c_2', shape=(1, 300), initializer=tf.initializers.glorot_uniform, dtype=tf.float32)
-        sess.run(tf.global_variables_initializer())
-        return sess.run([h_1, c_1, h_2, c_2])
+        limit = math.sqrt(6 / (1 + 300))
+        return [np.random.uniform(-limit, limit, (1, 300)),
+                np.random.uniform(-limit, limit, (1, 300)),
+                np.random.uniform(-limit, limit, (1, 300)),
+                np.random.uniform(-limit, limit, (1, 300))]
 
     def train(self, val_split=0.05):
         """
@@ -424,7 +422,19 @@ class LSTMModelStaf:
         evaluation = []
 
         # Configure evaluation parameters
-        temperatures = [1000000, 1.5, 1.0, 0.7, 0.5, 0.2, 0.1, 0.001, 0.0000001]
+        sampling_configurations = [
+            {'method': 'stochastic',  'temperature': float('inf')},
+            {'method': 'stochastic',  'temperature': 1.5},
+            {'method': 'stochastic',  'temperature': 1.0},
+            {'method': 'stochastic',  'temperature': 0.7},
+            {'method': 'stochastic',  'temperature': 0.5},
+            {'method': 'stochastic',  'temperature': 0.2},
+            {'method': 'stochastic',  'temperature': 0.1},
+            {'method': 'stochastic',  'temperature': 0.001},
+            {'method': 'greedy',      'temperature': 1.0},
+            {'method': 'beam-search', 'temperature': 1.0},
+            {'method': 'beam-search', 'temperature': 3.0}
+        ]
         category_weights_names = ['Move', 'Cable', 'Miss', 'Move and Miss', 'Move and Links', 'Links', 'Cable and Move',
                                   'Cable and Links', 'Miss and Links', 'Tuck', 'Move and Tuck', 'Tuck and Links',
                                   'Miss and Tuck', 'Cable and Miss', 'Cable, Move, Links', 'Cable and Tuck',
@@ -452,13 +462,15 @@ class LSTMModelStaf:
             [1/3, 1/3, 0.0, 1/3, 0.0]
         ]
         assert len(category_weights_names) == len(category_weights_values)
-        num_samples = 2000
+        num_samples = 1000
 
         # Configure progress logger and silence tensorflow
-        progress = tf.keras.utils.Progbar(len(temperatures) * len(category_weights_values) * num_samples)
+        progress = tf.keras.utils.Progbar(len(sampling_configurations) * len(category_weights_values) * num_samples)
         progress_counter = 0
 
-        for temperature in temperatures:
+        for sampling_configuration in sampling_configurations:
+            method = sampling_configuration['method']
+            temperature = sampling_configuration['temperature']
             for i, category_weights in enumerate(category_weights_values):
                 # Keep a set of hashes of previously sampled knitpaint
                 previous = set()
@@ -468,35 +480,42 @@ class LSTMModelStaf:
 
                     # Sample and create knitpaint object from result
                     generated_res = []
-                    for s in sample([START_OF_FILE_CHAR], category_weights, temperature=temperature, max_generate=400):
+                    for s in sample([START_OF_FILE_CHAR], category_weights, method, temperature, 5, True, 0, 400):
                         generated_res = generated_res + s
-                    knitpaint = read_linebreak(generated_res[1:-1], 151, padding_char=1)
+                    knitpaint = read_linebreak(generated_res[1:-1], END_OF_LINE_CHAR, padding_char=1)
                     knitpaint_hash = hash(bytes(knitpaint.bitmap_data))
 
                     # Check if the data is knittable
+                    no_problems = True
                     knittable = True
                     try:
                         knitpaint.check_as_pattern()
-                    except (KnitPaintCheckException, AttributeError, ZeroDivisionError, NotImplementedError):
+                    except KnitPaintCheckException as e:
+                        no_problems = False
+                        relevant_problems = [p for p in e.problems if not (
+                                               isinstance(p, NumberOfLoopsInNeedleWarning)
+                                               or isinstance(p, TransferOfPickupStitchWarning)
+                                               or isinstance(p, TransferWithOverlappedLoopsWarning)
+                                             )]
+                        knittable = len(relevant_problems) == 0
+                    except (AttributeError, ZeroDivisionError, NotImplementedError):
                         knittable = False
+                        no_problems = False
 
                     # Append to result list
                     evaluation.append({
+                        'method': method,
                         'temperature': temperature,
                         'category_weights_value': category_weights,
                         'category_weights_name': category_weights_names[i],
                         'category_weights_train_count': category_weights_train_counts[i],
+                        'no_problems': no_problems,
                         'knittable': knittable,
                         'unique': knitpaint_hash not in previous,
                         'width': knitpaint.get_width(),
                         'height': knitpaint.get_height(),
                         'area': len(knitpaint.bitmap_data)
                     })
-
-                    # Save matching knitpaint some for MetaKnit project
-                    if knittable and knitpaint.get_width() == 4 and knitpaint.get_height() == 6 \
-                            and knitpaint_hash not in previous and 0.1 < temperature < 0.8:
-                        knitpaint.write_dat(self.model_dir + 'meta-knit/' + str(progress_counter) + '.dat')
 
                     # Add to set of previous knitpaint
                     previous.add(knitpaint_hash)
@@ -510,25 +529,38 @@ class LSTMModelStaf:
         df.to_excel(self.model_dir + 'evaluation.xlsx')
 
         # Calculate and some metrics
-        unique_and_knittable_mean = df.groupby(['temperature', 'category_weights_name'])[['knittable', 'unique']].mean()
+        means = df.groupby(['method', 'temperature', 'category_weights_name'])[['knittable', 'no_problems', 'unique']].mean()
+
         knittable = df[df['knittable']]
-        unique_of_knittable_mean = knittable.groupby(['temperature', 'category_weights_name'])[['unique']].mean()
-        unique_of_knittable_mean = unique_of_knittable_mean.rename(columns={'unique': 'unique-of-knittable'})
-        unique_knittable = pd.concat([unique_and_knittable_mean, unique_of_knittable_mean], axis=1, sort=False)
-        unique_knittable_pivot = pd.pivot_table(unique_knittable, values=['knittable', 'unique', 'unique-of-knittable'],
-                                                index=['temperature'], columns=['category_weights_name'],
-                                                aggfunc='mean')
+        unique_of_knittable_mean = knittable.groupby(['method', 'temperature', 'category_weights_name'])[['unique']].mean()
+        unique_of_knittable_mean = unique_of_knittable_mean.rename(columns={'unique': 'unique_of_knittable'})
+        means = pd.concat([means, unique_of_knittable_mean], axis=1, sort=False)
         knittable_widths = knittable.groupby(['width']).size()
         knittable_heights = knittable.groupby(['height']).size()
         knittable_areas = knittable.groupby(['area']).size()
 
+        no_problems = df[df['no_problems']]
+        unique_of_no_problems_mean = no_problems.groupby(['method', 'temperature', 'category_weights_name'])[['unique']].mean()
+        unique_of_no_problems_mean = unique_of_no_problems_mean.rename(columns={'unique': 'unique_of_no_problems'})
+        means = pd.concat([means, unique_of_no_problems_mean], axis=1, sort=False)
+        unproblematic_widths = no_problems.groupby(['width']).size()
+        unproblematic_heights = no_problems.groupby(['height']).size()
+        unproblematic_areas = no_problems.groupby(['area']).size()
+
+        means_pivot = pd.pivot_table(means, values=['knittable', 'no_problems', 'unique',
+                                                    'unique_of_knittable', 'unique_of_no_problems'],
+                                     index=['method', 'temperature'], columns=['category_weights_name'], aggfunc='mean')
+
         # Save to excel
         writer = pd.ExcelWriter(self.model_dir + 'evaluation_metrics.xlsx', engine='xlsxwriter')
-        unique_knittable.to_excel(writer, sheet_name='Means')
-        unique_knittable_pivot.to_excel(writer, sheet_name='Means Pivot')
+        means.to_excel(writer, sheet_name='Means')
+        means_pivot.to_excel(writer, sheet_name='Means Pivot')
         knittable_widths.to_excel(writer, sheet_name='Knittable Widths')
         knittable_heights.to_excel(writer, sheet_name='Knittable Heights')
         knittable_areas.to_excel(writer, sheet_name='Knittable Areas')
+        unproblematic_widths.to_excel(writer, sheet_name='Unproblematic Widths')
+        unproblematic_heights.to_excel(writer, sheet_name='Unproblematic Heights')
+        unproblematic_areas.to_excel(writer, sheet_name='Unproblematic Areas')
         writer.save()
 
 
@@ -548,6 +580,8 @@ if __name__ == '__main__':
             print('Sampled: ' + str(test))
     elif sys.argv[1] == 'evaluate':
         print('Evaluating...')
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
         lstm_model.evaluate()
 
     print('Done!')
