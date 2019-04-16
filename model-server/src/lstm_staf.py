@@ -44,7 +44,7 @@ class LSTMModelStaf:
         self.data_dir = '../data/raw/staf/'
         self.training_dir = '../data/processed/training-files/lstm-staf/'
         self.model_dir = '../output/models/lstm-staf/'
-        self.epochs = 200
+        self.epochs = 600
         self.batch_size = 32
 
     def generate_training_file(self):
@@ -175,11 +175,13 @@ class LSTMModelStaf:
         # Get concatenated inputs
         sequence_input, category_input, concatenated_inputs = self._get_model_input(vocab_size, batch_size)
 
-        # Define two lstm layers
-        lstm_layer_1 = get_lstm_layer()(300, return_sequences=True, recurrent_initializer='glorot_uniform',
+        # Define two lstm layers with dropout in between
+        lstm_layer_1 = get_lstm_layer()(100, return_sequences=True, recurrent_initializer='glorot_uniform',
                                         name='lstm_1')
-        lstm_layer_2 = get_lstm_layer()(300, return_sequences=True, recurrent_initializer='glorot_uniform',
+        dropout_layer_1 = keras.layers.Dropout(0.2, name='dropout_1')
+        lstm_layer_2 = get_lstm_layer()(100, return_sequences=True, recurrent_initializer='glorot_uniform',
                                         name='lstm_2')
+        dropout_layer_2 = keras.layers.Dropout(0.2, name='dropout_2')
 
         # Dense output: One element for each color number in the vocabulary
         dense_output_layer = Dense(vocab_size, name='dense_output')
@@ -187,8 +189,10 @@ class LSTMModelStaf:
 
         # Now assemble the layers
         lstm_1 = lstm_layer_1(concatenated_inputs)
-        lstm_2 = lstm_layer_2(lstm_1)
-        dense_output = dense_output_layer(lstm_2)
+        dropout_1 = dropout_layer_1(lstm_1)
+        lstm_2 = lstm_layer_2(dropout_1)
+        dropout_2 = dropout_layer_2(lstm_2)
+        dense_output = dense_output_layer(dropout_2)
         softmax_output = softmax_output_layer(dense_output)
 
         # Define training model
@@ -201,14 +205,14 @@ class LSTMModelStaf:
         sequence_input, category_input, concatenated_inputs = self._get_model_input(vocab_size, batch_size)
 
         # Define two lstm layers
-        lstm_layer_1 = get_lstm_layer()(300, return_sequences=True, return_state=True, name='lstm_1')
-        lstm_layer_2 = get_lstm_layer()(300, return_sequences=False, return_state=True, name='lstm_2')
+        lstm_layer_1 = get_lstm_layer()(100, return_sequences=True, return_state=True, name='lstm_1')
+        lstm_layer_2 = get_lstm_layer()(100, return_sequences=False, return_state=True, name='lstm_2')
 
         # The sampling model needs additional inputs for the lstm states
-        lstm_1_states_input = [Input(batch_shape=(batch_size, 300), name='lstm_1_initial_h'),
-                               Input(batch_shape=(batch_size, 300), name='lstm_1_initial_c')]
-        lstm_2_states_input = [Input(batch_shape=(batch_size, 300), name='lstm_2_initial_h'),
-                               Input(batch_shape=(batch_size, 300), name='lstm_2_initial_c')]
+        lstm_1_states_input = [Input(batch_shape=(batch_size, 100), name='lstm_1_initial_h'),
+                               Input(batch_shape=(batch_size, 100), name='lstm_1_initial_c')]
+        lstm_2_states_input = [Input(batch_shape=(batch_size, 100), name='lstm_2_initial_h'),
+                               Input(batch_shape=(batch_size, 100), name='lstm_2_initial_c')]
 
         # The output can be scaled by a temperature
         temperature_input = Input(batch_shape=(batch_size, 1), name='temperature')
@@ -243,11 +247,11 @@ class LSTMModelStaf:
         Returns a random initial state for the model
         :return:
         """
-        limit = math.sqrt(6 / (1 + 300))
-        return [np.random.uniform(-limit, limit, (1, 300)),
-                np.random.uniform(-limit, limit, (1, 300)),
-                np.random.uniform(-limit, limit, (1, 300)),
-                np.random.uniform(-limit, limit, (1, 300))]
+        limit = math.sqrt(6 / (1 + 100))
+        return [np.random.uniform(-limit, limit, (1, 100)),
+                np.random.uniform(-limit, limit, (1, 100)),
+                np.random.uniform(-limit, limit, (1, 100)),
+                np.random.uniform(-limit, limit, (1, 100))]
 
     def train(self, val_split=0.05):
         """
