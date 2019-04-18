@@ -34,8 +34,9 @@ export class PatternComponent implements OnChanges {
   private fetchPreview() {
     this.thumbnail = null;
     if (this.knitpaint) {
+      const previewKnitpaint = this.knitpaint.repeatToSize(24, 28);
       this.knitpaintThumbnailService
-        .generateThumbnail(this.knitpaint, 'png', 200, 2, [160, 170, 185])
+        .generateThumbnail(previewKnitpaint, 'png', 200, 3, [160, 170, 185])
         .pipe(takeUntil(this.knitpaintChanged))
         .subscribe((dataUrl) => {
           this.thumbnail = dataUrl;

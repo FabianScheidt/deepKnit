@@ -173,7 +173,7 @@ export class EditorIoService {
    */
   public exportThumbnail(knitpaint: Knitpaint) {
     this.knitpaintThumbnailService
-      .generateThumbnail(knitpaint, 'png', 200, 2, [160, 170, 185], true)
+      .generateThumbnail(knitpaint, 'png', 400, 2, [160, 170, 185], true)
       .subscribe((blob: Blob) => saveAs(blob, 'deepknit.png'));
   }
 

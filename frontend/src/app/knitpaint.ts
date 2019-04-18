@@ -175,6 +175,25 @@ export class Knitpaint {
   }
 
   /**
+   * Repeats a pattern to specified dimensions.
+   * The original pattern is placed in the center and surrounded with repetitions.
+   *
+   * @param width
+   * @param height
+   */
+  public repeatToSize(width: number, height: number): Knitpaint {
+    let repeatX = Math.ceil(width / this.width);
+    repeatX = repeatX % 2 === 0 ? repeatX + 1 : repeatX;
+    let repeatY = Math.ceil(height / this.height);
+    repeatY = repeatY % 2 === 0 ? repeatY + 1 : repeatY;
+    const offsetX = Math.floor((repeatX * this.width - width) / 2);
+    const offsetY = Math.floor((repeatY * this.height - height) / 2);
+    const repeated = this.repeat(repeatX, repeatY);
+    console.log([repeatX * this.width, repeatY * this.height], [width, height], [offsetX, offsetY]);
+    return repeated.slice(offsetX, offsetY, width, height);
+  }
+
+  /**
    * Creates a new knitpaint that can be flipped in x or y direction
    *
    * @param flipX
