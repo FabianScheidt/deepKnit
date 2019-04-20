@@ -157,28 +157,8 @@ export class TextureTool extends AbstractKnitpaintTool implements KnitpaintTool 
    * @param setKnitpaint
    */
   private applyTexture(setKnitpaint: (knitpaint: Knitpaint, triggerChange?: boolean) => void): void {
-    // Find start index
-    const canvasCoordinates = this.getCanvasCoordinates();
-    const startIndex = KnitpaintCanvasUtils.getIndexAtCoordinates(canvasCoordinates.x, canvasCoordinates.y, this.knitpaint.width);
-
-    // Only continue if index and current texture is valid
-    const texture = this.transformedTexture;
-    if ((!startIndex && startIndex !== 0) || !texture) {
-      return;
-    }
-
-    // Apply pixel by pixel
-    let knitpaint = this.knitpaint;
-    const textureNumbers = texture.getColorNumbers();
-    for (let x = 0; x < texture.width; x++) {
-      for (let y = 0; y < texture.height; y++) {
-        const knitpaintIndex = startIndex + y * knitpaint.width + x;
-        const textureIndex = y * texture.width + x;
-        knitpaint = knitpaint.setColorNumber(knitpaintIndex, textureNumbers[textureIndex]);
-      }
-    }
-
-    // Set new knitpaint
+    const offset = this.getCanvasCoordinates();
+    const knitpaint = this.knitpaint.applyOther(this.transformedTexture, offset.x, offset.y);
     setKnitpaint(knitpaint);
   }
 

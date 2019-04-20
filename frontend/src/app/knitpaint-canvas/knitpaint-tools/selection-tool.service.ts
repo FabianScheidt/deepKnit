@@ -8,9 +8,16 @@ export class SelectionTool extends AbstractStartEndTool implements KnitpaintTool
 
   public readonly name = 'Selection Tool';
   public selection: Knitpaint;
+  private setKnitpaint: (knitpaint: Knitpaint, triggerChange?: boolean) => void;
 
   constructor() {
     super();
+  }
+
+  load(canvas: HTMLCanvasElement, requestRender: () => void,
+       setKnitpaint: (knitpaint: Knitpaint, triggerChange?: boolean) => void, __?): void {
+    this.setKnitpaint = setKnitpaint;
+    super.load(canvas, requestRender, setKnitpaint, __);
   }
 
   render(ctx: CanvasRenderingContext2D, transform: SVGMatrix): void {
@@ -55,5 +62,14 @@ export class SelectionTool extends AbstractStartEndTool implements KnitpaintTool
       this.selection = this.knitpaint.slice(x, y, width, height);
       console.log(this.selection);
     }
+  }
+
+  public fillWithPattern(pattern: Knitpaint) {
+    const knitpaintRect = this.getKnitpaintRect();
+    const width = knitpaintRect[1].x - knitpaintRect[0].x;
+    const height = knitpaintRect[1].y - knitpaintRect[0].y;
+    const fill = pattern.repeatToSize(width, height);
+    const knitpaint = this.knitpaint.applyOther(fill, knitpaintRect[0].x, knitpaintRect[0].y);
+    this.setKnitpaint(knitpaint);
   }
 }

@@ -3,6 +3,7 @@ import { KnitpaintTool } from '../../../knitpaint-canvas/knitpaint-tool';
 import { TextureTool } from '../../../knitpaint-canvas/knitpaint-tools/texture-tool.service';
 import { SelectionTool } from '../../../knitpaint-canvas/knitpaint-tools/selection-tool.service';
 import { EditorStateService } from '../../editor-state.service';
+import { Knitpaint } from '../../../knitpaint';
 
 @Component({
   selector: 'app-tool-options',
@@ -23,6 +24,10 @@ export class ToolOptionsComponent {
     return <SelectionTool>this.activeTools.find(t => t instanceof SelectionTool);
   }
 
+  public getSelectedPattern(): Knitpaint {
+    return this.editorStateService.getSelectedPattern();
+  }
+
   public optionsAvailable(): boolean {
     return !!this.getTextureTool() || !!this.getSelectionTool();
   }
@@ -34,6 +39,11 @@ export class ToolOptionsComponent {
       patterns.push(selection);
       this.editorStateService.setPatterns(patterns);
     }
+  }
+
+  public fillSelectionWithPattern() {
+    const selectedPattern = this.getSelectedPattern();
+    this.getSelectionTool().fillWithPattern(selectedPattern);
   }
 
 }

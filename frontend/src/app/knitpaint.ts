@@ -1,5 +1,6 @@
 import { COLOR_TABLE, COLOR_LABELS } from './knitpaint-constants';
 import * as _ from 'lodash';
+import { KnitpaintCanvasUtils } from './knitpaint-canvas/knitpaint-canvas-utils';
 
 export type Color = [number, number, number];
 
@@ -265,6 +266,40 @@ export class Knitpaint {
     const uint: Uint8Array = new Uint8Array(copy);
     uint.fill(colorNumber, index, index + 1);
     return new Knitpaint(copy, this.width);
+  }
+
+  /**
+   * Copies the content of another knitpaint with an optional offset
+   *
+   * @param other
+   * @param offsetX
+   * @param offsetY
+   */
+  public applyOther(other: Knitpaint, offsetX?: number, offsetY?: number) {
+    offsetX = offsetX || 0;
+    offsetY = offsetY || 0;
+
+    // Find start index
+    const startIndex = KnitpaintCanvasUtils.getIndexAtCoordinates(offsetX, offsetY, this.width);
+
+    // Only continue if index and current texture is valid
+    if ((!startIndex && startIndex !== 0) || !other) {
+      return;
+    }
+
+    // Apply pixel by pixel
+    let knitpaint: Knitpaint = this;
+    const otherNumbers = other.getColorNumbers();
+    for (let x = 0; x < other.width; x++) {
+      for (let y = 0; y < other.height; y++) {
+        const knitpaintIndex = startIndex + y * knitpaint.width + x;
+        const textureIndex = y * other.width + x;
+        knitpaint = knitpaint.setColorNumber(knitpaintIndex, otherNumbers[textureIndex]);
+      }
+    }
+
+    // Return new knitpaint
+    return knitpaint;
   }
 
   /**
