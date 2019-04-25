@@ -437,7 +437,8 @@ class LSTMModelStaf:
             {'method': 'stochastic',  'temperature': 0.001},
             {'method': 'greedy',      'temperature': 1.0},
             {'method': 'beam-search', 'temperature': 1.0},
-            {'method': 'beam-search', 'temperature': 3.0}
+            {'method': 'beam-search', 'temperature': 3.0},
+            {'method': 'beam-search', 'temperature': 5.0}
         ]
         category_weights_names = ['Move', 'Cable', 'Miss', 'Move and Miss', 'Move and Links', 'Links', 'Cable and Move',
                                   'Cable and Links', 'Miss and Links', 'Tuck', 'Move and Tuck', 'Tuck and Links',
