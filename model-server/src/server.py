@@ -5,7 +5,7 @@ from flask_cors import CORS
 from lstm import LSTMModel
 from lstm_staf import LSTMModelStaf, START_OF_FILE_CHAR, END_OF_LINE_CHAR
 from sliding_window import SlidingWindowModel
-from knitpaint import KnitPaint
+from knitpaint import KnitPaint, KnitPaintCheckException
 import knitpaint
 
 # Create flask app that allows to sample from previously trained models
@@ -143,7 +143,7 @@ def from_dat():
     """
     dat_bytes = request.stream.read()
     handler = KnitPaint(dat_bytes)
-    resp = Response(knitpaint_to_json(handler), mimetype='application/json')
+    resp = Response(json.dumps(knitpaint_to_dict(handler)), mimetype='application/json')
     set_cache_headers(resp)
     return resp
 
@@ -215,7 +215,17 @@ def get_pattern():
 
     # Read result as knitpaint
     handler = knitpaint.read_linebreak(generated_res[1:-1], 151, padding_char=1)
-    resp = Response(knitpaint_to_json(handler), mimetype='application/json')
+    json_resp = knitpaint_to_dict(handler)
+
+    # Perform a check
+    try:
+        handler.check_as_pattern()
+        json_resp['knittable'] = True
+    except KnitPaintCheckException:
+        json_resp['knittable'] = False
+
+    # Return the response
+    resp = Response(json.dumps(json_resp), mimetype='application/json')
     set_cache_headers(resp)
     return resp
 
@@ -242,11 +252,11 @@ def log_project():
     return ''
 
 
-def knitpaint_to_json(handler):
-    return json.dumps({
+def knitpaint_to_dict(handler):
+    return {
         'data': base64.b64encode(bytes(handler.bitmap_data)).decode(),
         'width': handler.get_width()
-    })
+    }
 
 
 # Run flask app to make it available for development
