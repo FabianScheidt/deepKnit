@@ -68,6 +68,7 @@ class LSTMModelStaf(LSTMModel):
         for i, (_, row) in enumerate(df.iterrows()):
             apex_file = self.data_dir + row['apex_file']
             knitpaint = KnitPaint(apex_file)
+            knitpaint.normalize_color_numbers()
             knitpaint.add_char_col(END_OF_LINE_CHAR)
             sequence = np.array(knitpaint.bitmap_data)
             sequence = np.array([START_OF_FILE_CHAR, *sequence, END_OF_FILE_CHAR])
