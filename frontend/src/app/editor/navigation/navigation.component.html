@@ -1,0 +1,56 @@
+<div class="nav">
+  <ul>
+    <li class="step">
+      <button mat-button (click)="setup()" appTapClick [class.active]="isSetup()">
+        1. Set up your project
+      </button>
+    </li>
+    <li class="step">
+      <button mat-button (click)="patterns()" appTapClick [class.active]="isPatterns()">
+        2. Pick your patterns
+      </button>
+    </li>
+    <li class="step">
+      <button mat-button (click)="assembly()" appTapClick [class.active]="isAssembly()">
+        3. Assemble your knitting
+      </button>
+    </li>
+    <li class="options" [matMenuTriggerFor]="menu">
+      <button mat-button>
+        <mat-icon>more_horiz</mat-icon>
+      </button>
+    </li>
+  </ul>
+
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="newProject()" appTapClick>New project</button>
+    <button mat-menu-item (click)="openProject()" appTapClick>Open project</button>
+    <button mat-menu-item (click)="saveProject()" appTapClick>Save project</button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item [matMenuTriggerFor]="assemblyMenu" appTapClick>Assembly Import / Export</button>
+    <button mat-menu-item [matMenuTriggerFor]="patternMenu" appTapClick [disabled]="!patternSelected()">Pattern Import / Export</button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item [disabled]="!undoAvailable()" (click)="undo()" appTapClick>Undo</button>
+    <button mat-menu-item [disabled]="!redoAvailable()" (click)="redo()" appTapClick>Redo</button>
+  </mat-menu>
+
+  <mat-menu #assemblyMenu="matMenu">
+    <button mat-menu-item (click)="importAssemblyFromDat()" appTapClick>Import from APEX</button>
+    <button mat-menu-item (click)="exportAssemblyToDat()" appTapClick>Export to APEX</button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="importAssemblyFromImage()" appTapClick>Import from Image</button>
+    <button mat-menu-item (click)="exportAssemblyToImage()" appTapClick>Export as Image</button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="exportAssemblyThumbnail()" appTapClick>Export Rendering</button>
+  </mat-menu>
+
+  <mat-menu #patternMenu="matMenu">
+    <button mat-menu-item (click)="importPatternFromDat()" appTapClick>Import from APEX</button>
+    <button mat-menu-item (click)="exportPatternToDat()" appTapClick>Export to APEX</button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="importPatternFromImage()" appTapClick>Import from Image</button>
+    <button mat-menu-item (click)="exportPatternToImage()" appTapClick>Export as Image</button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="exportPatternThumbnail()" appTapClick>Export Rendering</button>
+  </mat-menu>
+</div>

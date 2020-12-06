@@ -1,0 +1,39 @@
+<div class="flip-container" [class.flippable]="thumbnail" [class.flipped]="showThumbnail">
+  <div class="flipper">
+    <div class="front" [class.loading]="!knitpaint">
+      <div class="canvas">
+        <app-knitpaint-canvas *ngIf="knitpaint" [knitpaint]="knitpaint"></app-knitpaint-canvas>
+      </div>
+
+      <div class="check" *ngIf="knitpaint">
+        <mat-icon *ngIf="!knitpaint.syntax_error && !knitpaint.knit_error && !knitpaint.knit_warning" matTooltip="This pattern is ready to knit">check_circle</mat-icon>
+        <mat-icon *ngIf="!knitpaint.syntax_error && !knitpaint.knit_error && knitpaint.knit_warning" matTooltip="This pattern might be difficult to knit">info</mat-icon>
+        <mat-icon *ngIf="!knitpaint.syntax_error && knitpaint.knit_error" matTooltip="This pattern has problems">error</mat-icon>
+        <mat-icon *ngIf="knitpaint.syntax_error" matTooltip="This pattern has incorrect syntax">cancel</mat-icon>
+      </div>
+      <div class="save" *ngIf="knitpaint">
+        <mat-icon *ngIf="!saved" (click)="toggleSave()" appTapClick>favorite_border</mat-icon>
+        <mat-icon *ngIf="saved" (click)="toggleSave()" appTapClick>favorite</mat-icon>
+      </div>
+    </div>
+
+    <div class="back">
+      <div class="thumbnail">
+        <span class="center-helper"></span>
+        <img *ngIf="thumbnail" [src]="thumbnail" alt="KnitPaint Preview">
+      </div>
+
+      <div class="check" *ngIf="knitpaint">
+        <mat-icon *ngIf="!knitpaint.syntax_error && !knitpaint.knit_error && !knitpaint.knit_warning" matTooltip="This pattern is ready to knit">check_circle</mat-icon>
+        <mat-icon *ngIf="!knitpaint.syntax_error && !knitpaint.knit_error && knitpaint.knit_warning" matTooltip="This pattern might be difficult to knit">info</mat-icon>
+        <mat-icon *ngIf="!knitpaint.syntax_error && knitpaint.knit_error" matTooltip="This pattern has problems">error</mat-icon>
+        <mat-icon *ngIf="knitpaint.syntax_error" matTooltip="This pattern has incorrect syntax">cancel</mat-icon>
+      </div>
+      <div class="save" *ngIf="knitpaint">
+        <mat-icon *ngIf="!saved" (click)="toggleSave()" appTapClick>favorite_border</mat-icon>
+        <mat-icon *ngIf="saved" (click)="toggleSave()" appTapClick>favorite</mat-icon>
+      </div>
+    </div>
+  </div>
+</div>
+

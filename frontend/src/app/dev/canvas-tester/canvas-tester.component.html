@@ -1,0 +1,30 @@
+<div class="wrapper">
+  <div>
+    <p>
+      Enable Grid:
+      <input type="checkbox" [ngModel]="enableGrid" (ngModelChange)="setEnableGrid($event)">
+    </p>
+    <p>
+      Enable Transform:
+      <input type="checkbox" [ngModel]="enableTransform" (ngModelChange)="setEnableTransform($event)">
+    </p>
+    <p>
+      Active Tool:
+      <select [ngModel]="activeTool" (ngModelChange)="setActiveTool($event)">
+        <option [ngValue]="tool" *ngFor="let tool of tools">{{ tool.name }}</option>
+      </select>
+    </p>
+    <p>
+      Picked Color: {{ pickedColor }}
+    </p>
+  </div>
+  <div>
+    <p>
+      <app-knitpaint-canvas
+        #knitpaintCanvas
+        [knitpaint]="someKnitpaint"></app-knitpaint-canvas>
+    </p>
+  </div>
+</div>
+<app-tooltip-outlet></app-tooltip-outlet>
+

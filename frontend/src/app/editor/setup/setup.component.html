@@ -1,0 +1,23 @@
+<form (submit)="isSizeDifferent() && resize()">
+  <div class="setup-container">
+    <div class="text">
+      Set the dimensions of your knitting.
+    </div>
+    <div class="options">
+      <div class="option">
+        <mat-form-field>
+          <input matInput type="number" min="1" id="width" name="width" placeholder="Width" [(ngModel)]="width" autofocus>
+        </mat-form-field>
+      </div>
+      <div class="option">
+        <mat-form-field>
+          <input matInput type="number" min="1" id="height" name="height" placeholder="Height" [(ngModel)]="height">
+        </mat-form-field>
+      </div>
+    </div>
+    <div class="buttons">
+      <button type="submit" mat-button color="accent" [disabled]="!isSizeDifferent()">Apply</button>
+      <button mat-button (click)="nextStage()">Continue</button>
+    </div>
+  </div>
+</form>

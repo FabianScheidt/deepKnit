@@ -1,0 +1,32 @@
+@import "../editor-constants";
+
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 40px;
+  background-color: $panel-background;
+}
+
+.tools {
+  flex-grow: 1;
+}
+
+.view {
+  border-top: 4px solid $main-background;
+}
+
+.tools, .view {
+  padding: 4px 0;
+  text-align: center;
+
+  /deep/ i.material-icons {
+    font-size: 22px;
+    margin: 6px;
+    cursor: pointer;
+    color: $active;
+
+    &.selected {
+      color: $selected;
+    }
+  }
+}

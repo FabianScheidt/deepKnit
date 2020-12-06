@@ -1,0 +1,9 @@
+<div class="wrapper">
+  <div
+    *ngFor="let colorNumber of colorNumbers"
+    class="color"
+    [style.backgroundColor]="getBackgroundColorStr(colorNumber)"
+    [style.color]="getTextColorStr(colorNumber)">
+    {{ getColorLabel(colorNumber) }}
+  </div>
+</div>

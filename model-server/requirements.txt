@@ -1,0 +1,11 @@
+joblib
+matplotlib
+scikit-learn
+gensim
+pandas
+pytest
+Flask==1.0.2
+Flask-Cors==3.0.7
+numpy==1.15.2
+opencv-python==3.4.3.18
+tensorflow-gpu==1.12.0

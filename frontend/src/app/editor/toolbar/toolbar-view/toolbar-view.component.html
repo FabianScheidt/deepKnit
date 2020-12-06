@@ -1,0 +1,14 @@
+<i class="material-icons"
+   appTooltip="Disable Grid"
+   *ngIf="isGridActive()"
+   (click)="toggleGrid()" appTapClick>grid_off</i>
+<i class="material-icons"
+   appTooltip="Enable Grid"
+   *ngIf="!isGridActive()"
+   (click)="toggleGrid()" appTapClick>grid_on</i>
+<i class="material-icons"
+   appTooltip="Zoom In"
+   (click)="zoom(true)" appTapClick>zoom_in</i>
+<i class="material-icons"
+   appTooltip="Zoom Out"
+   (click)="zoom(false)" appTapClick>zoom_out</i>

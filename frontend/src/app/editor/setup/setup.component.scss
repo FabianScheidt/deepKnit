@@ -1,0 +1,39 @@
+@import "../editor-constants";
+
+:host {
+  display: block;
+}
+
+.setup-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  margin-left: calc(50% - 250px);
+  margin-top: 100px;
+  width: 500px;
+  height: 300px;
+  padding: 20px;
+  background-color: $panel-background;
+  color: $active;
+
+  .text {
+    padding: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    color: $active;
+    text-align: center;
+  }
+
+  .options .option {
+    text-align: center;
+  }
+
+  .buttons {
+    text-align: right;
+
+    button {
+      margin-left: 5px;
+    }
+  }
+}

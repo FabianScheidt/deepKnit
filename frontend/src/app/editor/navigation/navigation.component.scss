@@ -1,0 +1,41 @@
+@import "../editor-constants";
+
+:host {
+  display: block;
+  position: relative;
+  background-color: $panel-background;
+}
+
+.nav ul {
+  display: flex;
+  margin: 0;
+
+  li {
+    display: block;
+    margin: 0;
+
+    &.step {
+      flex-grow: 1;
+      flex-shrink: 1;
+      text-align: center;
+
+      button {
+        font-size: 20px;
+        font-weight: 700;
+        display: inline-block;
+        color: $inactive;
+        padding: 10px 20px;
+        cursor: pointer;
+      }
+
+      button.active {
+        color: $active;
+      }
+    }
+
+    &.options {
+      padding: 10px 10px 0 10px;
+      color: $active;
+    }
+  }
+}

@@ -1,0 +1,13 @@
+<div class="title">Pattern Library</div>
+
+<div class="patterns">
+  <div class="pattern" *ngFor="let pattern of getSavedPatterns()"
+       [class.selectable]="allowSelection" [class.selected]="selection === pattern" (click)="select(pattern)" appTapClick>
+    <div class="canvas">
+      <app-knitpaint-canvas [knitpaint]="pattern"></app-knitpaint-canvas>
+    </div>
+    <div class="remove" *ngIf="allowRemoval">
+      <mat-icon (click)="removePattern(pattern)" appTapClick>favorite</mat-icon>
+    </div>
+  </div>
+</div>
