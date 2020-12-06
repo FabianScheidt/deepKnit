@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
 import pathlib, sys, datetime, os, random
-from KnitPaintFileHandler import KnitPaintFileHandler
+from knitpaint import KnitPaint
 from TensorBoardLogger import TensorBoardLogger
 
 
@@ -59,7 +59,7 @@ class SlidingWindowModel:
             progress.update(i)
 
             # Read file, get data as numpy, remove padding on all sides
-            handler = KnitPaintFileHandler(dat_file)
+            handler = KnitPaint(dat_file)
             try:
                 handler.normalize_bitmap_data(option_line='remove')
             except AssertionError:

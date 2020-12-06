@@ -3,7 +3,7 @@ from flask import Flask, Response, request, json
 from flask_cors import CORS
 from lstm import LSTMModel
 from sliding_window import SlidingWindowModel
-from KnitPaintFileHandler import KnitPaintFileHandler
+from knitpaint import KnitPaint
 
 # Create flask app that allows to sample from previously trained models
 app = Flask(__name__, static_url_path='', static_folder='../static')
@@ -98,8 +98,7 @@ def from_dat():
     :return:
     """
     dat_bytes = request.stream.read()
-    handler = KnitPaintFileHandler()
-    handler.read_dat_bytes(dat_bytes)
+    handler = KnitPaint(dat_bytes)
     res = json.dumps({
         'data': handler.bitmap_data,
         'width': handler.get_width()
@@ -131,9 +130,9 @@ def to_dat():
 
     # Use KnitpaintFileHandler to generate the dat file
     height = len(data) // width
-    handler = KnitPaintFileHandler()
+    handler = KnitPaint()
     handler.set_bitmap_data(data, width, height)
-    dat_bytes = handler.get_dat_bytes()
+    dat_bytes = handler.write_dat()
     resp = Response(dat_bytes, mimetype='application/octet-stream')
     set_cache_headers(resp)
     return resp

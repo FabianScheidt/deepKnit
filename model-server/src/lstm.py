@@ -2,8 +2,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
 import pathlib, sys, datetime, os
-from sklearn.model_selection import train_test_split
-from KnitPaintFileHandler import KnitPaintFileHandler
+from knitpaint import KnitPaint
 from TensorBoardLogger import TensorBoardLogger
 
 
@@ -34,14 +33,14 @@ class LSTMModel:
             progress.update(i)
 
             # Read file, normalize, remove option line and add linebreak character
-            handler = KnitPaintFileHandler(dat_file)
+            handler = KnitPaint(dat_file)
             try:
                 handler.normalize_bitmap_data(option_line='remove')
                 handler.add_char_col(self.linebreak_char)
             except AssertionError:
                 continue
 
-            # Get data as numpy, remove padding on top of the Knitpaint, leave on line at bottom
+            # Get data as numpy, remove padding on top of the Knitpaint, leave one line at bottom
             # (respectively bottom and top of the numpy data)
             dat_data = handler.get_np_bitmap_data()[2:-3, :]
 
