@@ -1,8 +1,9 @@
 import os, logging
-from flask import Flask, Response, request
+from flask import Flask, Response, request, json
 from flask_cors import CORS
 from lstm import LSTMModel
 from sliding_window import SlidingWindowModel
+from KnitPaintFileHandler import KnitPaintFileHandler
 
 # Create flask app that allows to sample from previously trained models
 app = Flask(__name__, static_url_path='', static_folder='../static')
@@ -50,7 +51,7 @@ def send_cors_options():
     return resp
 
 
-@app.route('/stream', methods=['POST'])
+@app.route('/sample', methods=['POST'])
 def sample_model():
     """
     Samples knitpaint pixels and returns the result in chunks
@@ -86,6 +87,54 @@ def sample_model():
         resp = Response(model.sample(width, start, temperature, num_generate), mimetype='application/octet-stream')
     else:
         resp = Response('Unknown model', status=400)
+    set_cache_headers(resp)
+    return resp
+
+
+@app.route('/from-dat', methods=['POST'])
+def from_dat():
+    """
+    Reads from a provided dat file and returns the content as list of color numbers
+    :return:
+    """
+    dat_bytes = request.stream.read()
+    handler = KnitPaintFileHandler()
+    handler.read_dat_bytes(dat_bytes)
+    res = json.dumps({
+        'data': handler.bitmap_data,
+        'width': handler.get_width()
+    })
+    resp = Response(res, mimetype='application/json')
+    set_cache_headers(resp)
+    return resp
+
+
+@app.route('/to-dat', methods=['POST'])
+def to_dat():
+    """
+    Converts the provided knitpaint data to a dat file and streams back the file
+    :return:
+    """
+    data = [0]
+    width = 57
+
+    # Try to read options from JSON
+    options = request.get_json()
+    if 'data' in options:
+        data = options['data']
+    if 'width' in options:
+        width = options['width']
+
+    # Make sure the length of the data matches the width
+    if len(data) % width != 0:
+        data += [0] * (width - len(data) % width)
+
+    # Use KnitpaintFileHandler to generate the dat file
+    height = len(data) // width
+    handler = KnitPaintFileHandler()
+    handler.set_bitmap_data(data, width, height)
+    dat_bytes = handler.get_dat_bytes()
+    resp = Response(dat_bytes, mimetype='application/octet-stream')
     set_cache_headers(resp)
     return resp
 

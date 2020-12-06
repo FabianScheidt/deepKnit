@@ -109,9 +109,15 @@ class KnitPaintFileHandler:
         :param input_filename:
         :return:
         """
-        # Read the file
         dat_bytes = open(input_filename, "rb").read()
+        self.read_dat_bytes(dat_bytes)
 
+    def read_dat_bytes(self, dat_bytes):
+        """
+        Reads all information from the provided dat bytes
+        :param dat_bytes:
+        :return:
+        """
         # Check if file needs to be decompressed
         compress_text = "SDS LZSS COMPRESS Ver 1.00"
         compress_bytes = compress_text.encode()
@@ -367,10 +373,24 @@ class KnitPaintFileHandler:
             file.close()
             print('Saved training data to ' + output_filename)
 
+    def get_dat_bytes(self):
+        """
+        Converts the current data to a knitpaint dat file and returns the bytes
+        :return:
+        """
+        raise NotImplementedError('Confidential')
+
     def save_dat_file(self, output_filename):
         """
         Saves the current data as knitpaint dat file
         :param output_filename:
         :return:
         """
-        raise NotImplementedError('Confidential')
+        # Get bytes
+        dat_bytes = self.get_dat_bytes()
+
+        # Write file
+        with open(output_filename, "w+b") as file:
+            file.write(dat_bytes)
+            file.close()
+            print('Saved dat to ' + output_filename)
