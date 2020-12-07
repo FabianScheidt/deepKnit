@@ -1,21 +1,3 @@
-############################
-### Application Specific ###
-############################
-
-# Provessed data
-/data/processed
-
-# Output
-/output
-
-# Static web files
-/static
-
-
-############################
-######### General ##########
-############################
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
