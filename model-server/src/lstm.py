@@ -34,16 +34,16 @@ CATEGORIES = ['Cable/Aran', 'Stitch move', 'Links', 'Miss', 'Tuck']
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
-class LSTMModelStaf:
+class LSTMModel:
     """
-    Uses knit patterns from the staf library to train an lstm
+    Uses knit patterns from the library to train an lstm
     """
 
     def __init__(self):
         super().__init__()
-        self.data_dir = '../data/raw/staf/'
-        self.training_dir = '../data/processed/training-files/lstm-staf/'
-        self.model_dir = '../output/models/lstm-staf/'
+        self.data_dir = '../data/raw/'
+        self.training_dir = '../data/processed/training-files/'
+        self.model_dir = '../output/models/'
         self.epochs = 600
         self.batch_size = 32
 
@@ -570,7 +570,7 @@ class LSTMModelStaf:
 
 
 if __name__ == '__main__':
-    lstm_model = LSTMModelStaf()
+    lstm_model = LSTMModel()
 
     if sys.argv[1] == 'generate-training-file':
         print('Generating training file...')

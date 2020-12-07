@@ -3,7 +3,7 @@ from functools import reduce
 from uuid import UUID
 from flask import Flask, Response, request, json
 from flask_cors import CORS
-from lstm_staf import LSTMModelStaf, START_OF_FILE_CHAR, END_OF_LINE_CHAR
+from lstm import LSTMModel, START_OF_FILE_CHAR, END_OF_LINE_CHAR
 from knitpaint import KnitPaint, KnitPaintCheckException
 from knitpaint.check import KnitPaintCheckSyntaxError, KnitPaintCheckError, KnitPaintCheckWarning
 import knitpaint
@@ -18,8 +18,8 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # Initialize model
-lstm_model_staf = LSTMModelStaf()
-sample_lstm_staf = lstm_model_staf.sample()
+lstm_model = LSTMModel()
+sample_lstm = lstm_model.sample()
 
 
 @app.route('/', methods=['GET'], defaults={'path': ''})
@@ -129,9 +129,9 @@ def get_pattern():
 
     # Sample from lstm staf model. Start with start character
     start_seq = [START_OF_FILE_CHAR]
-    sample = sample_lstm_staf(start_seq, category_weights=category_weights, method=method, temperature=temperature, k=k,
-                              length_normalization=length_normalization, length_bonus_factor=length_bonus_factor,
-                              max_generate=max_generate)
+    sample = sample_lstm(start_seq, category_weights=category_weights, method=method, temperature=temperature, k=k,
+                         length_normalization=length_normalization, length_bonus_factor=length_bonus_factor,
+                         max_generate=max_generate)
     generated_res = []
     for generated in sample:
         generated_res += generated
