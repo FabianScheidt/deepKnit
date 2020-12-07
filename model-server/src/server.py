@@ -164,28 +164,6 @@ def get_pattern():
     return resp
 
 
-@app.route('/api/log-project', methods=['POST'])
-def log_project():
-    # Read project
-    body = request.get_json()
-    project = body['project']
-
-    # Sanitize uuids
-    client_uuid = str(UUID(body['clientUuid']))
-    project_uuid = str(UUID(project['uuid']))
-
-    # Make sure the proper folder is there
-    project_folder = '../log/' + 'client-' + client_uuid + '/project-' + project_uuid + '/'
-    pathlib.Path(project_folder).mkdir(parents=True, exist_ok=True)
-
-    # Save the file
-    filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f') + '.deepknitproject'
-    with open(project_folder + filename, 'w') as outfile:
-        json.dump(project, outfile)
-
-    return ''
-
-
 def knitpaint_to_dict(handler):
     return {
         'data': base64.b64encode(bytes(handler.bitmap_data)).decode(),

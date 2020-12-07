@@ -3,8 +3,6 @@ import { ProjectService } from './project.service';
 import { Project, ProjectStage } from './project';
 import { Knitpaint } from '../knitpaint';
 import { Observable, Subject } from 'rxjs';
-import { ProjectLoggingService } from '../api/project-logging.service';
-import { MatomoTracker } from 'ngx-matomo';
 
 @Injectable()
 export class EditorStateService {
@@ -27,9 +25,7 @@ export class EditorStateService {
   private selectedPatternChangedSubject: Subject<void> = new Subject<void>();
   public selectedPatternsChanged: Observable<void> = this.selectedPatternChangedSubject.asObservable();
 
-  constructor(private projectService: ProjectService,
-              private projectLoggingService: ProjectLoggingService,
-              private matomoTracker: MatomoTracker) {
+  constructor(private projectService: ProjectService) {
     // Get the current project
     this.project = projectService.getProject();
 
@@ -39,19 +35,9 @@ export class EditorStateService {
     // Save whenever the project changes
     this.projectService.projectChanged.subscribe(() => this.saveToLocalStorage());
 
-    // Track stage changes
-    this.stageChangedSubject.subscribe(() => setTimeout(() => {
-      this.matomoTracker.setCustomUrl(location.href);
-      this.matomoTracker.trackPageView();
-    }));
-
     // Try to load a project from local storage, use a timeout to give other components a chance to register for changes
     setTimeout(() => {
       this.initFromLocalStorage();
-
-      // Add some tracking after that
-      this.patternsChanged.subscribe(() => this.matomoTracker.trackEvent('patterns', 'changed'));
-      this.assemblyChanged.subscribe(() => this.matomoTracker.trackEvent('assembly', 'changed'));
     });
   }
 
@@ -71,7 +57,6 @@ export class EditorStateService {
       if (this.project.assembly !== lastProject.assembly) {
         this.assemblyChangedSubject.next();
       }
-      this.projectLoggingService.logProject(this.project);
     });
   }
 
@@ -81,7 +66,6 @@ export class EditorStateService {
   public init(): void {
     const project = new Project();
     this.projectService.setProject(project, true);
-    this.matomoTracker.trackEvent('project', 'new');
   }
 
   /**
@@ -102,7 +86,6 @@ export class EditorStateService {
       if (projectJSON) {
         const projectSerialized = JSON.parse(projectJSON);
         const project = Project.fromJSON(projectSerialized);
-        this.matomoTracker.trackEvent('project', 'loaded-from-local-storage');
         this.projectService.setProject(project, true);
       }
     }
