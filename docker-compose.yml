@@ -1,0 +1,7 @@
+version: '3.7'
+
+services:
+  deepknit:
+    build: .
+    ports:
+      - 5000:5000
