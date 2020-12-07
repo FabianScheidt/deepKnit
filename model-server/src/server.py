@@ -3,9 +3,7 @@ from functools import reduce
 from uuid import UUID
 from flask import Flask, Response, request, json
 from flask_cors import CORS
-from lstm import LSTMModel
 from lstm_staf import LSTMModelStaf, START_OF_FILE_CHAR, END_OF_LINE_CHAR
-from sliding_window import SlidingWindowModel
 from knitpaint import KnitPaint, KnitPaintCheckException
 from knitpaint.check import KnitPaintCheckSyntaxError, KnitPaintCheckError, KnitPaintCheckWarning
 import knitpaint
@@ -19,13 +17,9 @@ cors = CORS(app)
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-# Initialize models
-lstm_model = LSTMModel()
-sample_lstm = lstm_model.sample()
+# Initialize model
 lstm_model_staf = LSTMModelStaf()
 sample_lstm_staf = lstm_model_staf.sample()
-sliding_window_model = SlidingWindowModel()
-sample_sliding_window = sliding_window_model.sample()
 
 
 @app.route('/', methods=['GET'], defaults={'path': ''})
@@ -60,79 +54,6 @@ def send_cors_options():
     :return:
     """
     resp = Response('')
-    set_cache_headers(resp)
-    return resp
-
-
-@app.route('/api/sample', methods=['POST'])
-def sample_model():
-    """
-    Samples knitpaint pixels and returns the result in chunks
-    :return:
-    """
-
-    # Set default options
-    model = 'lstm'
-    temperature = 1.0
-    num_generate = 57*70
-    start = []
-    width = 57
-
-    # Try to read options from JSON
-    options = request.get_json()
-    if 'model' in options:
-        model = options['model']
-    if 'start' in options:
-        start = options['start']
-    if 'temperature' in options:
-        temperature = options['temperature']
-    if 'num_generate' in options:
-        num_generate = options['num_generate']
-    if 'width' in options:
-        width = options['width']
-
-    # Return respective response
-    if model == 'lstm':
-        if len(start) == 0:
-            start = [0]
-        resp = Response(sample_lstm(start, temperature=temperature, num_generate=num_generate),
-                        mimetype='application/octet-stream')
-    elif model == 'lstm-staf':
-        last_non_zero = True
-        res = []
-        for char in start:
-            if char != 0 and char:
-                res.append(char)
-                last_non_zero = True
-            else:
-                if last_non_zero:
-                    res.append(END_OF_LINE_CHAR)
-                last_non_zero = False
-
-        start = [START_OF_FILE_CHAR] + res
-        category_weights = [0, 0, 1, 0, 0]
-
-        def lstm_staf_generator():
-            i = 0
-            sample = sample_lstm_staf(start, category_weights, temperature=temperature, max_generate=num_generate)
-            for generated in sample:
-                for single_generated in generated:
-                    if int(single_generated) != START_OF_FILE_CHAR:
-                        yield bytes([single_generated])
-                        i += 1
-                    if int(single_generated) == END_OF_LINE_CHAR:
-                        add_count = width - (i % width)
-                        yield bytes([0] * add_count)
-                        i += add_count
-                    if i >= num_generate:
-                        break
-
-        resp = Response(lstm_staf_generator(), mimetype='application/octet-stream')
-    elif model == 'sliding-window':
-        resp = Response(sample_sliding_window(width, start, temperature, num_generate),
-                        mimetype='application/octet-stream')
-    else:
-        resp = Response('Unknown model', status=400)
     set_cache_headers(resp)
     return resp
 

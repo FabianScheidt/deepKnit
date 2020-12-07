@@ -23,7 +23,6 @@
     "@angular/platform-browser-dynamic": "^7.2.2",
     "@angular/router": "^7.2.2",
     "core-js": "^2.5.4",
-    "fetch-readablestream": "^0.1.0",
     "file-saver": "latest",
     "hammerjs": "^2.0.8",
     "lodash": "^4.17.11",
